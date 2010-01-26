@@ -82,8 +82,8 @@ describe RightScale::SvnScraper do
       puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.repo_dir.should be_true)
-      extract_file_layout(@scraper.repo_dir, [ '.svn' ]).should == @repo_content
+      File.directory?(@scraper.current_repo_dir.should be_true)
+      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
     end
     
     it 'should scrape incrementally' do
@@ -95,8 +95,8 @@ describe RightScale::SvnScraper do
       puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.repo_dir.should be_true)
-      extract_file_layout(@scraper.repo_dir, [ '.svn' ]).should == @repo_content
+      File.directory?(@scraper.current_repo_dir.should be_true)
+      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
     end
 
   end

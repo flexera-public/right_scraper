@@ -32,8 +32,8 @@ module RightScale
     #        incremental updates
     # false:: Otherwise
     def incremental_update?
-      return false unless File.directory?(@repo_dir)
-      Dir.chdir(@repo_dir) do
+      return false unless File.directory?(@current_repo_dir)
+      Dir.chdir(@current_repo_dir) do
         info = `svn info`
         $?.success? && info =~ (/^URL: (.*)$/) && $1 == @repo.url
       end
@@ -52,17 +52,17 @@ module RightScale
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
         ' 2>&1'
-        Dir.chdir(@repo_dir) do
+        Dir.chdir(@current_repo_dir) do
           res = `#{svn_cmd}`
           if $? != 0
             @callback.call("Failed to update repo: #{res}, falling back to checkout", is_step=false) if @callback
-            FileUtils.rm_rf(@repo_dir)
+            FileUtils.rm_rf(@current_repo_dir)
             @incremental = false
           end
         end
       end
       if !@incremental
-        svn_cmd = "svn checkout #{@repo.url} #{@repo_dir} --non-interactive --quiet" +
+        svn_cmd = "svn checkout #{@repo.url} #{@current_repo_dir} --non-interactive --quiet" +
         (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +

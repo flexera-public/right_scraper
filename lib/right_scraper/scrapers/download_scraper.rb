@@ -34,8 +34,8 @@ module RightScale
       @callback.call(msg, is_step=true) if @callback
       filename = @repo.url.split('/').last
       user_opt = @repo.first_credential && @repo.second_credential ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
-      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output '#{@repo_dir}/#{filename}' '#{@repo.url}' 2>&1"
-      FileUtils.mkdir_p(@repo_dir)
+      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output '#{@current_repo_dir}/#{filename}' '#{@repo.url}' 2>&1"
+      FileUtils.mkdir_p(@current_repo_dir)
       res = `#{cmd}`
       @errors << res if $? != 0
       if succeeded?
@@ -44,7 +44,7 @@ module RightScale
           when 'tgz', 'gzip' then 'z'
           else ''
         end
-        Dir.chdir(@repo_dir) do
+        Dir.chdir(@current_repo_dir) do
           cmd = "tar x#{unzip_opt}f #{filename} 2>&1"
           res = `#{cmd}`
           @errors << res if $? != 0

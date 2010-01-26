@@ -38,4 +38,9 @@ describe RightScale::ScraperBase do
     @base.send(:incremental_update?).should be_false
   end
     
-end
+  it 'should allow retrieving the download directory path' do
+    repo_dir = RightScale::ScraperBase.repo_dir('root_dir', { :repo_type => :git, :url => 'git://github.com/rightscale/right_scraper.git' })
+    repo_dir.should =~ /^root_dir\//
+  end
+  
+end 

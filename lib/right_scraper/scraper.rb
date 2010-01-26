@@ -34,7 +34,7 @@ module RightScale
 
     # (String) Path to directory where remote repository was downloaded
     # Note: This will be a subfolder of the scrape directory (directory given to initializer)
-    attr_reader :repo_dir
+    attr_reader :last_repo_dir
     
     # Initialize scrape destination directory
     #
@@ -72,8 +72,19 @@ module RightScale
       raise "Invalid repository type" unless SCRAPERS.include?(repo.repo_type)
       @scraper = @scrapers[repo.repo_type] ||= SCRAPERS[repo.repo_type].new(@scrape_dir)
       @scraper.scrape(repo, &callback)
-      @repo_dir = @scraper.repo_dir
+      @last_repo_dir = @scraper.current_repo_dir
       @scraper.succeeded?
+    end
+    
+    # Retrieve directory path where repo was or would be downloaded
+    #
+    # === Parameters
+    # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
+    #
+    # === Return 
+    # repo_dir(String):: Path to local directory that corresponds to given repository
+    def repo_dir(repo)
+      repo_dir = RightScale::ScraperBase.repo_dir(scrape_dir, repo)
     end
 
     # Error messages in case of failure

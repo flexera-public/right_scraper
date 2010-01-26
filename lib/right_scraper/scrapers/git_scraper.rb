@@ -32,8 +32,8 @@ module RightScale
     #        incremental updates
     # false:: Otherwise
     def incremental_update?
-      return false unless File.directory?(@repo_dir)
-      Dir.chdir(@repo_dir) do
+      return false unless File.directory?(@current_repo_dir)
+      Dir.chdir(@current_repo_dir) do
         remote_url = `git config --get remote.origin.url`.chomp
         $?.success? && remote_url == @repo.url
       end
@@ -53,7 +53,7 @@ module RightScale
       is_branch = nil
 
       if @incremental
-        Dir.chdir(@repo_dir) do
+        Dir.chdir(@current_repo_dir) do
           is_tag, is_branch, res = git_tag_kind(ssh_cmd)
           if !is_tag && !is_branch
             @callback.call("Nothing to update: repo tag refers to neither a branch nor a tag", is_step=false)
@@ -66,17 +66,17 @@ module RightScale
             res += `#{ssh_cmd} git pull --quiet --depth 1 origin #{tag} 2>&1`
             if $? != 0
               @callback.call("Failed to pull repo: #{res}, falling back to cloning", is_step=false) if @callback
-              FileUtils.rm_rf(@repo_dir)
+              FileUtils.rm_rf(@current_repo_dir)
               @incremental = false
             end
           end
         end
       end
       if !@incremental
-        res += `#{ssh_cmd} git clone --quiet --depth 1 #{@repo.url} #{@repo_dir} 2>&1`
+        res += `#{ssh_cmd} git clone --quiet --depth 1 #{@repo.url} #{@current_repo_dir} 2>&1`
         @errors << res if $? != 0
         if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
-          Dir.chdir(@repo_dir) do
+          Dir.chdir(@current_repo_dir) do
             if is_tag.nil?
               is_tag, is_branch, out = git_tag_kind(ssh_cmd)
               res += out

@@ -39,7 +39,7 @@ module RightScale
     attr_reader :errors
 
     # (String) Path to local directory where repository was downloaded
-    attr_reader :repo_dir
+    attr_reader :current_repo_dir
 
     # Set path to directory containing all scraped repos
     #
@@ -54,16 +54,30 @@ module RightScale
     # after this method initializes all the scraper attributes properly.
     # See RightScale::Scraper#scrape
     def scrape(repo, &callback)
-      @repo            = repo
-      @callback        = callback
-      @scrape_dir_name = Digest::MD5.hexdigest(repo.to_s)
-      @scrape_dir_path = File.join(root_dir, @scrape_dir_name)
-      @repo_dir        = "#{@scrape_dir_path}/repo"
-      @incremental     = incremental_update?
-      @errors          = []
-      FileUtils.rm_rf(@repo_dir) unless @incremental
+      @repo             = repo
+      @callback         = callback
+      @current_repo_dir = ScraperBase.repo_dir(root_dir, repo)
+      @scrape_dir_path  = File.expand_path(File.join(@current_repo_dir, '..'))
+      @incremental      = incremental_update?
+      @errors           = []
+      FileUtils.rm_rf(@current_repo_dir) unless @incremental
       scrape_imp
       true
+    end
+    
+    # Path to directory where given repo should be or was downloaded
+    #
+    # === Parameters
+    # root_dir(String):: Path to directory containing all scraped repositories
+    # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
+    #
+    # === Return 
+    # repo_dir(String):: Path to local directory that corresponds to given repository
+    def self.repo_dir(root_dir, repo)
+      repo = Repository.from_hash(repo) if repo.is_a?(Hash)
+      dir_name  = Digest::MD5.hexdigest(repo.to_s)
+      dir_path  = File.join(root_dir, dir_name)
+      repo_dir = "#{dir_path}/repo"
     end
 
     # Was last call to scrapesuccessful?

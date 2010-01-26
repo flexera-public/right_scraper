@@ -45,22 +45,22 @@ describe RightScale::Scraper do
     repo.repo_type = :mock
     @mock_scraper.should_receive(:scrape).with(repo, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(true)
-    @mock_scraper.should_receive(:repo_dir).and_return('42')
+    @mock_scraper.should_receive(:current_repo_dir).and_return('42')
     @scraper.scrape(repo) { }.should be_true
-    @scraper.repo_dir.should == '42'
+    @scraper.last_repo_dir.should == '42'
   end
   
   it 'should scrape from a hash' do
     @mock_scraper.should_receive(:scrape).with(RightScale::Repository, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(true)
-    @mock_scraper.should_receive(:repo_dir).and_return('42')
+    @mock_scraper.should_receive(:current_repo_dir).and_return('42')
     @scraper.scrape({:repo_type => :mock}) { }.should be_true
   end
   
   it 'should report failures' do
     @mock_scraper.should_receive(:scrape).with(RightScale::Repository, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(false)
-    @mock_scraper.should_receive(:repo_dir).and_return('42')
+    @mock_scraper.should_receive(:current_repo_dir).and_return('42')
     @scraper.scrape({:repo_type => :mock}) { }.should be_false
   end
     
