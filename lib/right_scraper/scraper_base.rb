@@ -80,7 +80,7 @@ module RightScale
       repo_dir = "#{dir_path}/repo"
     end
 
-    # Was last call to scrapesuccessful?
+    # Was last call to scrape successful?
     # Call errors to get error messages if false
     #
     # === Return

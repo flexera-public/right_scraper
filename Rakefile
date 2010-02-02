@@ -33,6 +33,9 @@ task :default => 'spec'
 desc "Run unit tests"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = Dir['**/*_spec.rb']
+  t.spec_opts = lambda do
+    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
+  end
 end
 
 desc "Run unit tests with RCov"
@@ -40,7 +43,7 @@ Spec::Rake::SpecTask.new(:rcov) do |t|
   t.spec_files = Dir['**/*_spec.rb']
   t.rcov = true
   t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
   end
 end
 

@@ -44,41 +44,41 @@ module RightScale
     # === Return
     # true:: Always return true
     def scrape_imp
-      msg = @incremental ? "Pulling " : "Cloning "
+      msg = @incremental ? 'Pulling ' : 'Cloning '
       msg += "git repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
-      ssh_cmd = ssh_command
-      res = ""
-      is_tag = nil
+      ssh_cmd   = ssh_command
+      res       = ''
+      is_tag    = nil
       is_branch = nil
 
       if @incremental
         Dir.chdir(@current_repo_dir) do
-          is_tag, is_branch, res = git_tag_kind(ssh_cmd)
+          is_tag, is_branch, res = git_fetch(ssh_cmd)
           if !is_tag && !is_branch
-            @callback.call("Nothing to update: repo tag refers to neither a branch nor a tag", is_step=false)
+            @callback.call('Nothing to update: repo tag refers to neither a branch nor a tag', is_step=false)
             return true
           end
           if is_tag && is_branch
             @errors << 'Repository tag ambiguous: could be git tag or git branch'
           else
             tag = @repo.tag.nil? || @repo.tag.empty? ? 'master' : @repo.tag
-            res += `#{ssh_cmd} git pull --quiet --depth 1 origin #{tag} 2>&1`
+            res += `git checkout #{tag} 2>&1`
             if $? != 0
-              @callback.call("Failed to pull repo: #{res}, falling back to cloning", is_step=false) if @callback
+              @callback.call("Failed to update repo: #{res}, falling back to cloning", is_step=false) if @callback
               FileUtils.rm_rf(@current_repo_dir)
               @incremental = false
             end
           end
         end
       end
-      if !@incremental
+      if !@incremental && succeeded?
         res += `#{ssh_cmd} git clone --quiet --depth 1 #{@repo.url} #{@current_repo_dir} 2>&1`
         @errors << res if $? != 0
         if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
           Dir.chdir(@current_repo_dir) do
             if is_tag.nil?
-              is_tag, is_branch, out = git_tag_kind(ssh_cmd)
+              is_tag, is_branch, out = git_fetch(ssh_cmd)
               res += out
             end
             if is_tag && is_branch
@@ -118,12 +118,13 @@ module RightScale
       options = opts.inject('') { |o, (k, v)| o << "#{k.to_s}=#{v}\n" }
     end
 
-    # Store public SSH key into temporary folder and create temporary script
+    # Store private SSH key into temporary folder and create temporary script
     # that wraps SSH and uses this key.
     #
     # === Return
     # ssh(String):: Code to initialize GIT_SSH environment variable with path to SSH wrapper script
     def ssh_command
+      return win32_ssh_command if RUBY_PLATFORM=~/mswin/
       ssh_dir = File.join(@scrape_dir_path, '.ssh')
       FileUtils.mkdir_p(ssh_dir)
       key_content = @repo.first_credential
@@ -131,7 +132,7 @@ module RightScale
         # Explicitely disable public key authentication so we don't endup using the system's key
         options = { :PubkeyAuthentication => 'no' }
       else    
-        ssh_key_path = File.join(ssh_dir, 'ssh.pub')
+        ssh_key_path = File.join(ssh_dir, 'id_rsa')
         File.open(ssh_key_path, 'w') { |f| f.puts(key_content) }
         File.chmod(0600, ssh_key_path)
         options = { :IdentityFile => ssh_key_path }
@@ -144,19 +145,53 @@ module RightScale
       "GIT_SSH=#{ssh}"
     end
 
-    # Resolves whehter repository tag is a git tag or a git branch
-    # Return output of run commands too
-    # Note:: Assume that current working directory is a git directory
-    #
-    # === Parameters
-    # ssh_cmd<String>:: SSH command to be used with git if any
+    # Prepare SSH for git on Windows
+    # The GIT_SSH trick doesn't seem to work on Windows, instead actually
+    # save the private key in the user ssh folder.
+    # Note: This will override any pre-existing SSH key that was on the system
     #
     # === Return
-    # res<Array>::
+    # '':: Always return an empty string
+    #
+    # === Raise
+    # Exception:: If the USERPROFILE environment variable is not set
+    def win32_ssh_command
+      # resolve key file path.
+      raise 'Environment variable USERPROFILE is missing' unless ENV['USERPROFILE']
+      user_profile_dir_path = ENV['USERPROFILE']
+      ssh_keys_dir = File.join(user_profile_dir_path, '.ssh')
+      FileUtils.mkdir_p(ssh_keys_dir) unless File.directory?(ssh_keys_dir)
+      ssh_key_file_path = File.join(ssh_keys_dir, 'id_rsa')
+
+      # (re)create key file. must overwrite any existing credentials in case
+      # we are switching repositories and have different credentials for each.
+      File.open(ssh_key_file_path, 'w') { |f| f.puts(repo.ssh_key) }
+
+      # we need to create the "known_hosts" file or else the process will
+      # halt in windows waiting for a yes/no response to the unknown
+      # git host. this is normally handled by specifying
+      # "-o StrictHostKeyChecking=no" in the GIT_SSH executable, but it is
+      # still a mystery why this doesn't work properly in windows.
+      # so make a ssh call which creates the proper "known_hosts" file.
+      system("ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit")
+
+      return ''
+    end
+
+    # Shallow fetch
+    # Resolves whehter repository tag is a git tag or a git branch
+    # Return output of run commands too
+    # Note: Assume that current working directory is a git directory
+    #
+    # === Parameters
+    # ssh_cmd(String):: SSH command to be used with git if any
+    #
+    # === Return
+    # res(Array)::
     #   - res[0] is true if git repo has a tag with a name corresponding to the repository tag
     #   - res[1] is true if git repo has a branch with a name corresponding to the repository tag
     #   - res[2] contains the git output
-    def git_tag_kind(ssh_cmd)
+    def git_fetch(ssh_cmd)
       return [ false, true, "" ] if @repo.tag.nil? || @repo.tag.empty? || @repo.tag == 'master'
       output = `#{ssh_cmd} git fetch --tags --depth 1 2>&1`
       is_tag = `git tag`.split("\n").include?(@repo.tag)

@@ -40,8 +40,8 @@ module RightScale
       @errors << res if $? != 0
       if succeeded?
         unzip_opt = case @repo.url[/\.(.*)$/]
-          when 'bzip', 'bzip2' then 'j'
-          when 'tgz', 'gzip' then 'z'
+          when 'bzip', 'bzip2', 'bz2' then 'j'
+          when 'tgz', 'gzip', 'gz' then 'z'
           else ''
         end
         Dir.chdir(@current_repo_dir) do
