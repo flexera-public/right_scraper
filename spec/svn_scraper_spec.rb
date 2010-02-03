@@ -38,15 +38,15 @@ describe RightScale::SvnScraper do
     @repo_path = File.join(File.dirname(__FILE__), '__repo')
     @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] } ]
     FileUtils.rm_rf(@svn_repo_path)
-    res, status = exec("svnadmin create #{@svn_repo_path}")
+    res, status = exec("svnadmin create \"#{@svn_repo_path}\"")
     raise "Failed to initialize SVN repository: #{res}" unless status.success?
     FileUtils.rm_rf(@repo_path)
-    res, status = exec("svn checkout file://#{@svn_repo_path} #{@repo_path}")
+    res, status = exec("svn checkout \"file:///#{@svn_repo_path}\" \"#{@repo_path}\"")
     raise "Failed to checkout repository: #{res}" unless status.success?
     create_file_layout(@repo_path, @repo_content)
     Dir.chdir(@repo_path) do
       res, status = exec("svn add *")
-      res, status = exec("svn commit --quiet -m 'Initial Commit'") if status.success?
+      res, status = exec("svn commit --quiet -m \"Initial Commit\"") if status.success?
       raise "Failed to setup repository: #{res}" unless status.success?
     end
   end
@@ -79,7 +79,7 @@ describe RightScale::SvnScraper do
     it 'should scrape' do
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir.should be_true)
@@ -87,12 +87,13 @@ describe RightScale::SvnScraper do
     end
     
     it 'should scrape incrementally' do
+	  pending "File URLs comparison on Windows is tricky" if RUBY_PLATFORM=~/mswin/
       @scraper.scrape(@repo)
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.incremental_update?.should be_true
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir.should be_true)

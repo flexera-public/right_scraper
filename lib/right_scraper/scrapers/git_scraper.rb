@@ -73,7 +73,7 @@ module RightScale
         end
       end
       if !@incremental && succeeded?
-        res += `#{ssh_cmd} git clone --quiet --depth 1 #{@repo.url} #{@current_repo_dir} 2>&1`
+        res += `#{ssh_cmd} git clone --quiet --depth 1 "#{@repo.url}" "#{@current_repo_dir}" 2>&1`
         @errors << res if $? != 0
         if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
           Dir.chdir(@current_repo_dir) do
@@ -156,25 +156,27 @@ module RightScale
     # === Raise
     # Exception:: If the USERPROFILE environment variable is not set
     def win32_ssh_command
-      # resolve key file path.
-      raise 'Environment variable USERPROFILE is missing' unless ENV['USERPROFILE']
-      user_profile_dir_path = ENV['USERPROFILE']
-      ssh_keys_dir = File.join(user_profile_dir_path, '.ssh')
-      FileUtils.mkdir_p(ssh_keys_dir) unless File.directory?(ssh_keys_dir)
-      ssh_key_file_path = File.join(ssh_keys_dir, 'id_rsa')
+	  key_content = @repo.first_credential
+	  unless key_content.nil?
+		# resolve key file path.
+		raise 'Environment variable USERPROFILE is missing' unless ENV['USERPROFILE']
+		user_profile_dir_path = ENV['USERPROFILE']
+		ssh_keys_dir = File.join(user_profile_dir_path, '.ssh')
+		FileUtils.mkdir_p(ssh_keys_dir) unless File.directory?(ssh_keys_dir)
+		ssh_key_file_path = File.join(ssh_keys_dir, 'id_rsa')
 
-      # (re)create key file. must overwrite any existing credentials in case
-      # we are switching repositories and have different credentials for each.
-      File.open(ssh_key_file_path, 'w') { |f| f.puts(repo.ssh_key) }
+		# (re)create key file. must overwrite any existing credentials in case
+		# we are switching repositories and have different credentials for each.
+		File.open(ssh_key_file_path, 'w') { |f| f.puts(key_content) }
 
-      # we need to create the "known_hosts" file or else the process will
-      # halt in windows waiting for a yes/no response to the unknown
-      # git host. this is normally handled by specifying
-      # "-o StrictHostKeyChecking=no" in the GIT_SSH executable, but it is
-      # still a mystery why this doesn't work properly in windows.
-      # so make a ssh call which creates the proper "known_hosts" file.
-      system("ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit")
-
+		# we need to create the "known_hosts" file or else the process will
+		# halt in windows waiting for a yes/no response to the unknown
+		# git host. this is normally handled by specifying
+		# "-o StrictHostKeyChecking=no" in the GIT_SSH executable, but it is
+		# still a mystery why this doesn't work properly in windows.
+		# so make a ssh call which creates the proper "known_hosts" file.
+		system("ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit")
+	  end
       return ''
     end
 

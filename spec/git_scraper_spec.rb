@@ -41,15 +41,15 @@ describe RightScale::GitScraper do
     FileUtils.mkdir_p(@origin_path)
     Dir.chdir(@origin_path) do
       res, status = exec("git init --bare")
-      raise "Failed to initialize remote git repository: #{res}" unless status.success?
+      raise "Failed to initialize bare git repository: #{res}" unless status.success?
     end
     FileUtils.rm_rf(@repo_path)
-    res, status = exec("git clone --quiet #{@origin_path} #{@repo_path}")
+    res, status = exec("git clone --quiet \"#{@origin_path}\" \"#{@repo_path}\"")
     raise "Failed to initialize git repository: #{res}" unless status.success?
     create_file_layout(@repo_path, @repo_content)
     Dir.chdir(@repo_path) do
       res, status = exec("git add .")
-      res, status = exec("git commit --quiet -am 'Initial Commit'") if status.success?
+      res, status = exec("git commit --quiet -m \"Initial Commit\"") if status.success?
       res, status = exec("git push origin master") if status.success?
       raise "Failed to setup git repository: #{res}" unless status.success?
     end
@@ -83,7 +83,7 @@ describe RightScale::GitScraper do
     it 'should scrape' do
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir.should be_true)
@@ -92,11 +92,11 @@ describe RightScale::GitScraper do
     
     it 'should scrape incrementally' do
       @scraper.scrape(@repo)
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.incremental_update?.should be_true
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir.should be_true)

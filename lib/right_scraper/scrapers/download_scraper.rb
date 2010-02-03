@@ -34,7 +34,7 @@ module RightScale
       @callback.call(msg, is_step=true) if @callback
       filename = @repo.url.split('/').last
       user_opt = @repo.first_credential && @repo.second_credential ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
-      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output '#{@current_repo_dir}/#{filename}' '#{@repo.url}' 2>&1"
+      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
       FileUtils.mkdir_p(@current_repo_dir)
       res = `#{cmd}`
       @errors << res if $? != 0

@@ -21,6 +21,9 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# Not supported on Windows
+unless RUBY_PLATFORM=~/mswin/
+
 require File.join(File.dirname(__FILE__), 'spec_helper')
 require 'scraper_base'
 require 'repository'
@@ -41,7 +44,7 @@ describe RightScale::DownloadScraper do
     create_file_layout(@download_repo_path, @repo_content)
     @download_file = File.expand_path(File.join(File.dirname(__FILE__), '__download_file.tar'))
     Dir.chdir(@download_repo_path) do
-      res, status = exec("tar cf #{@download_file} *")
+      res, status = exec("tar cf \"#{@download_file}\" *")
       raise "Failed to create tarball: #{res}" unless status.success?
     end
   end
@@ -65,7 +68,7 @@ describe RightScale::DownloadScraper do
       @scraper = RightScale::DownloadScraper.new(@repo_path)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
-                                               :url          => "file://#{@download_file}")
+                                               :url          => "file:///#{@download_file}")
     end
 
     after(:all) do
@@ -75,7 +78,7 @@ describe RightScale::DownloadScraper do
     it 'should scrape' do
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
-      puts "\n **ERRORS: #{@scraper.error_message}\n" unless @scraper.succeeded?
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir.should be_true)
@@ -85,3 +88,5 @@ describe RightScale::DownloadScraper do
   end
 
 end
+
+end # unless RUBY_PLATFORM=~/mswin/

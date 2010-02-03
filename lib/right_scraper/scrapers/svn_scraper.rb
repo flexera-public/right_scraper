@@ -62,7 +62,7 @@ module RightScale
         end
       end
       if !@incremental
-        svn_cmd = "svn checkout #{@repo.url} #{@current_repo_dir} --non-interactive --quiet" +
+        svn_cmd = "svn checkout \"#{@repo.url}\" \"#{@current_repo_dir}\" --non-interactive --quiet" +
         (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
