@@ -47,52 +47,71 @@ module RightScale
       msg = @incremental ? 'Pulling ' : 'Cloning '
       msg += "git repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
-      ssh_cmd   = ssh_command
-      res       = ''
-      is_tag    = nil
+      ssh_cmd = ssh_command
+      res = ''
+      is_tag = nil
       is_branch = nil
+      update_failed = false
 
       if @incremental
         Dir.chdir(@current_repo_dir) do
-          is_tag, is_branch, res = git_fetch(ssh_cmd)
-          if !is_tag && !is_branch
-            @callback.call('Nothing to update: repo tag refers to neither a branch nor a tag', is_step=false)
-            return true
-          end
-          if is_tag && is_branch
-            @errors << 'Repository tag ambiguous: could be git tag or git branch'
-          else
-            tag = @repo.tag.nil? || @repo.tag.empty? ? 'master' : @repo.tag
-            res += `git checkout #{tag} 2>&1`
-            if $? != 0
-              @callback.call("Failed to update repo: #{res}, falling back to cloning", is_step=false) if @callback
-              FileUtils.rm_rf(@current_repo_dir)
-              @incremental = false
-            end
-          end
-        end
-      end
-      if !@incremental && succeeded?
-        res += `#{ssh_cmd} git clone --quiet --depth 1 "#{@repo.url}" "#{@current_repo_dir}" 2>&1`
-        @errors << res if $? != 0
-        if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
-          Dir.chdir(@current_repo_dir) do
-            if is_tag.nil?
-              is_tag, is_branch, out = git_fetch(ssh_cmd)
-              res += out
+          analysis = git_fetch_and_analyze(ssh_cmd)
+          if analysis[:success]
+            is_tag = analysis[:tag]
+            is_branch = analysis[:branch]
+            if !is_tag && !is_branch
+              @callback.call('Nothing to update: repo tag refers to neither a branch nor a tag', is_step=false)
+              return true
             end
             if is_tag && is_branch
               @errors << 'Repository tag ambiguous: could be git tag or git branch'
-            elsif is_branch
-              res += `git branch #{@repo.tag} origin/#{@repo.tag} 2>&1`
-              @errors << res if $? != 0
-            elsif !is_tag # Not a branch nor a tag, SHA ref? fetch everything so we have all SHAs
-              res += `#{ssh_cmd} git fetch origin master --depth #{2**31 - 1} 2>&1`
-              @errors << res if $? != 0
+            else
+              tag = @repo.tag.nil? || @repo.tag.empty? ? 'master' : @repo.tag
+              res = `git checkout #{tag} 2>&1`
+              if $? != 0
+                @callback.call("Failed to checkout #{tag}: #{res}, falling back to cloning", is_step=false) if @callback
+                update_failed = true
+              end
             end
-            if succeeded?
-              res += `git checkout #{@repo.tag} 2>&1`
-              @errors << res if $? != 0
+          else
+            @callback.call("Failed to update repo: #{analysis[:output]}, falling back to cloning", is_step=false) if @callback
+            update_failed = true
+          end
+        end
+      end
+      if update_failed
+        FileUtils.rm_rf(@current_repo_dir)
+        @incremental = false
+      end
+      if !@incremental && succeeded?
+        res += `#{ssh_cmd} git clone --quiet --depth 1 "#{@repo.url}" "#{@current_repo_dir}" 2>&1`
+        @errors << "Failed to clone repo: #{res}" if $? != 0
+        if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
+          Dir.chdir(@current_repo_dir) do
+            if is_tag.nil?
+              analysis = git_fetch_and_analyze(ssh_cmd)
+              if analysis[:success]
+                is_tag = analysis[:tag]
+                is_branch = analysis[:branch]
+                res += analysis[:output]
+              else
+                @errors << "Failed to analyze repo: #{res}"
+              end
+            end
+            if succeded?
+              if is_tag && is_branch
+                @errors << 'Repository tag ambiguous: could be git tag or git branch'
+              elsif is_branch
+                res += `git branch #{@repo.tag} origin/#{@repo.tag} 2>&1`
+                @errors << res if $? != 0
+              elsif !is_tag # Not a branch nor a tag, SHA ref? fetch everything so we have all SHAs
+                res += `#{ssh_cmd} git fetch origin master --depth #{2**31 - 1} 2>&1`
+                @errors << res if $? != 0
+              end
+              if succeeded?
+                res += `git checkout #{@repo.tag} 2>&1`
+                @errors << res if $? != 0
+              end
             end
           end
         end
@@ -189,16 +208,20 @@ module RightScale
     # ssh_cmd(String):: SSH command to be used with git if any
     #
     # === Return
-    # res(Array)::
-    #   - res[0] is true if git repo has a tag with a name corresponding to the repository tag
-    #   - res[1] is true if git repo has a branch with a name corresponding to the repository tag
-    #   - res[2] contains the git output
-    def git_fetch(ssh_cmd)
-      return [ false, true, "" ] if @repo.tag.nil? || @repo.tag.empty? || @repo.tag == 'master'
+    # res(Hash)::
+    #   - resp[:success]:: true if fetch was successful, false otherwise
+    #   - res[:output] contains the git output
+    #   - res[:tag]:: is true if git repo has a tag with a name corresponding to the repository tag
+    #   - res[:branch] is true if git repo has a branch with a name corresponding to the repository tag
+    def git_fetch_and_analyze(ssh_cmd)
       output = `#{ssh_cmd} git fetch --tags --depth 1 2>&1`
-      is_tag = `git tag`.split("\n").include?(@repo.tag)
-      is_branch = `git branch -r`.split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
-      res = [ is_tag, is_branch, output ]
+      success = [0, 1].include? $?.exitstatus # git fetch returns 1 when there is nothing to fetch
+      is_tag = is_branch = false
+      if success
+        is_tag = `git tag`.split("\n").include?(@repo.tag)
+        is_branch = `git branch -r`.split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
+      end
+      { :success => success, :output => output, :tag => is_tag, :branch => is_branch }
     end
 
   end
