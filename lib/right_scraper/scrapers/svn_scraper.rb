@@ -48,7 +48,7 @@ module RightScale
       msg += "SVN repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
       if @incremental
-        svn_cmd = "svn update --non-interactive --quiet" +
+        svn_cmd = "svn update --no-auth-cache --non-interactive --quiet" +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
         ' 2>&1'
@@ -62,7 +62,7 @@ module RightScale
         end
       end
       if !@incremental
-        svn_cmd = "svn checkout \"#{@repo.url}\" \"#{@current_repo_dir}\" --non-interactive --quiet" +
+        svn_cmd = "svn checkout \"#{@repo.url}\" \"#{@current_repo_dir}\" --no-auth-cache --non-interactive --quiet" +
         (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
