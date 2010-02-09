@@ -53,22 +53,18 @@ module RightScale
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
         ' 2>&1'
         Dir.chdir(@current_repo_dir) do
-          res = `#{svn_cmd}`
-          if $? != 0
-            @callback.call("Failed to update repo: #{res}, falling back to checkout", is_step=false) if @callback
-            FileUtils.rm_rf(@current_repo_dir)
-            @incremental = false
-          end
+          res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+          handle_watcher_result(res, 'SVN update', update=true)
         end
       end
-      if !@incremental
+      if !@incremental && succeeded?
         svn_cmd = "svn checkout \"#{@repo.url}\" \"#{@current_repo_dir}\" --no-auth-cache --non-interactive --quiet" +
         (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
         ' 2>&1'
-        res = `#{svn_cmd}`
-        @errors << res if $? != 0
+        res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+        handle_watcher_result(res, 'SVN checkout', update=false)
       end
       true
     end

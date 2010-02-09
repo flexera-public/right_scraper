@@ -41,12 +41,15 @@ module RightScale
     # (String) Path to local directory where repository was downloaded
     attr_reader :current_repo_dir
 
-    # Set path to directory containing all scraped repos
+    # Set path to directory containing all scraped repos as well as space and time upperbounds
     #
     # === Parameters
     # root_dir(String):: Path to scraped repos parent directory
-    def initialize(root_dir)
+    # max_bytes(Integer):: Maximum size allowed for repos, -1 for no limit (default)
+    # max_seconds(Integer):: Maximum number of seconds a single scrape operation should take, -1 for no limit (default)
+    def initialize(root_dir, max_bytes, max_seconds)
       @root_dir = root_dir
+      @watcher  = Watcher.new(max_bytes, max_seconds)
     end
 
     # Common implementation of scrape method for all repository types.
@@ -108,6 +111,35 @@ module RightScale
     def scrape_imp
       raise "Method not implemented"
     end
-    
+
+    # Update state of scraper according to status returned by watcher
+    #
+    # === Parameters
+    # res(RightScale::WatchResult):: Watcher status to be analyzed
+    # msg_title(String):: Error message title in case of failure
+    # update(TrueClass|FalseClass):: Whether the process was launch to incrementally update the repo
+    # ok_codes:: Successful process return codes, only 0 by default
+    #
+    # === Return
+    # true:: Always return true
+    def handle_watcher_result(res, msg_title, update, ok_codes=[0])
+      if res.status == :timeout
+        @errors << "#{msg_title} is taking more time than #{@watcher.max_seconds / 60} minutes, aborting..."
+        FileUtils.rm_rf(@current_repo_dir)
+      elsif res.status == :size_exceeded
+        @errors << "#{msg_title} is taking more space than #{@watcher.max_bytes / 1048576} MB, aborting..."
+        FileUtils.rm_rf(@current_repo_dir)
+      elsif !ok_codes.include?(res.exit_code)
+        if update
+          @callback.call("#{msg_title} failed: #{res.output}, reverting to non incremental update", is_step=false) if @callback
+          FileUtils.rm_rf(@current_repo_dir)
+          @incremental = false
+        else
+          @errors << "#{msg_title} failed: #{res.output}"
+        end
+      end
+      true
+    end
+
   end
 end

@@ -24,6 +24,7 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 require 'scraper_base'
 require 'repository'
+require 'watcher'
 require File.join('scrapers', 'git_scraper')
 
 describe RightScale::GitScraper do
@@ -70,7 +71,7 @@ describe RightScale::GitScraper do
     end
 
     before(:each) do
-      @scraper = RightScale::GitScraper.new(@repo_path)      
+      @scraper = RightScale::GitScraper.new(@repo_path, max_bytes=1024**2, max_seconds=20)      
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :git,
                                                :url          => @origin_path)

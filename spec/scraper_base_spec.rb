@@ -27,7 +27,7 @@ require 'scraper_base'
 describe RightScale::ScraperBase do
 
   before(:each) do
-    @base = RightScale::ScraperBase.new('/tmp')
+    @base = RightScale::ScraperBase.new('/tmp', max_bytes=1024**2, max_seconds=20)
   end
   
   it 'should initialize the scrape directory' do

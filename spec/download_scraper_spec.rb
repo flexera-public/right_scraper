@@ -65,7 +65,7 @@ describe RightScale::DownloadScraper do
     end
 
     before(:each) do
-      @scraper = RightScale::DownloadScraper.new(@repo_path)
+      @scraper = RightScale::DownloadScraper.new(@repo_path, max_bytes=1024**2, max_seconds=20)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")

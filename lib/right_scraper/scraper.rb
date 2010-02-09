@@ -40,8 +40,12 @@ module RightScale
     #
     # === Parameters
     # scrape_dir(String):: Scrape destination directory
-    def initialize(scrape_dir)
+    # max_bytes(Integer):: Maximum size allowed for repos, -1 for no limit (default)
+    # max_seconds(Integer):: Maximum number of seconds a single scrape operation should take, -1 for no limit (default)
+    def initialize(scrape_dir, max_bytes = -1, max_seconds = -1)
       @scrape_dir = scrape_dir
+      @max_bytes = max_bytes
+      @max_seconds = max_seconds
       @scrapers = {}
     end
 
@@ -70,7 +74,7 @@ module RightScale
     def scrape(repo, &callback)
       repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
       raise "Invalid repository type" unless SCRAPERS.include?(repo.repo_type)
-      @scraper = @scrapers[repo.repo_type] ||= SCRAPERS[repo.repo_type].new(@scrape_dir)
+      @scraper = @scrapers[repo.repo_type] ||= SCRAPERS[repo.repo_type].new(@scrape_dir, @max_bytes, @max_seconds)
       @scraper.scrape(repo, &callback)
       @last_repo_dir = @scraper.current_repo_dir
       @scraper.succeeded?

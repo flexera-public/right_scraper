@@ -48,19 +48,17 @@ module RightScale
       msg += "git repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
       ssh_cmd = ssh_command
-      res = ''
       is_tag = nil
       is_branch = nil
-      update_failed = false
 
       if @incremental
         Dir.chdir(@current_repo_dir) do
-          analysis = git_fetch_and_analyze(ssh_cmd)
-          if analysis[:success]
+          analysis = git_fetch_and_analyze(ssh_cmd, update=true)
+          if succeeded? && @incremental
             is_tag = analysis[:tag]
             is_branch = analysis[:branch]
             if !is_tag && !is_branch
-              @callback.call('Nothing to update: repo tag refers to neither a branch nor a tag', is_step=false)
+              @callback.call('Nothing to update: repo tag refers to neither a branch nor a tag', is_step=false) if @callback
               return true
             end
             if is_tag && is_branch
@@ -70,35 +68,25 @@ module RightScale
               res = `git checkout #{tag} 2>&1`
               if $? != 0
                 @callback.call("Failed to checkout #{tag}: #{res}, falling back to cloning", is_step=false) if @callback
-                update_failed = true
+                FileUtils.rm_rf(@current_repo_dir)
+                @incremental = false
               end
             end
-          else
-            @callback.call("Failed to update repo: #{analysis[:output]}, falling back to cloning", is_step=false) if @callback
-            update_failed = true
           end
         end
       end
-      if update_failed
-        FileUtils.rm_rf(@current_repo_dir)
-        @incremental = false
-      end
       if !@incremental && succeeded?
-        res += `#{ssh_cmd} git clone --quiet --depth 1 "#{@repo.url}" "#{@current_repo_dir}" 2>&1`
-        @errors << "Failed to clone repo: #{res}" if $? != 0
+        git_cmd = "#{ssh_cmd} git clone --quiet --depth 1 \"#{@repo.url}\" \"#{@current_repo_dir}\" 2>&1"
+        res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)
+        handle_watcher_result(res, 'git clone', update=false)
         if !@repo.tag.nil? && !@repo.tag.empty? && @repo.tag != 'master' && succeeded?
           Dir.chdir(@current_repo_dir) do
             if is_tag.nil?
-              analysis = git_fetch_and_analyze(ssh_cmd)
-              if analysis[:success]
-                is_tag = analysis[:tag]
-                is_branch = analysis[:branch]
-                res += analysis[:output]
-              else
-                @errors << "Failed to analyze repo: #{res}"
-              end
+              analysis = git_fetch_and_analyze(ssh_cmd, update=false)
+              is_tag = analysis[:tag]
+              is_branch = analysis[:branch]
             end
-            if succeded?
+            if succeeded?
               if is_tag && is_branch
                 @errors << 'Repository tag ambiguous: could be git tag or git branch'
               elsif is_branch
@@ -202,26 +190,27 @@ module RightScale
     # Shallow fetch
     # Resolves whehter repository tag is a git tag or a git branch
     # Return output of run commands too
+    # Update errors collection upon failure (check for succeeded? after call)
     # Note: Assume that current working directory is a git directory
     #
     # === Parameters
     # ssh_cmd(String):: SSH command to be used with git if any
+    # update(FalseClass|TrueClass):: Whether analysis is done as part of an update
     #
     # === Return
     # res(Hash)::
-    #   - resp[:success]:: true if fetch was successful, false otherwise
-    #   - res[:output] contains the git output
     #   - res[:tag]:: is true if git repo has a tag with a name corresponding to the repository tag
     #   - res[:branch] is true if git repo has a branch with a name corresponding to the repository tag
-    def git_fetch_and_analyze(ssh_cmd)
-      output = `#{ssh_cmd} git fetch --tags --depth 1 2>&1`
-      success = [0, 1].include? $?.exitstatus # git fetch returns 1 when there is nothing to fetch
+    def git_fetch_and_analyze(ssh_cmd, update)
+      git_cmd = "#{ssh_cmd} git fetch --tags --depth 1 2>&1"
+      res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)
+      handle_watcher_result(res, 'git fetch', update, ok_codes=[0, 1]) # git fetch returns 1 when there is nothing to fetch
       is_tag = is_branch = false
-      if success
+      if succeeded? && (!update || @incremental)
         is_tag = `git tag`.split("\n").include?(@repo.tag)
         is_branch = `git branch -r`.split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
       end
-      { :success => success, :output => output, :tag => is_tag, :branch => is_branch }
+      { :tag => is_tag, :branch => is_branch }
     end
 
   end

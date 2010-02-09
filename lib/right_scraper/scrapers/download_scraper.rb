@@ -36,8 +36,8 @@ module RightScale
       user_opt = @repo.first_credential && @repo.second_credential ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
       cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
       FileUtils.mkdir_p(@current_repo_dir)
-      res = `#{cmd}`
-      @errors << res if $? != 0
+      res = @watcher.launch_and_watch(cmd, @current_repo_dir)
+      handle_watcher_result(res, 'Download', update=false)
       if succeeded?
         unzip_opt = case @repo.url[/\.(.*)$/]
           when 'bzip', 'bzip2', 'bz2' then 'j'
