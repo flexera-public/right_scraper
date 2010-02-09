@@ -84,9 +84,13 @@ module RightScale
       # Loop until process is done or times out or takes too much space
       timed_out = repeat(1, @max_seconds) do
         output += r.readlines.join
-        size = 0
-        Find.find(dest_dir) { |f| size += File.stat(f).size unless File.directory?(f) } if File.directory?(dest_dir)
-        size > @max_bytes || status
+        if @max_bytes < 0
+          status
+        else
+          size = 0
+          Find.find(dest_dir) { |f| size += File.stat(f).size unless File.directory?(f) } if File.directory?(dest_dir)
+          size > @max_bytes || status
+        end
       end
 
       # Cleanup and report status
@@ -127,7 +131,7 @@ module RightScale
     # res(TrueClass|FalseClass):: true if timeout is reached, false otherwise.
     def repeat(period, timeout)
       end_at = Time.now + timeout
-      while res = (Time.now < end_at)
+      while res = (timeout < 0 || Time.now < end_at)
         exit = false
         elapsed = timed { exit = yield }
         break if exit

@@ -29,3 +29,4 @@ require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git_scra
 require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn_scraper')
 require File.join(File.dirname(__FILE__), 'right_scraper', 'repository')
 require File.join(File.dirname(__FILE__), 'right_scraper', 'scraper')
+require File.join(File.dirname(__FILE__), 'right_scraper', 'watcher')

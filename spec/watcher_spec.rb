@@ -59,4 +59,12 @@ describe RightScale::Watcher do
     status.output.should == "42\n"
   end
 
+  it 'should allow infinite size and timeout' do
+    watcher = RightScale::Watcher.new(max_bytes=-1, max_seconds=-1)
+    status = watcher.launch_and_watch("ruby -e 'puts 42; File.open(File.join(\"#{@dest_dir}\", \"test\"), \"w\") { |f| f.puts \"MORE THAN 2 CHARS\" };sleep 2'", @dest_dir)
+    status.status.should == :success
+    status.exit_code.should == 0
+    status.output.should == "42\n"
+  end
+
 end
