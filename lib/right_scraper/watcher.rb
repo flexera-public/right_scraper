@@ -71,35 +71,46 @@ module RightScale
     # === Return
     # res(RightScale::WatchStatus):: Outcome of watch, see RightScale::WatchStatus
     def launch_and_watch(cmd, dest_dir)
-      status = nil
+      exit_code = nil
       output = ''
 
       # Run external process and monitor it in a new thread
-      r = IO.popen(cmd)
-      Thread.new do
-        Process.wait(r.pid)
-        status = $?
+      io = IO.popen(cmd)
+      reader = Thread.new do
+        o = io.read
+        until o == ''
+          output += o
+          o = io.read
+        end
+        Process.wait(io.pid)
+        exit_code = $?.exitstatus
       end
 
       # Loop until process is done or times out or takes too much space
       timed_out = repeat(1, @max_seconds) do
-        output += r.readlines.join
         if @max_bytes < 0
-          status
+          exit_code
         else
           size = 0
-          Find.find(dest_dir) { |f| size += File.stat(f).size unless File.directory?(f) } if File.directory?(dest_dir)
-          size > @max_bytes || status
+          Find.find(dest_dir) { |f| size += File.stat(f).size rescue 0 if File.file?(f) } if File.directory?(dest_dir)
+          size > @max_bytes || exit_code
         end
       end
 
       # Cleanup and report status
-      output += r.readlines.join
-      Process.kill('TERM', r.pid) unless status
-      r.close
-      s = status ? :success : (timed_out ? :timeout : :size_exceeded)
-      exit_code = status && status.exitstatus || -1
-      res = WatchStatus.new(s, exit_code, output)
+      # Note: We need to store the exit status before we kill the underlying process so that
+      # if it finished in the mean time we still report -1 as exit code
+      if exit_code
+        exit_status = exit_code
+        outcome = :success
+      else
+        exit_status = -1
+        outcome = (timed_out ? :timeout : :size_exceeded)
+        Process.kill('INT', io.pid)
+      end
+      reader.join
+      io.close
+      res = WatchStatus.new(outcome, exit_status, output)
     end
 
     protected

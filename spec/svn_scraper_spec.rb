@@ -66,10 +66,12 @@ describe RightScale::SvnScraper do
     end
 
     before(:each) do
+	  file_prefix = 'file://'
+	  file_prefix += '/' if RUBY_PLATFORM =~ /mswin/
       @scraper = RightScale::SvnScraper.new(@repo_path, max_bytes=1024**2, max_seconds=20)      
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
-                                               :url          => "file://#{@svn_repo_path}")
+                                               :url          => "#{file_prefix}#{@svn_repo_path}")
     end
     
     after(:all) do
