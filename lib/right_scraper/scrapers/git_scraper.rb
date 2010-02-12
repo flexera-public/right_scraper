@@ -90,15 +90,15 @@ module RightScale
               if is_tag && is_branch
                 @errors << 'Repository tag ambiguous: could be git tag or git branch'
               elsif is_branch
-                res += `git branch #{@repo.tag} origin/#{@repo.tag} 2>&1`
-                @errors << res if $? != 0
+                output = `git branch #{@repo.tag} origin/#{@repo.tag} 2>&1`
+                @errors << output if $? != 0
               elsif !is_tag # Not a branch nor a tag, SHA ref? fetch everything so we have all SHAs
-                res += `#{ssh_cmd} git fetch origin master --depth #{2**31 - 1} 2>&1`
-                @errors << res if $? != 0
+                output = `#{ssh_cmd} git fetch origin master --depth #{2**31 - 1} 2>&1`
+                @errors << output if $? != 0
               end
               if succeeded?
-                res += `git checkout #{@repo.tag} 2>&1`
-                @errors << res if $? != 0
+                output = `git checkout #{@repo.tag} 2>&1`
+                @errors << output if $? != 0
               end
             end
           end
