@@ -57,6 +57,7 @@ module RightScale
     # repo(Hash|RightScale::Repository):: Repository to be scraped
     # Note: repo can either be a Hash or a RightScale::Repo instance.
     # See the RightScale::Repo class for valid Hash keys.
+    # incremental(FalseClass|TrueClass):: Whether scrape should be incremental if possible (true by default)
     #
     # === Block
     # If a block is given, it will be called back with progress information
@@ -71,12 +72,12 @@ module RightScale
     #
     # === Raise
     # 'Invalid repository type':: If repository type is not known
-    def scrape(repo, &callback)
+    def scrape(repo, incremental=true, &callback)
       repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
       repo.repo_type = repo.repo_type.to_s # In case it's a symbol
       raise "Invalid repository type" unless SCRAPERS.include?(repo.repo_type)
       @scraper = @scrapers[repo.repo_type] ||= SCRAPERS[repo.repo_type].new(@scrape_dir, @max_bytes, @max_seconds)
-      @scraper.scrape(repo, &callback)
+      @scraper.scrape(repo, incremental, &callback)
       @last_repo_dir = @scraper.current_repo_dir
       @scraper.succeeded?
     end
