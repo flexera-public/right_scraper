@@ -56,7 +56,7 @@ module RightScale
     # Each scraper implementation should override scrape_imp which is called
     # after this method initializes all the scraper attributes properly.
     # See RightScale::Scraper#scrape
-    def scrape(repo, incremental, &callback)
+    def scrape(repo, incremental=true, &callback)
       @repo             = repo
       @callback         = callback
       @current_repo_dir = ScraperBase.repo_dir(root_dir, repo)

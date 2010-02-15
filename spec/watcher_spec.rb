@@ -45,7 +45,7 @@ describe RightScale::Watcher do
 
   it 'should report timeouts' do
     watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=2)
-    status = watcher.launch_and_watch('ruby -e "STDOUT.sync = true; puts 42; sleep 5"', @dest_dir)
+    status = watcher.launch_and_watch('ruby -e "STDOUT.sync = true; puts 42; sleep 5" 2>&1', @dest_dir)
     status.status.should == :timeout
     status.exit_code.should == -1
     status.output.should == "42\n"

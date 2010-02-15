@@ -24,6 +24,7 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 require 'scraper_base'
 require 'repository'
+require 'watcher'
 require File.join('scrapers', 'svn_scraper')
 
 describe RightScale::SvnScraper do

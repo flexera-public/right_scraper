@@ -182,7 +182,7 @@ module RightScale
 		# "-o StrictHostKeyChecking=no" in the GIT_SSH executable, but it is
 		# still a mystery why this doesn't work properly in windows.
 		# so make a ssh call which creates the proper "known_hosts" file.
-		system("ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit")
+		system("ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit 2>&1")
 	  end
       return ''
     end

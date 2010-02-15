@@ -22,11 +22,7 @@
 #++
 
 require 'find'
-if RUBY_PLATFORM =~ /mswin/
-  require File.join(File.dirname(__FILE__), 'win32', 'process_monitor')
-else
-  require File.join(File.dirname(__FILE__), 'linux', 'process_monitor')
-end
+require 'win32/process'
 
 module RightScale
 
@@ -77,13 +73,18 @@ module RightScale
     # res(RightScale::WatchStatus):: Outcome of watch, see RightScale::WatchStatus
     def launch_and_watch(cmd, dest_dir)
       exit_code = nil
-      output    = ''
-      monitor   = ProcessMonitor.new
+      output = ''
 
-      # Run external process and monitor it in a new thread, platform specific
-      pid = monitor.spawn(cmd) do |data|
-        output << data[:output] if data.include?(:output)
-        exit_code = data[:exit_code] if data.include?(:exit_code)
+      # Run external process and monitor it in a new thread
+      io = IO.popen(cmd)
+      reader = Thread.new do
+        o = io.read
+        until o == ''
+          output += o
+          o = io.read
+        end
+        Process.wait(io.pid)
+        exit_code = $?.exitstatus
       end
 
       # Loop until process is done or times out or takes too much space
@@ -106,12 +107,10 @@ module RightScale
       else
         exit_status = -1
         outcome = (timed_out ? :timeout : :size_exceeded)
-        Process.kill('INT', pid)
+        Process.kill('INT', io.pid)
       end
-
-      # Cleanup any open handle etc., platform specific
-      monitor.cleanup
-
+      reader.join
+      io.close
       res = WatchStatus.new(outcome, exit_status, output)
     end
 
