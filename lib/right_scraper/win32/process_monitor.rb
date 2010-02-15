@@ -21,137 +21,71 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'find'
 require 'win32/process'
 
 module RightScale
 
-  # Encapsulate information returned by watcher
-  class WatchStatus
+  # Windows specific watcher implementation
+  class ProcessMonitor
 
-    # Potential outcome of watcher
-    VALID_STATUSES = [ :success, :timeout, :size_exceeded ]
+    include Windows::Process
+    include Windows::Synchronize
+    include Windows::Handle
 
-    attr_reader :status    # One of VALID_STATUSES
-    attr_reader :exit_code # Watched process exit code or -1 if process was killed
-    attr_reader :output    # Watched process combined output
-
-    # Initialize attibutes
-    def initialize(status, exit_code, output)
-      @status    = status
-      @exit_code = exit_code
-      @output    = output
-    end
-
-  end
-
-  class Watcher
-
-    attr_reader :max_bytes   # Maximum size in bytes of watched directory before process is killed
-    attr_reader :max_seconds # Maximum number of elapased seconds before external process is killed
-
-    # Initialize attributes
-    #
-    # max_bytes(Integer):: Maximum size in bytes of watched directory before process is killed
-    # max_seconds(Integer):: Maximum number of elapased seconds before external process is killed
-    def initialize(max_bytes, max_seconds)
-      @max_bytes   = max_bytes
-      @max_seconds = max_seconds
-    end
-
-    # Launch given command as external process and watch given directory
-    # so it doesn't exceed given size. Also watch time elapsed and kill
-    # external process if either the size of the watched directory exceed
-    # @max_bytes or the time elapsed exceeds @max_seconds.
-    # Note: This method is not thread-safe, instantiate one watcher per thread
+    # Spawn given process and callback given block with output and exit code
     #
     # === Parameters
-    # cmd(String):: Command line to be launched
-    # dest_dir(String):: Watched directory
+    # cmd(String):: Process command line (including arguments)
+    #
+    # === Block
+    # Given block should take one argument which is a hash which may contain
+    # the keys :output and :exit_code. The value associated with :output is a chunk
+    # of output while the value associated with :exit_code is the process exit code
+    # This block won't be called anymore once the :exit_code key has associated value
     #
     # === Return
-    # res(RightScale::WatchStatus):: Outcome of watch, see RightScale::WatchStatus
-    def launch_and_watch(cmd, dest_dir)
-      exit_code = nil
-      output = ''
-
+    # pid(Integer):: Spawned process pid
+    def spawn(cmd)
       # Run external process and monitor it in a new thread
-      io = IO.popen(cmd)
-      reader = Thread.new do
-        o = io.read
-        until o == ''
-          output += o
-          o = io.read
-        end
-        Process.wait(io.pid)
-        exit_code = $?.exitstatus
-      end
-
-      # Loop until process is done or times out or takes too much space
-      timed_out = repeat(1, @max_seconds) do
-        if @max_bytes < 0
-          exit_code
-        else
-          size = 0
-          Find.find(dest_dir) { |f| size += File.stat(f).size rescue 0 if File.file?(f) } if File.directory?(dest_dir)
-          size > @max_bytes || exit_code
-        end
-      end
-
-      # Cleanup and report status
-      # Note: We need to store the exit status before we kill the underlying process so that
-      # if it finished in the mean time we still report -1 as exit code
-      if exit_code
-        exit_status = exit_code
-        outcome = :success
+      @io = IO.popen(cmd)
+      @handle = OpenProcess(PROCESS_ALL_ACCESS, 0, @io.pid)
+      case @handle
+      when INVALID_HANDLE_VALUE
+        # Something bad happened
+        yield(:exit_code => 1)
+      when 0
+        # Process already finished
+        yield(:exit_code => 0)
       else
-        exit_status = -1
-        outcome = (timed_out ? :timeout : :size_exceeded)
-        Process.kill('INT', io.pid)
+        # Start output read
+        @reader = Thread.new do
+          o = @io.read
+          until o == ''
+            yield(:output => o)
+            o = @io.read
+          end
+          status = WaitForSingleObject(@handle, INFINITE)
+          exit_code = [0].pack('L')
+          if GetExitCodeProcess(@handle, exit_code)
+            exit_code = exit_code.unpack('L').first
+          else
+            exit_code = 1
+          end
+          yield(:exit_code => exit_code)
+        end
       end
-      reader.join
-      io.close
-      res = WatchStatus.new(outcome, exit_status, output)
+      @io.pid
     end
 
-    protected
-
-    # Run given block in thread and time execution
-    #
-    # === Block
-    # Block whose execution is timed
+    # Cleanup underlying handle
     #
     # === Return
-    # elapsed(Integer):: Number of seconds elapsed while running given block
-    def timed
-      start_at = Time.now
-      yield
-      elapsed = Time.now - start_at
-    end
-
-    # Repeat given block at regular intervals
-    #
-    # === Parameters
-    # seconds(Integer):: Number of seconds between executions
-    # timeout(Integer):: Timeout after which execution stops and method returns
-    #
-    # === Block
-    # Given block gets executed every period seconds until timeout is reached
-    # *or* block returns true
-    #
-    # === Return
-    # res(TrueClass|FalseClass):: true if timeout is reached, false otherwise.
-    def repeat(period, timeout)
-      end_at = Time.now + timeout
-      while res = (timeout < 0 || Time.now < end_at)
-        exit = false
-        elapsed = timed { exit = yield }
-        break if exit
-        sleep(period - elapsed) if elapsed < period
-      end
-      !res
+    # true:: Always return true
+    def cleanup
+      @reader.join
+      CloseHandle(@handle) if @handle > 0
+      @io.close
     end
 
   end
-
 end
