@@ -60,7 +60,15 @@ module RightScale
       end
       repo
     end
-           
+
+    # Unique representation for this repo, should resolve to the same string
+    # for repos that should be cloned in same directory
+    #
+    # === Returns
+    # res(String):: Unique representation for this repo
+    def to_s
+      res = "#{repo_type} #{url}:#{tag}"
+    end
   end
   
 end
