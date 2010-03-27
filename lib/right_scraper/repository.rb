@@ -39,6 +39,10 @@ module RightScale
     # Not used for 'download' repositories
     attr_accessor :tag
     
+    # (Array) List of directories containing cookbooks in repository
+    # Root directory is used if this is nil or empty
+    attr_accessor :cookbooks_path
+    
     # (String) Optional, SVN username or git private SSH key content
     attr_accessor :first_credential
     

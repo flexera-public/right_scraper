@@ -82,7 +82,7 @@ module RightScale
 
       # Run external process and monitor it in a new thread, platform specific
       pid = monitor.spawn(cmd) do |data|
-        output << data[:output] if data.include?(:output)
+        output << data[:output] if data[:output]
         exit_code = data[:exit_code] if data.include?(:exit_code)
       end
 

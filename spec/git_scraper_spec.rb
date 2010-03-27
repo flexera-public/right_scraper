@@ -75,6 +75,7 @@ describe RightScale::GitScraper do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :git,
                                                :url          => @origin_path)
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
     end
     
     after(:all) do
@@ -87,7 +88,7 @@ describe RightScale::GitScraper do
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.current_repo_dir.should be_true)
+      File.directory?(@scraper.current_repo_dir).should be_true
       extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ]).should == @repo_content
     end
     
@@ -100,7 +101,7 @@ describe RightScale::GitScraper do
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.current_repo_dir.should be_true)
+      File.directory?(@scraper.current_repo_dir).should be_true
       extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ]).should == @repo_content
     end
 

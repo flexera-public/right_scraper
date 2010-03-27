@@ -37,7 +37,9 @@ describe RightScale::SvnScraper do
   def setup_svn_repo
     @svn_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__svn_repo'))
     @repo_path = File.join(File.dirname(__FILE__), '__repo')
-    @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] } ]
+    @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] },
+                               { 'folder2' => [ { 'folder3' => [ 'file4' ] },
+                                                { 'folder5' => [ 'file6' ] } ] } ]
     FileUtils.rm_rf(@svn_repo_path)
     res, status = exec("svnadmin create \"#{@svn_repo_path}\"")
     raise "Failed to initialize SVN repository: #{res}" unless status.success?
@@ -73,6 +75,7 @@ describe RightScale::SvnScraper do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
                                                :url          => "#{file_prefix}#{@svn_repo_path}")
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
     end
     
     after(:all) do
@@ -85,7 +88,7 @@ describe RightScale::SvnScraper do
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.current_repo_dir.should be_true)
+      File.directory?(@scraper.current_repo_dir).should be_true
       extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
     end
     
@@ -99,8 +102,34 @@ describe RightScale::SvnScraper do
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.current_repo_dir.should be_true)
+      File.directory?(@scraper.current_repo_dir).should be_true
       extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
+    end
+
+    it 'should only scrape cookbooks directories' do
+      messages = []
+      @repo.cookbooks_path = [ 'folder1', File.join('folder2', 'folder3') ]
+      @scraper.scrape(@repo) { |m, progress| messages << m if progress }
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+      @scraper.succeeded?.should be_true
+      messages.size.should == 1
+      File.directory?(@scraper.current_repo_dir).should be_true
+      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
+    end
+
+    it 'should only scrape cookbooks directories incrementally' do
+      pending "File URLs comparison on Windows is tricky" if RUBY_PLATFORM=~/mswin/
+      @repo.cookbooks_path = [ 'folder1', File.join('folder2', 'folder3') ]
+      @scraper.scrape(@repo)
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+      @scraper.incremental_update?.should be_true
+      messages = []
+      @scraper.scrape(@repo) { |m, progress| messages << m if progress }
+      puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+      @scraper.succeeded?.should be_true
+      messages.size.should == 1
+      File.directory?(@scraper.current_repo_dir).should be_true
+      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
     end
 
   end

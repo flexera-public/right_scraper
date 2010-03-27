@@ -70,6 +70,7 @@ describe RightScale::DownloadScraper do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
     end
 
     after(:all) do
@@ -82,7 +83,7 @@ describe RightScale::DownloadScraper do
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
-      File.directory?(@scraper.current_repo_dir.should be_true)
+      File.directory?(@scraper.current_repo_dir).should be_true
       extract_file_layout(@scraper.current_repo_dir).should == @repo_content
     end
 

@@ -33,10 +33,24 @@ module RightScale
     # false:: Otherwise
     def incremental_update?
       return false unless File.directory?(@current_repo_dir)
-      Dir.chdir(@current_repo_dir) do
-        info = `svn info`
-        $?.success? && info =~ (/^URL: (.*)$/) && $1 == @repo.url
+      inc = false
+      cookbooks_path = repo.cookbooks_path || []
+      cookbooks_path = [ cookbooks_path ] unless cookbooks_path.is_a?(Array)
+      if cookbooks_path.empty?
+        Dir.chdir(@current_repo_dir) do
+          info = `svn info`
+          inc = $?.success? && info =~ (/^URL: (.*)$/) && $1 == @repo.url
+        end
+      else
+        cookbooks_path.each do |path|
+          Dir.chdir(File.join(@current_repo_dir, path)) do
+            info = `svn info`
+            inc = $?.success? && info =~ (/^URL: (.*)$/) && $1 == File.join(@repo.url, path)
+            break unless inc
+          end
+        end
       end
+      inc
     end
 
     # Scrape SVN repository, see RightScale::Scraper#scrape
@@ -47,27 +61,57 @@ module RightScale
       msg = @incremental ? "Updating " : "Checking out "
       msg += "SVN repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
+      cookbooks_path = repo.cookbooks_path || []
+      cookbooks_path = [ cookbooks_path ] unless cookbooks_path.is_a?(Array)
       if @incremental
         svn_cmd = "svn update --no-auth-cache --non-interactive --quiet" +
         (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
         (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
         ' 2>&1'
-        Dir.chdir(@current_repo_dir) do
-          res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
-          handle_watcher_result(res, 'SVN update', update=true)
+        if cookbooks_path.empty?
+          Dir.chdir(@current_repo_dir) do
+            res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+            handle_watcher_result(res, 'SVN update', update=true)
+          end
+        else
+          cookbooks_path.each do |path|
+            break unless succeeded?
+            full_path = File.join(@current_repo_dir, path)
+            Dir.chdir(full_path) do
+              res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+              handle_watcher_result(res, 'SVN update', update=true)
+            end
+          end
         end
       end
       if !@incremental && succeeded?
-        svn_cmd = "svn checkout \"#{@repo.url}\" \"#{@current_repo_dir}\" --no-auth-cache --non-interactive --quiet" +
-        (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
-        (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
-        (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
-        ' 2>&1'
-        res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
-        handle_watcher_result(res, 'SVN checkout', update=false)
+        if cookbooks_path.empty?
+          res = @watcher.launch_and_watch(svn_checkout_cmd, @current_repo_dir)
+          handle_watcher_result(res, 'SVN checkout', update=false)
+        else
+          cookbooks_path.each do |path|
+            break unless succeeded?
+            res = @watcher.launch_and_watch(svn_checkout_cmd(path), @current_repo_dir)
+            handle_watcher_result(res, 'SVN checkout', update=false)
+          end
+        end
       end
       true
     end
 
+    # SVN checkout command using current repo definition and given path into it
+    #
+    # === Parameters
+    # path(String):: Relative path inside repo that should be checked out
+    #
+    # === Return
+    # svn_cmd(String):: Corresponding SVN command line
+    def svn_checkout_cmd(path='')
+      svn_cmd = "svn checkout \"#{File.join(@repo.url, path)}\" \"#{File.join(@current_repo_dir, path)}\" --no-auth-cache --non-interactive --quiet" +
+      (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
+      (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
+      (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
+      ' 2>&1'
+    end
   end
 end
