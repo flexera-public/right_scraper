@@ -61,16 +61,18 @@ module RightScale
             if !is_tag && !is_branch
               current_sha = `git rev-parse HEAD`.chomp
               if current_sha == @repo.tag
-                @callback.call("Nothing to update: already using #{repo.tag}", is_step=false) if @callback
+                @callback.call("Nothing to update: already using #{@repo.tag}", is_step=false) if @callback
                 return true
+              else
+                @callback.call("Current HEAD (#{current_sha}) differs from #{@repo.tag}, falling back to cloning", is_step=false) if @callback                
               end
             end
             if is_tag && is_branch
               @errors << 'Repository tag ambiguous: could be git tag or git branch'
-            elsif !on_branch
+            elsif is_branch && !on_branch
               res = `git checkout #{@repo.tag} 2>&1`
               if $? != 0
-                @callback.call("Failed to checkout #{tag}: #{res}, falling back to cloning", is_step=false) if @callback
+                @callback.call("Failed to checkout #{@repo.tag}: #{res}, falling back to cloning", is_step=false) if @callback
                 FileUtils.rm_rf(@current_repo_dir)
                 @incremental = false
               end
