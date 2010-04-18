@@ -215,7 +215,7 @@ module RightScale
       if succeeded? && (!update || @incremental)
         is_tag = `git tag`.split("\n").include?(@repo.tag)
         is_branch = `git branch -r`.split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
-        on_branch = is_branch && !!(`git branch`.split("\n").include?("* #{@repo.tag}")
+        on_branch = is_branch && !!`git branch`.split("\n").include?("* #{@repo.tag}")
       end
       { :tag => is_tag, :branch => is_branch, :on_branch => on_branch }
     end
