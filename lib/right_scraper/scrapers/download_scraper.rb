@@ -37,7 +37,7 @@ module RightScale
       cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
       FileUtils.mkdir_p(@current_repo_dir)
       res = @watcher.launch_and_watch(cmd, @current_repo_dir)
-      handle_watcher_result(res, 'Download', update=false)
+      handle_watcher_result(res, 'Download')
       if succeeded?
         unzip_opt = case @repo.url[/\.(.*)$/]
           when 'bzip', 'bzip2', 'bz2' then 'j'

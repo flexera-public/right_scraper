@@ -117,12 +117,11 @@ module RightScale
     # === Parameters
     # res(RightScale::WatchResult):: Watcher status to be analyzed
     # msg_title(String):: Error message title in case of failure
-    # update(TrueClass|FalseClass):: Whether the process was launch to incrementally update the repo
     # ok_codes:: Successful process return codes, only 0 by default
     #
     # === Return
     # true:: Always return true
-    def handle_watcher_result(res, msg_title, update, ok_codes=[0])
+    def handle_watcher_result(res, msg_title, ok_codes=[0])
       if res.status == :timeout
         @errors << "#{msg_title} is taking more time than #{@watcher.max_seconds / 60} minutes, aborting..."
         FileUtils.rm_rf(@current_repo_dir)
@@ -130,7 +129,7 @@ module RightScale
         @errors << "#{msg_title} is taking more space than #{@watcher.max_bytes / 1048576} MB, aborting..."
         FileUtils.rm_rf(@current_repo_dir)
       elsif !ok_codes.include?(res.exit_code)
-        if update
+        if @incremental
           @callback.call("#{msg_title} failed: #{res.output}, reverting to non incremental update", is_step=false) if @callback
           FileUtils.rm_rf(@current_repo_dir)
           @incremental = false

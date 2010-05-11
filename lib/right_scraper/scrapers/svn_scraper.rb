@@ -71,7 +71,7 @@ module RightScale
         if cookbooks_path.empty?
           Dir.chdir(@current_repo_dir) do
             res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
-            handle_watcher_result(res, 'SVN update', update=true)
+            handle_watcher_result(res, 'SVN update')
           end
         else
           cookbooks_path.each do |path|
@@ -79,7 +79,7 @@ module RightScale
             full_path = File.join(@current_repo_dir, path)
             Dir.chdir(full_path) do
               res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
-              handle_watcher_result(res, 'SVN update', update=true)
+              handle_watcher_result(res, 'SVN update')
             end
           end
         end
@@ -87,12 +87,12 @@ module RightScale
       if !@incremental && succeeded?
         if cookbooks_path.empty?
           res = @watcher.launch_and_watch(svn_checkout_cmd, @current_repo_dir)
-          handle_watcher_result(res, 'SVN checkout', update=false)
+          handle_watcher_result(res, 'SVN checkout')
         else
           cookbooks_path.each do |path|
             break unless succeeded?
             res = @watcher.launch_and_watch(svn_checkout_cmd(path), @current_repo_dir)
-            handle_watcher_result(res, 'SVN checkout', update=false)
+            handle_watcher_result(res, 'SVN checkout')
           end
         end
       end
