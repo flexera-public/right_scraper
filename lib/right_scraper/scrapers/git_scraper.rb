@@ -52,8 +52,9 @@ module RightScale
       has_tag = !@repo.tag.nil? && !@repo.tag.empty?
 
       if @incremental
+        checkout = false
         Dir.chdir(@current_repo_dir) do
-          git_fetch(:depth => 1)
+          git_fetch(:depth => 1, :remote_tag => @repo.tag)
           if succeeded? && @incremental && has_tag
             analysis = analyze_repo_tag
             if succeeded?
@@ -75,12 +76,12 @@ module RightScale
                 end
               end
             end
-            if succeeded?
-              if checkout || is_branch && !on_branch
-                git_checkout(@repo.tag)
-              else # Pull latest commits on same branch
-                git_fetch(:merge => true, :remote_tag => @repo.tag)
-              end
+          end
+          if succeeded?
+            if checkout || is_branch && !on_branch
+              git_checkout(@repo.tag)
+            else # Pull latest commits on same branch
+              git_fetch(:depth => 1, :merge => true, :remote_tag => @repo.tag)
             end
           end
         end
@@ -212,11 +213,12 @@ module RightScale
     # true:: Always return true
     def git_fetch(opts={})
       depth   = opts[:depth] || 2**31 - 1 # Specify max to override depth of already cloned repo
-      remote  = opts[:remote_tag] || 'master'
+      remote  = opts[:remote_tag] 
+      remote  = 'master' if remote.nil? || remote.rstrip.empty?
       action  = (opts[:merge] ? 'pull' : 'fetch')
       git_cmd = "#{@ssh_cmd} git #{action} --tags --depth #{depth} origin #{remote} 2>&1"
       res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)
-      handle_watcher_result(res, "git #{action}", ok_codes=[0, 1]) # git fetch returns 1 when there is nothing to fetch
+      handle_watcher_result(res, "git #{action}")
     end
 
     # Does a git checkout to given tag
