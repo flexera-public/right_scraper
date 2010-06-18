@@ -107,7 +107,7 @@ module RightScale
     # === Return
     # succeeded(Boolean):: true if scrape finished with no error, false otherwise.
     def succeeded?
-      succeeded = @errors.nil? || @errors.size == 0
+      succeeded = errors.size == 0
     end
   end
 end
