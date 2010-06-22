@@ -28,9 +28,9 @@ module RightScale
   # Windows specific watcher implementation
   class ProcessMonitor
 
-    include Windows::Process
-    include Windows::Synchronize
-    include Windows::Handle
+    include ::Windows::Process
+    include ::Windows::Synchronize
+    include ::Windows::Handle
 
     # Spawn given process and callback given block with output and exit code
     #

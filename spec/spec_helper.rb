@@ -91,18 +91,19 @@ module RightScale
     # layout(Array):: Corresponding layout as used by 'create_file_layout'
     def extract_file_layout(path, ignore=[])
       return [] unless File.directory?(path)
-      layout = []
+      dirs = []
+      files = []
       ignore += [ '.', '..' ]
       Dir.foreach(path) do |f|
         next if ignore.include?(f)
         full_path = File.join(path, f)
         if File.directory?(full_path)
-          layout << { f => extract_file_layout(full_path, ignore) }
+          dirs << { f => extract_file_layout(full_path, ignore) }
         else
-          layout << f
+          files << f
         end
       end
-      layout   
+      dirs + files.sort
     end
            
  

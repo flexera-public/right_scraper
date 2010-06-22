@@ -37,9 +37,10 @@ describe RightScale::SvnScraper do
   def setup_svn_repo
     @svn_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__svn_repo'))
     @repo_path = File.join(File.dirname(__FILE__), '__repo')
-    @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] },
-                               { 'folder2' => [ { 'folder3' => [ 'file4' ] },
-                                                { 'folder5' => [ 'file6' ] } ] } ]
+    @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] },
+                      { 'folder2' => [ { 'folder3' => [ 'file4' ] },
+                                       { 'folder5' => [ 'file6' ] } ] },
+                      'file1' ]
     FileUtils.rm_rf(@svn_repo_path)
     res, status = exec("svnadmin create \"#{@svn_repo_path}\"")
     raise "Failed to initialize SVN repository: #{res}" unless status.success?

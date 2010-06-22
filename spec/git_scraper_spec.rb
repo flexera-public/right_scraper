@@ -37,7 +37,7 @@ describe RightScale::GitScraper do
   def setup_git_repo
     @origin_path = File.expand_path(File.join(File.dirname(__FILE__), '__origin'))
     @repo_path = File.join(File.dirname(__FILE__), '__repo')
-    @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] } ]
+    @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] }, 'file1' ]
     FileUtils.rm_rf(@origin_path)
     FileUtils.mkdir_p(@origin_path)
     Dir.chdir(@origin_path) do

@@ -40,7 +40,7 @@ describe RightScale::DownloadScraper do
   def setup_download_repo
     @download_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__download_repo'))
     @repo_path = File.join(File.dirname(__FILE__), '__repo')
-    @repo_content = [ 'file1', { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] } ]
+    @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] }, 'file1' ]
     FileUtils.rm_rf(@download_repo_path)
     create_file_layout(@download_repo_path, @repo_content)
     @download_file = File.expand_path(File.join(File.dirname(__FILE__), '__download_file.tar'))
