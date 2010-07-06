@@ -54,8 +54,7 @@ module RightScale
       if @incremental
         checkout = false
         Dir.chdir(@current_repo_dir) do
-          git_fetch(:depth => 1, :remote_tag => @repo.tag)
-          if succeeded? && @incremental && has_tag
+          if has_tag
             analysis = analyze_repo_tag
             if succeeded?
               is_tag = analysis[:tag]
@@ -69,23 +68,27 @@ module RightScale
                 if current_sha == @repo.tag
                   @callback.call("Nothing to update: already using #{@repo.tag}", is_step=false) if @callback
                   return true
-                else 
+                else
                   # Probably a SHA, retrieve all commits
                   git_fetch(:depth => 2**31 - 1)
                   checkout = true
                 end
               end
+              if succeeded?
+                if checkout
+                  git_checkout(@repo.tag)
+                else
+                  git_checkout(@repo.tag) if is_branch && !on_branch
+                  git_fetch(:depth => 1, :merge => true, :remote_tag => @repo.tag)
+                end
+              end
             end
-          end
-          if succeeded?
-            if checkout || is_branch && !on_branch
-              git_checkout(@repo.tag)
-            else # Pull latest commits on same branch
-              git_fetch(:depth => 1, :merge => true, :remote_tag => @repo.tag)
-            end
+          else
+            git_fetch(:depth => 1, :merge => true)
           end
         end
       end
+
       if !@incremental && succeeded?
         git_cmd = "#{@ssh_cmd} git clone --quiet --depth 1 \"#{@repo.url}\" \"#{@current_repo_dir}\" 2>&1"
         res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)

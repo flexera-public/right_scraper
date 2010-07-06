@@ -21,66 +21,32 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.join(File.dirname(__FILE__), 'spec_helper')
+require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_helper'))
 require 'scraper_base'
 require 'repository'
 require 'watcher'
 require File.join('scrapers', 'svn_scraper')
+require 'set'
 
 describe RightScale::SvnScraper do
-  
-  include RightScale::SpecHelpers
-  
-  # Create svn repository following given layout
-  # Update @repo_path with path to repository
-  # Delete any previously created repo
-  def setup_svn_repo
-    @svn_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__svn_repo'))
-    @repo_path = File.join(File.dirname(__FILE__), '__repo')
-    @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] },
-                      { 'folder2' => [ { 'folder3' => [ 'file4' ] },
-                                       { 'folder5' => [ 'file6' ] } ] },
-                      'file1' ]
-    FileUtils.rm_rf(@svn_repo_path)
-    res, status = exec("svnadmin create \"#{@svn_repo_path}\"")
-    raise "Failed to initialize SVN repository: #{res}" unless status.success?
-    FileUtils.rm_rf(@repo_path)
-    res, status = exec("svn checkout \"file:///#{@svn_repo_path}\" \"#{@repo_path}\"")
-    raise "Failed to checkout repository: #{res}" unless status.success?
-    create_file_layout(@repo_path, @repo_content)
-    Dir.chdir(@repo_path) do
-      res, status = exec("svn add *")
-      res, status = exec("svn commit --quiet -m \"Initial Commit\"") if status.success?
-      raise "Failed to setup repository: #{res}" unless status.success?
-    end
-  end
-
-  # Cleanup after ourselves
-  def delete_svn_repo
-    FileUtils.rm_rf(@svn_repo_path) if @svn_repo_path
-    @svn_repo_path = nil
-    FileUtils.rm_rf(@repo_path) if @repo_path
-    @repo_path = nil
-  end
 
   context 'given a SVN repository' do
 
-    before(:all) do
-      setup_svn_repo
-    end
-
     before(:each) do
-	  file_prefix = 'file://'
-	  file_prefix += '/' if RUBY_PLATFORM =~ /mswin/
-      @scraper = RightScale::SvnScraper.new(@repo_path, max_bytes=1024**2, max_seconds=20)      
+      @helper = RightScale::SvnScraperSpecHelper.new
+      @helper.setup_test_repo
+      @scrape_dir = File.expand_path(File.join(File.dirname(__FILE__), '__scrape'))
+      @scraper = RightScale::SvnScraper.new(@scrape_dir, max_bytes=1024**2, max_seconds=20)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
-                                               :url          => "#{file_prefix}#{@svn_repo_path}")
-      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
+                                               :url          => @helper.repo_url)
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@helper.repo_path, @repo))
     end
     
-    after(:all) do
-      delete_svn_repo
+    after(:each) do
+      @helper.delete_test_repo
+      FileUtils.rm_rf(@helper.svn_repo_path)
+      FileUtils.rm_rf(@scrape_dir)
     end
 
     it 'should scrape' do
@@ -90,7 +56,8 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+        Set.new(@helper.repo_content)
     end
     
     it 'should scrape incrementally' do
@@ -98,13 +65,16 @@ describe RightScale::SvnScraper do
       @scraper.scrape(@repo)
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.incremental_update?.should be_true
+      @helper.create_file_layout(@helper.repo_path, @helper.additional_content)
+      @helper.commit_content
       messages = []
       @scraper.scrape(@repo) { |m, progress| messages << m if progress }
       puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == @repo_content
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+        Set.new(@helper.repo_content + @helper.additional_content)
     end
 
     it 'should only scrape cookbooks directories' do
@@ -115,7 +85,7 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
+      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
     end
 
     it 'should only scrape cookbooks directories incrementally' do
@@ -130,9 +100,49 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
+      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
     end
 
+    context 'and a revision' do
+
+      before(:each) do
+        @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
+        @helper.commit_content
+        @rev_repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                                     :repo_type    => :svn,
+                                                     :url          => @helper.repo_url,
+                                                     :tag          => @helper.commit_id(1))
+      end
+
+      it 'should scrape a revision' do
+        messages = []
+        @scraper.scrape(@rev_repo) { |m, progress| messages << m if progress }
+        puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+        @scraper.succeeded?.should be_true
+        messages.size.should == 1
+        File.directory?(@scraper.current_repo_dir).should be_true
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+          Set.new(@helper.repo_content)
+      end
+
+      it 'should scrape a revision incrementally' do
+        @scraper.scrape(@rev_repo)
+        puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+        @scraper.incremental_update?.should be_true
+        @helper.create_file_layout(@helper.repo_path, @helper.additional_content)
+        @helper.commit_content
+        messages = []
+        @scraper.scrape(@rev_repo) { |m, progress| messages << m if progress }
+        puts "\n **ERRORS: #{@scraper.errors.join("\n")}\n" unless @scraper.succeeded?
+        @scraper.succeeded?.should be_true
+        messages.size.should == 1
+        @scraper.instance_variable_get(:@incremental).should == true
+        File.directory?(@scraper.current_repo_dir).should be_true
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+          Set.new(@helper.repo_content)
+      end
+
+    end
   end
 
 end
