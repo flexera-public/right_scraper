@@ -149,7 +149,7 @@ module RightScale
     # === Return
     # ssh(String):: Code to initialize GIT_SSH environment variable with path to SSH wrapper script
     def ssh_command
-      return win32_ssh_command if RUBY_PLATFORM=~/mswin/
+      return win32_ssh_command if is_windows?
       ssh_dir = File.join(@scrape_dir_path, '.ssh')
       FileUtils.mkdir_p(ssh_dir)
       key_content = @repo.first_credential
