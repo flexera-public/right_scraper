@@ -32,7 +32,10 @@ module RightScale
     #        incremental updates
     # false:: Otherwise
     def incremental_update?
-      return false unless File.directory?(@current_repo_dir)
+      # FIX: current version of msysgit crashes attempting "git pull" on 64-bit
+      # servers. we will avoid incremental for now in hopes of getting a fix for
+      # msysgit or else a native Windows implementation such as Git#
+      return false if (is_windows? || !File.directory?(@current_repo_dir))
       Dir.chdir(@current_repo_dir) do
         remote_url = `git config --get remote.origin.url`.chomp
         $?.success? && remote_url == @repo.url
@@ -259,6 +262,16 @@ module RightScale
         @errors << "Analysis of repository tag failed with: #{e.message}"
       end
       res = { :tag => is_tag, :branch => is_branch, :on_branch => on_branch }
+    end
+
+    private
+
+    # Check for windows.
+    #
+    # === Return
+    #
+    def is_windows?
+      return !!(RUBY_PLATFORM =~ /mswin/)
     end
 
   end
