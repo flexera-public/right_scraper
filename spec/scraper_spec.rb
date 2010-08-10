@@ -27,6 +27,7 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'scraper
 require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'scrapers', 'svn_scraper')
 require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'scrapers', 'download_scraper')
 require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'repository')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'repositories', 'mock_repository')
 require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'scraper')
 
 describe RightScale::Scraper do
@@ -43,7 +44,7 @@ describe RightScale::Scraper do
   end
   
   it 'should scrape' do
-    repo = RightScale::Repository.new
+    repo = RightScale::MockRepository.new
     repo.repo_type = :mock
     @mock_scraper.should_receive(:scrape).with(repo, true, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(true)
@@ -53,14 +54,14 @@ describe RightScale::Scraper do
   end
   
   it 'should scrape from a hash' do
-    @mock_scraper.should_receive(:scrape).with(RightScale::Repository, true, Proc).and_return(true)
+    @mock_scraper.should_receive(:scrape).with(RightScale::MockRepository, true, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(true)
     @mock_scraper.should_receive(:current_repo_dir).and_return('42')
     @scraper.scrape({:repo_type => :mock}) { }.should be_true
   end
   
   it 'should report failures' do
-    @mock_scraper.should_receive(:scrape).with(RightScale::Repository, true, Proc).and_return(true)
+    @mock_scraper.should_receive(:scrape).with(RightScale::MockRepository, true, Proc).and_return(true)
     @mock_scraper.should_receive(:succeeded?).and_return(false)
     @mock_scraper.should_receive(:current_repo_dir).and_return('42')
     @scraper.scrape({:repo_type => :mock}) { }.should be_false

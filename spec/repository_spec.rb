@@ -22,20 +22,20 @@
 #++
 
 require File.join(File.dirname(__FILE__), 'spec_helper')
-require 'repository'
+require File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper')
 
 describe RightScale::Repository do
 
   it 'should be initializable from a hash' do
     repo = RightScale::Repository.from_hash(:display_name      => 'display_name',
-                                            :repo_type         => 'repo_type',
+                                            :repo_type         => :mock,
                                             :url               => 'url',
                                             :tag               => 'tag',
                                             :first_credential  => 'first_credential',
                                             :second_credential => 'second_credential')
     repo.should be_kind_of(RightScale::Repository)
     repo.display_name.should      == 'display_name'
-    repo.repo_type.should         == 'repo_type'
+    repo.repo_type.should         == :mock
     repo.url.should               == 'url'
     repo.tag.should               == 'tag'
     repo.first_credential.should  == 'first_credential'

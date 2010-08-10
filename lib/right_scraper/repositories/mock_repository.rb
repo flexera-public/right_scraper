@@ -21,15 +21,34 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-# Explicitely list required files to make IDEs happy
-require 'fileutils'
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scraper_base')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'download_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'download_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'svn_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'git_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'watcher')
+module RightScale
+  # A "repository" that is just there for testing.
+  class MockRepository < Repository
+    def initialize
+      @repo_type = :mock
+    end
+    # (String) Type of the repository, here 'download'.
+    attr_accessor :repo_type
+
+    # (String) Optional, tag or branch of repository that should be downloaded
+    attr_accessor :tag
+    
+    # (String) Optional, username
+    attr_accessor :first_credential
+    
+    # (String) Optional, password
+    attr_accessor :second_credential
+
+    # Unique representation for this repo, should resolve to the same string
+    # for repos that should be cloned in same directory
+    #
+    # === Returns
+    # res(String):: Unique representation for this repo
+    def to_s
+      res = "mock #{url}:#{tag}"
+    end
+
+    # Add this repository to the list of available types.
+    @@types[:mock] = RightScale::MockRepository
+  end
+end

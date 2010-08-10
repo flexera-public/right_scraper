@@ -22,44 +22,19 @@
 #++
 
 module RightScale
-  # Description of remote repository that needs to be scraped.
-  class Repository
-    # (String) Human readable repository name used for progress reports
-    attr_accessor :display_name
-    
-    # (String) Type of the repository.  Currently one of 'git', 'svn'
-    # or 'download', implemented by the appropriate subclass.
+  # A "repository" that is just a file hanging off a web server
+  # somewhere.
+  class DownloadRepository < Repository
+    # (String) Type of the repository, here 'download'.
     def repo_type
-      raise NotImplementedError
+      :download
     end
-    
-    # (String) URL to repository (e.g 'git://github.com/rightscale/right_scraper.git')
-    attr_accessor :url
-    
-    # (Array) List of directories containing cookbooks in repository
-    # Root directory is used if this is nil or empty
-    attr_accessor :cookbooks_path
 
-    # (Hash) Lookup table from textual description of repository type
-    # ('git', 'svn' or 'download' currently) to the class that
-    # represents that repository.
-    @@types = {} unless class_variable_defined?(:@@types)
-
-    # Initialize repository from given hash
-    # Hash keys should correspond to attributes of this class
-    #
-    # === Parameters
-    # opts(Hash):: Hash to be converted into a RightScale::Repository instance
-    #
-    # === Return
-    # repo(RightScale::Repository):: Resulting repository instance
-    def self.from_hash(opts)
-      repo = @@types[opts[:repo_type]].new
-      opts.each do |k, v|
-        repo.__send__("#{k.to_s}=".to_sym, v) unless k == :repo_type
-      end
-      repo
-    end
+    # (String) Optional, username
+    attr_accessor :first_credential
+    
+    # (String) Optional, password
+    attr_accessor :second_credential
 
     # Unique representation for this repo, should resolve to the same string
     # for repos that should be cloned in same directory
@@ -67,8 +42,10 @@ module RightScale
     # === Returns
     # res(String):: Unique representation for this repo
     def to_s
-      res = "#{repo_type} #{url}"
+      res = "download #{url}"
     end
+
+    # Add this repository to the list of available types.
+    @@types[:download] = RightScale::DownloadRepository
   end
-  
 end
