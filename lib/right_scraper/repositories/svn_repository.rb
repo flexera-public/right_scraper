@@ -47,6 +47,12 @@ module RightScale
       res = "svn #{url}:#{tag}"
     end
 
+    # (ScraperBase class) Appropriate class for scraping this sort of
+    # repository.
+    def scraper
+      RightScale::SvnScraper
+    end
+
     # Add this repository to the list of available types.
     @@types[:svn] = RightScale::SvnRepository
   end

@@ -22,12 +22,6 @@
 #++
 
 module RightScale
-
-  # Hash of repository types associated with corresponding scraper class
-  SCRAPERS = { 'git'      => RightScale::GitScraper,
-               'svn'      => RightScale::SvnScraper,
-               'download' => RightScale::DownloadScraper }
-
   # Library main entry point. Instantiate this class and call the scrape
   # method to download or update a remote repository to the local disk.
   class Scraper
@@ -74,9 +68,9 @@ module RightScale
     # 'Invalid repository type':: If repository type is not known
     def scrape(repo, incremental=true, &callback)
       repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
-      repo.repo_type = repo.repo_type.to_s # In case it's a symbol
-      raise "Invalid repository type" unless SCRAPERS.include?(repo.repo_type)
-      @scraper = @scrapers[repo.repo_type] ||= SCRAPERS[repo.repo_type].new(@scrape_dir, @max_bytes, @max_seconds)
+      scraper_class = repo.scraper
+      @scraper = @scrapers[scraper_class] ||=
+        scraper_class.new(@scrape_dir, @max_bytes, @max_seconds)
       @scraper.scrape(repo, incremental, &callback)
       @last_repo_dir = @scraper.current_repo_dir
       @scraper.succeeded?

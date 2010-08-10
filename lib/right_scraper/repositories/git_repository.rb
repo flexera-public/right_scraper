@@ -44,6 +44,12 @@ module RightScale
       res = "git #{url}:#{tag}"
     end
 
+    # (ScraperBase class) Appropriate class for scraping this sort of
+    # repository.
+    def scraper
+      RightScale::GitScraper
+    end
+
     # Add this repository to the list of available types.
     @@types[:git] = RightScale::GitRepository
   end

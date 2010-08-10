@@ -25,8 +25,8 @@ require 'digest/md5'
 
 module RightScale
 
-  # Base class for all scrapers.
-  # Actual scraper implementation should override scrape_imp and optionally incremental_update?
+  # Base class for all scrapers.  Actual scraper implementation should
+  # override scrape_imp and optionally incremental_update?
   class ScraperBase
 
     # (String) Path to directory containing all scraped repositories
@@ -41,7 +41,8 @@ module RightScale
     # (String) Path to local directory where repository was downloaded
     attr_reader :current_repo_dir
 
-    # Set path to directory containing all scraped repos as well as space and time upperbounds
+    # Set path to directory containing all scraped repos as well as
+    # space and time upperbounds
     #
     # === Parameters
     # root_dir(String):: Path to scraped repos parent directory
@@ -53,9 +54,9 @@ module RightScale
     end
 
     # Common implementation of scrape method for all repository types.
-    # Each scraper implementation should override scrape_imp which is called
-    # after this method initializes all the scraper attributes properly.
-    # See RightScale::Scraper#scrape
+    # Each scraper implementation should override scrape_imp which is
+    # called after this method initializes all the scraper attributes
+    # properly.  See RightScale::Scraper#scrape
     def scrape(repo, incremental=true, &callback)
       @repo             = repo
       @callback         = callback

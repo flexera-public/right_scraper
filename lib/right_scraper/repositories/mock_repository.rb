@@ -48,6 +48,16 @@ module RightScale
       res = "mock #{url}:#{tag}"
     end
 
+    # (ScraperBase class) Appropriate class for scraping this sort of
+    # repository.
+    def scraper
+      @@scraper || raise("Scraper for mocks isn't defined yet")
+    end
+
+    def self.scraper=(scraper)
+      @@scraper = scraper
+    end
+
     # Add this repository to the list of available types.
     @@types[:mock] = RightScale::MockRepository
   end

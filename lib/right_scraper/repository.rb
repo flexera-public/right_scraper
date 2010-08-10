@@ -28,8 +28,15 @@ module RightScale
     attr_accessor :display_name
     
     # (String) Type of the repository.  Currently one of 'git', 'svn'
-    # or 'download', implemented by the appropriate subclass.
+    # or 'download', implemented by the appropriate subclass.  Needs
+    # to be overridden by subclasses.
     def repo_type
+      raise NotImplementedError
+    end
+
+    # (ScraperBase class) Appropriate class for scraping this sort of
+    # repository.  Needs to be overridden appropriately by subclasses.
+    def scraper
       raise NotImplementedError
     end
     

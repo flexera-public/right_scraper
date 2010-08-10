@@ -45,6 +45,12 @@ module RightScale
       res = "download #{url}"
     end
 
+    # (ScraperBase class) Appropriate class for scraping this sort of
+    # repository.
+    def scraper
+      RightScale::DownloadScraper
+    end
+
     # Add this repository to the list of available types.
     @@types[:download] = RightScale::DownloadRepository
   end

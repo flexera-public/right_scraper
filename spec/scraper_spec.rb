@@ -36,11 +36,11 @@ describe RightScale::Scraper do
     @scraper = RightScale::Scraper.new('/tmp')
     @mock_scraper = flexmock('MockScraper')
     mock_scraper_klass = flexmock('MockScraperClass', :new => @mock_scraper)
-    RightScale::SCRAPERS.merge!('mock' => mock_scraper_klass)
+    RightScale::MockRepository.scraper = mock_scraper_klass
   end
   
   after(:all) do
-    RightScale::SCRAPERS.delete('mock')
+    RightScale::MockRepository.scraper = nil
   end
   
   it 'should scrape' do
