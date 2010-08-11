@@ -1,3 +1,6 @@
 .idea
 pkg
 tags
+.emacs-project
+config/environment.rb
+TAGS

@@ -75,3 +75,9 @@ task :reinstall do
    sh "rake install"
 end
 
+# == Emacs integration == #
+# This requires exuberant ctags.
+desc "Rebuild TAGS file"
+task :tags do
+  sh "ctags -a -e -f TAGS --tag-relative -R lib"
+end
