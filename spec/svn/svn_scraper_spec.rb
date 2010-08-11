@@ -21,11 +21,9 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_helper'))
-require 'scraper_base'
-require 'repository'
-require 'watcher'
-require File.join('scrapers', 'svn_scraper')
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'set'
 
 describe RightScale::SvnScraper do

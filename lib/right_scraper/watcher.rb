@@ -23,9 +23,9 @@
 
 require 'find'
 if RUBY_PLATFORM =~ /mswin/
-  require File.join(File.dirname(__FILE__), 'win32', 'process_monitor')
+  require File.expand_path(File.join(File.dirname(__FILE__), 'win32', 'process_monitor'))
 else
-  require File.join(File.dirname(__FILE__), 'linux', 'process_monitor')
+  require File.expand_path(File.join(File.dirname(__FILE__), 'linux', 'process_monitor'))
 end
 
 module RightScale

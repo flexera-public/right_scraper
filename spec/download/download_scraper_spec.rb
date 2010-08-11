@@ -25,10 +25,7 @@
 unless RUBY_PLATFORM=~/mswin/
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
-require 'scraper_base'
-require 'repository'
-require 'watcher'
-require File.join('scrapers', 'download_scraper')
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 
 describe RightScale::DownloadScraper do
 

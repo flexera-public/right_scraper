@@ -22,10 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'git_scraper_spec_helper'))
-require 'scraper_base'
-require 'repository'
-require 'watcher'
-require File.join('scrapers', 'git_scraper')
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'set'
 
 describe RightScale::GitScraper do

@@ -21,8 +21,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.join(File.dirname(__FILE__), 'spec_helper')
-require 'watcher'
+require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'watcher'))
 
 describe RightScale::Watcher do
 

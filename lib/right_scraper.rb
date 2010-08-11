@@ -23,13 +23,13 @@
 
 # Explicitely list required files to make IDEs happy
 require 'fileutils'
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scraper_base')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'download_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn_scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'download_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'svn_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'git_repository')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'scraper')
-require File.join(File.dirname(__FILE__), 'right_scraper', 'watcher')
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scraper_base'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'download_scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git_scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn_scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'download_repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'svn_repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'git_repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'watcher'))
