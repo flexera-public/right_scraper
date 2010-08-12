@@ -32,7 +32,7 @@ spec = Gem::Specification.new do |spec|
   spec.has_rdoc = true
   spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
   spec.extra_rdoc_files = ["README.rdoc"]
-  spec.required_ruby_version = '>= 1.8.6'
+  spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
   spec.require_path = 'lib'
 

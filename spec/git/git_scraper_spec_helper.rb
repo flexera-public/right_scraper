@@ -28,16 +28,19 @@ module RightScale
   # Git implementation of scraper spec helper
   # See parent class for methods headers comments
   class GitScraperSpecHelper < ScraperSpecHelperBase
-
-    def setup_test_repo
-      FileUtils.rm_rf(repo_path)
-      FileUtils.mkdir_p(repo_path)
+    def initialize
+      super()
+      FileUtils.mkdir(scraper_path)
       Dir.chdir(repo_path) do
         res, status = exec('git init')
-        raise "Failed to initialize bare git repository: #{res}" unless status.success?
+        raise "Failed to initialize git repository: #{res}" unless status.success?
       end
       create_cookbook(repo_path, repo_content)
       commit_content(repo_path)
+    end
+
+    def scraper_path
+      File.join(@tmpdir, "scraper")
     end
 
     def commit_content(commit_message='commit')

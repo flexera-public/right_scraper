@@ -38,12 +38,12 @@ describe RightScale::NewDownloadScraper do
   # Update @repo_path with path to repository
   # Delete any previously created repo
   def setup_download_repo
-    @download_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__download_repo'))
-    @repo_path = File.join(File.dirname(__FILE__), '__repo')
+    @tmpdir = Dir.mktmpdir
+    @download_repo_path = File.join(@tmpdir, "download")
+    @repo_path = File.join(@tmpdir, "repo")
     @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] }, 'file1' ]
-    FileUtils.rm_rf(@download_repo_path)
     create_cookbook(@download_repo_path, @repo_content)
-    @download_file = File.expand_path(File.join(File.dirname(__FILE__), '__download_file.tar'))
+    @download_file = File.join(@tmpdir, "file.tar")
     Dir.chdir(@download_repo_path) do
       res, status = exec("tar cf \"#{@download_file}\" *")
       raise "Failed to create tarball: #{res}" unless status.success?
@@ -52,11 +52,7 @@ describe RightScale::NewDownloadScraper do
 
   # Cleanup after ourselves
   def delete_download_repo
-    FileUtils.rm_rf(@download_repo_path) if @download_repo_path
-    @download_repo_path = nil
-    FileUtils.rm_rf(@repo_path) if @repo_path
-    @repo_path = nil
-    File.delete(@download_file) if File.exist?(@download_file)
+    FileUtils.remove_entry_secure @tmpdir
   end
 
   TEST_REMOTE=false

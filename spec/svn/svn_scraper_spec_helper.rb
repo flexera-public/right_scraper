@@ -30,7 +30,11 @@ module RightScale
   class SvnScraperSpecHelper < ScraperSpecHelperBase
 
     def svn_repo_path
-      svn_repo_path = File.expand_path(File.join(File.dirname(__FILE__), '__svn_repo'))
+      File.join(@tmpdir, "svn")
+    end
+
+    def scraper_path
+      File.join(@tmpdir, "scraper")
     end
 
     def repo_url
@@ -39,15 +43,15 @@ module RightScale
       url = "#{file_prefix}#{svn_repo_path}"
     end
 
-    def setup_test_repo
-      FileUtils.rm_rf(repo_path)
-      FileUtils.mkdir_p(repo_path)
-      FileUtils.rm_rf(svn_repo_path)
+    def initialize
+      super()
+      FileUtils.mkdir(svn_repo_path)
+      FileUtils.mkdir(scraper_path)
       res, status = exec("svnadmin create \"#{svn_repo_path}\"")
       raise "Failed to initialize SVN repository: #{res}" unless status.success?
       res, status = exec("svn checkout \"#{repo_url}\" \"#{repo_path}\"")
       raise "Failed to checkout repository: #{res}" unless status.success?
-      create_file_layout(repo_path, repo_content)
+      create_cookbook(repo_path, repo_content)
       commit_content
     end
 

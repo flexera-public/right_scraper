@@ -31,19 +31,15 @@ describe RightScale::GitScraper do
 
     before(:each) do
       @helper = RightScale::GitScraperSpecHelper.new
-      @helper.setup_test_repo
-      @scrape_dir = File.expand_path(File.join(File.dirname(__FILE__), '__scrape'))
-      @scraper = RightScale::GitScraper.new(@scrape_dir, max_bytes=1024**2, max_seconds=20)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :git,
                                                :url          => @helper.repo_path)
-      @current_repo_dir = RightScale::ScraperBase.repo_dir(@scrape_dir, @repo)
-      FileUtils.rm_rf(@current_repo_dir)
+      @scraper = RightScale::GitScraper.new(@helper.scraper_path, max_bytes=1024**2, max_seconds=20)
+      @current_repo_dir = RightScale::ScraperBase.repo_dir(@helper.scraper_path, @repo)
     end
     
     after(:each) do
-      @helper.delete_test_repo
-      FileUtils.rm_rf(@scrape_dir)
+      @helper.close
     end
 
     it 'should scrape the master branch' do

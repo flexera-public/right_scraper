@@ -22,6 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
+require 'tmpdir'
 
 module RightScale
 
@@ -32,12 +33,21 @@ module RightScale
 
     include SpecHelpers
 
+    def initialize
+      @tmpdir = Dir.mktmpdir
+      FileUtils.mkdir(repo_path)
+    end
+
+    def close
+      FileUtils.remove_entry_secure @tmpdir
+    end
+
     # Path to test repository
     #
     # === Return
     # repo_path(String):: Path to test repository
     def repo_path
-      repo_path = File.join(File.dirname(__FILE__), '__repo')
+      File.join(@tmpdir, "repository")
     end
 
     # Default test repo content
@@ -62,26 +72,6 @@ module RightScale
     # content(String):: Additional content
     def additional_content
       content = [ { 'additional_folder' => [ 'afile1', 'afile2' ] }, 'afile3' ]
-    end
-
-    # Create test repository following given layout
-    # Delete any previously created repo
-    #
-    # === Return
-    # repo_path(String):: Path to created repositoy
-    #
-    # === Raise
-    # Exception:: If repository initialization fails
-    def setup_test_repo
-      raise 'Not supported'
-    end
-
-    # Delete test repository
-    #
-    # === Return
-    # true:: Always return true
-    def delete_test_repo
-      FileUtils.rm_rf(repo_path)
     end
 
     # Commit any non-commited changes of given directory

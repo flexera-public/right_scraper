@@ -32,19 +32,15 @@ describe RightScale::SvnScraper do
 
     before(:each) do
       @helper = RightScale::SvnScraperSpecHelper.new
-      @helper.setup_test_repo
-      @scrape_dir = File.expand_path(File.join(File.dirname(__FILE__), '__scrape'))
-      @scraper = RightScale::SvnScraper.new(@scrape_dir, max_bytes=1024**2, max_seconds=20)
+      @scraper = RightScale::SvnScraper.new(@helper.scraper_path, max_bytes=1024**2, max_seconds=20)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
                                                :url          => @helper.repo_url)
-      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@helper.repo_path, @repo))
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@helper.scraper_path, @repo))
     end
     
     after(:each) do
-      @helper.delete_test_repo
-      FileUtils.rm_rf(@helper.svn_repo_path)
-      FileUtils.rm_rf(@scrape_dir)
+      @helper.close
     end
 
     it 'should scrape' do
@@ -54,7 +50,7 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ])).should ==
         Set.new(@helper.repo_content)
     end
     
@@ -71,7 +67,7 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ])).should ==
         Set.new(@helper.repo_content + @helper.additional_content)
     end
 
@@ -83,7 +79,7 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
+      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
     end
 
     it 'should only scrape cookbooks directories incrementally' do
@@ -98,7 +94,7 @@ describe RightScale::SvnScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
+      @helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ]).should == [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => ['folder3' => [ 'file4' ] ] } ]
     end
 
     context 'and a revision' do
@@ -119,7 +115,7 @@ describe RightScale::SvnScraper do
         @scraper.succeeded?.should be_true
         messages.size.should == 1
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ])).should ==
           Set.new(@helper.repo_content)
       end
 
@@ -136,7 +132,7 @@ describe RightScale::SvnScraper do
         messages.size.should == 1
         @scraper.instance_variable_get(:@incremental).should == true
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.svn', 'metadata.json' ])).should ==
           Set.new(@helper.repo_content)
       end
 
