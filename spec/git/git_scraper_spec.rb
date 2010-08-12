@@ -55,7 +55,7 @@ describe RightScale::GitScraper do
       @scraper.succeeded?.should be_true
       messages.size.should == 1
       File.directory?(@scraper.current_repo_dir).should be_true
-      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
         Set.new(@helper.repo_content)
     end
     
@@ -72,7 +72,7 @@ describe RightScale::GitScraper do
       messages.size.should == 1
       @scraper.instance_variable_get(:@incremental).should == true
       File.directory?(@scraper.current_repo_dir).should be_true
-      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+      Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
         Set.new(@helper.repo_content + @helper.additional_content)
     end
 
@@ -93,7 +93,7 @@ describe RightScale::GitScraper do
         @scraper.succeeded?.should be_true
         messages.size.should == 1
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
           Set.new((@helper.repo_content + @helper.branch_content))
       end
 
@@ -110,7 +110,7 @@ describe RightScale::GitScraper do
         messages.size.should == 1
         @scraper.instance_variable_get(:@incremental).should == true
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
           Set.new((@helper.repo_content + @helper.branch_content + @helper.additional_content))
       end
 
@@ -134,7 +134,7 @@ describe RightScale::GitScraper do
         @scraper.succeeded?.should be_true
         messages.size.should == 1
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
           Set.new(@helper.repo_content)
       end
 
@@ -151,7 +151,7 @@ describe RightScale::GitScraper do
         messages.size.should == 1
         @scraper.instance_variable_get(:@incremental).should == true
         File.directory?(@scraper.current_repo_dir).should be_true
-        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh' ])).should ==
+        Set.new(@helper.extract_file_layout(@scraper.current_repo_dir, [ '.git', '.ssh', 'metadata.json' ])).should ==
           Set.new(@helper.repo_content)
       end
 

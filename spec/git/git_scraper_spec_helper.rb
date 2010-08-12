@@ -36,7 +36,7 @@ module RightScale
         res, status = exec('git init')
         raise "Failed to initialize bare git repository: #{res}" unless status.success?
       end
-      create_file_layout(repo_path, repo_content)
+      create_cookbook(repo_path, repo_content)
       commit_content(repo_path)
     end
 
@@ -54,7 +54,7 @@ module RightScale
         raise "Failed to setup branch #{branch}: #{res}" unless status.success?
       end
       unless new_content.nil?
-        create_file_layout(repo_path, new_content)
+        create_cookbook(repo_path, new_content)
         commit_content("Branch #{branch}")
       end
     end

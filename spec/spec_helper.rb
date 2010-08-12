@@ -25,6 +25,7 @@ require 'rubygems'
 require 'flexmock'
 require 'spec'
 require 'find'
+require 'json'
 
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper')))
 
@@ -52,6 +53,13 @@ module RightScale
       res = `#{cmd} 2>&1`
       puts res unless res.empty? if ENV[VERBOSE]
       return res, $?
+    end
+
+    def create_cookbook(path, contents)
+      create_file_layout(path, contents)
+      File.open(File.join(path, 'metadata.json'), 'w') { |f|
+        f.puts contents.to_json
+      }
     end
 
     # Create file layout from given array
