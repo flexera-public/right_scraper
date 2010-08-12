@@ -27,6 +27,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scr
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'download_scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git_scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn_scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'cookbook'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repository'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'download_repository'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'svn_repository'))
