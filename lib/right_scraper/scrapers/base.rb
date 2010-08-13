@@ -22,11 +22,13 @@
 #++
 
 require 'digest/md5'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
+require 'tmpdir'
 
 module RightScale
 
   # Base class for all scrapers.  Actual scraper implementation should
-  # override next, seek, position
+  # override next, seek, position, rewind
   class NewScraperBase
     # Integer:: optional maximum size permitted for repositories
     attr_accessor :max_bytes
@@ -57,6 +59,38 @@ module RightScale
     # Retrieve the current position of the scraper.
     def position
       raise NotImplementedError
+    end
+
+    # Set the scraper back to the beginning of scanning this repository.
+    def rewind
+      raise NotImplementedError
+    end
+
+    # Close the scraper, removing any temporary files.
+    # Should be used as follows:
+    #  scraper = ...
+    #  begin
+    #    # use the scraper
+    #  ensure
+    #    scraper.close
+    #  end
+    def close
+    end
+
+    def watch(command)
+      watcher = Watcher.new(max_bytes, max_seconds)
+      Dir.mktmpdir {|dir|
+        result = watcher.launch_and_watch(command, dir)
+        if result.status == :timeout
+          raise "Timeout error"
+        elsif result.status == :size_exceeded
+          raise "Command took too much space"
+        elsif result.exit_code != 0
+          raise "Unknown error: #{result.exit_code} output #{result.output}"
+        else
+          result.output
+        end
+      }
     end
   end
 end

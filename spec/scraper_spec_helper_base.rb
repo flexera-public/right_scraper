@@ -36,6 +36,9 @@ module RightScale
     def initialize
       @tmpdir = Dir.mktmpdir
       FileUtils.mkdir(repo_path)
+      @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] },
+                        { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] },
+                        'file1' ]
     end
 
     def close
@@ -50,12 +53,13 @@ module RightScale
       File.join(@tmpdir, "repository")
     end
 
+    attr_reader :repo_content
     # Default test repo content
     #
     # === Return
     # content(String):: Default test repo content
     def repo_content
-      content = [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] }, 'file1' ]
+      @repo_content
     end
 
     # Test branch content

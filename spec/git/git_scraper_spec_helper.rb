@@ -22,6 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_spec_helper_base'))
+require 'git'
 
 module RightScale
 
@@ -31,10 +32,7 @@ module RightScale
     def initialize
       super()
       FileUtils.mkdir(scraper_path)
-      Dir.chdir(repo_path) do
-        res, status = exec('git init')
-        raise "Failed to initialize git repository: #{res}" unless status.success?
-      end
+      @git = Git.init(repo_path)
       create_cookbook(repo_path, repo_content)
       commit_content(repo_path)
     end
@@ -44,32 +42,24 @@ module RightScale
     end
 
     def commit_content(commit_message='commit')
-      Dir.chdir(repo_path) do
-        res, status = exec('git add .')
-        res, status = exec("git commit --quiet -m \"#{commit_message}\"") if status.success?
-        raise "Failed to commit changes from #{repo_path}: #{res}" unless status.success?
-      end
+      @git.add('.')
+      @git.commit_all(commit_message)
     end
 
     def setup_branch(branch, new_content=nil)
-      Dir.chdir(repo_path) do
-        res, status = exec("git checkout -b #{branch}")
-        raise "Failed to setup branch #{branch}: #{res}" unless status.success?
-      end
+      @git.branch(branch).checkout
       unless new_content.nil?
-        create_cookbook(repo_path, new_content)
+        create_file_layout(repo_path, new_content)
+        @repo_content += new_content
+        File.open(File.join(repo_path, 'metadata.json'), 'w') { |f|
+          f.puts @repo_content.to_json
+        }
         commit_content("Branch #{branch}")
       end
     end
 
     def commit_id(index_from_last=0)
-      res = nil
-      Dir.chdir(repo_path) do
-        res, status = exec("git log --format=%H -#{index_from_last + 1}")
-        raise "Failed to retrieve commit sha #{index_from_last}: #{res}" unless status.success?
-      end
-      commit_id = res.split("\n").last
+      @git.log.skip(1).first.sha
     end
-
   end
 end

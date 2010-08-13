@@ -39,7 +39,9 @@ spec = Gem::Specification.new do |spec|
   spec.add_dependency('json', '>= 1.4.5')
   spec.add_dependency('libarchive', '>= 0.1.1')
   spec.add_dependency('curb', '>= 0.7.7.1')
+  spec.add_dependency('git', '>= 1.2.5')
   spec.requirements << 'libarchive, 2.8.4'
+  spec.requirements << 'gnutar'
 
   spec.description = <<-EOF
   RightScraper provides a simple interface to download and keep local copies of remote
