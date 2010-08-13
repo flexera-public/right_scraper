@@ -22,20 +22,19 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_spec_helper_base'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'svn'))
+require 'svn/repos'
 
 module RightScale
 
   # SVN implementation of scraper spec helper
   # See parent class for methods headers comments
   class SvnScraperSpecHelper < ScraperSpecHelperBase
-
     def svn_repo_path
       File.join(@tmpdir, "svn")
     end
 
-    def scraper_path
-      File.join(@tmpdir, "scraper")
-    end
+    attr_reader :repo
 
     def repo_url
       file_prefix = 'file://'
@@ -46,31 +45,44 @@ module RightScale
     def initialize
       super()
       FileUtils.mkdir(svn_repo_path)
-      FileUtils.mkdir(scraper_path)
-      res, status = exec("svnadmin create \"#{svn_repo_path}\"")
-      raise "Failed to initialize SVN repository: #{res}" unless status.success?
-      res, status = exec("svn checkout \"#{repo_url}\" \"#{repo_path}\"")
-      raise "Failed to checkout repository: #{res}" unless status.success?
+      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                               :repo_type    => :svn,
+                                               :url          => repo_url)
+      @client = SvnClient.new(@repo)
+      @svnrepo = Svn::Repos.create(svn_repo_path, {}, {})
+      @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)} 
       create_cookbook(repo_path, repo_content)
       commit_content
     end
 
+    def close
+      @repository.close unless @repos.nil?
+      @repository = nil
+    end
+
+    def delete(location, log="")
+      @client.with_context(log) {|ctx|
+        ctx.delete(location)
+      }
+    end
+
     def commit_content(commit_message='commit message')
-      Dir.chdir(repo_path) do
-        res, status = exec('svn add *')
-        res, status = exec("svn commit --quiet -m \"#{commit_message}\"") if status.success?
-        raise "Failed to commit changes from #{branch}: #{res}" unless status.success?
-      end
+      @client.with_context(commit_message) {|ctx|
+        Dir.glob(File.join(repo_path, '*')) {|file| ctx.add(file, true, true) }
+        ctx.commit(repo_path)
+      }
     end
 
     def commit_id(index_from_last=0)
-      res = nil
-      Dir.chdir(repo_path) do
-        res, status = exec("svn log --quiet #{repo_url}")
-        raise "Failed to retrieve commit revision #{index_from_last}: #{res}" unless status.success?
-      end
-      commit_id = res.split("\n")[ 1 + index_from_last * 2].split(' ').first
+      @client.with_context('fetching logs') {|ctx|
+        seen = []
+        ctx.log(repo_path, 1, "HEAD", 0, true, nil, 
+                nil) {|changed, rev, author, date, message|
+          seen << rev
+          seen.shift if seen.length > index_from_last+1
+        }
+        seen.first
+      }
     end
-
   end
 end

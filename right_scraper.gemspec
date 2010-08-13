@@ -42,6 +42,7 @@ spec = Gem::Specification.new do |spec|
   spec.add_dependency('git', '>= 1.2.5')
   spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'gnutar'
+  spec.requirements << 'subversion ruby bindings'
 
   spec.description = <<-EOF
   RightScraper provides a simple interface to download and keep local copies of remote
