@@ -24,6 +24,7 @@
 require 'digest/md5'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
 require 'tmpdir'
+require 'libarchive_ruby'
 
 module RightScale
 
@@ -91,6 +92,108 @@ module RightScale
           result.output
         end
       }
+    end
+  end
+
+  class FilesystemBasedScraper < NewScraperBase
+    def initialize(*args)
+      super
+      @tmpdir = Dir.mktmpdir
+      do_checkout
+      @stack = []
+      rewind
+    end
+
+    def do_checkout
+    end
+
+    def ignorable_paths
+      []
+    end
+
+    def checkout_path
+      @tmpdir
+    end
+
+    def close
+      @stack.each {|s| s.close}
+      FileUtils.remove_entry_secure @tmpdir
+    end
+
+    def rewind
+      @stack.each {|s| s.close}
+      @stack = [Dir.open(@tmpdir)]
+    end
+
+    # Return the position of the scraper.  Here, the position is the
+    # path relative from the top of the temporary directory.
+    def position
+      return strip_tmpdir(@stack.last.path)
+    end
+
+    def strip_tmpdir(path)
+      res = path[@tmpdir.length+1..-1]
+      if res == nil || res == ""
+        "."
+      else
+        res
+      end
+    end
+
+    # Seek to the given position.
+    def seek(position)
+      dirs = position.split(File::SEPARATOR)
+      rewind
+      until dirs.empty?
+        name = dirs.shift
+        dir = @stack.last
+        entry = dir.read
+        until entry == nil || entry == name
+          entry = dir.read
+        end
+        raise "Position #{position} no longer exists!" if entry == nil
+        @stack << Dir.open(File.join(dir.path, name))
+      end
+      @stack.last.rewind # to make sure we don't miss a metadata.json here.
+    end
+
+    def ignorable?(entry)
+      ignorable_paths.include?(entry)
+    end
+
+    def next
+      until @stack.empty?
+        dir = @stack.last
+        entry = dir.read
+        if entry == nil
+          dir.close
+          @stack.pop
+          next
+        end
+
+        fullpath = File.join(dir.path, entry)
+
+        next if entry == '.' || entry == '..'
+        next if ignorable?(entry)
+
+        if File.directory?(fullpath)
+          @stack << Dir.new(fullpath)
+          next
+        elsif entry == 'metadata.json'
+          cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
+
+          cookbook.metadata = JSON.parse(open(fullpath) {|f| f.read })
+
+          # make new archive rooted here
+          exclude_declarations =
+            ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
+          cookbook.archive =
+            watch("tar -C #{File.dirname fullpath} -c #{exclude_declarations} .")
+
+          return cookbook
+        end
+      end
+      nil
     end
   end
 end
