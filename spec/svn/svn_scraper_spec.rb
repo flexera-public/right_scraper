@@ -32,11 +32,11 @@ describe RightScale::SvnScraper do
 
     before(:each) do
       @helper = RightScale::SvnScraperSpecHelper.new
-      @scraper = RightScale::SvnScraper.new(@helper.scraper_path, max_bytes=1024**2, max_seconds=20)
+      @scraper = RightScale::SvnScraper.new(@helper.repo_path, max_bytes=1024**2, max_seconds=20)
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
                                                :url          => @helper.repo_url)
-      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@helper.scraper_path, @repo))
+      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@helper.repo_path, @repo))
     end
     
     after(:each) do
