@@ -28,63 +28,68 @@ require 'set'
 require 'libarchive_ruby'
 
 describe RightScale::NewGitScraper do
-
-  context 'given a git repository' do
-
+  shared_examples_for "From-scratch scraping" do
     before(:each) do
-      @helper = RightScale::GitScraperSpecHelper.new
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
-                                               :repo_type    => :git,
-                                               :url          => @helper.repo_path)
-      @scraper = RightScale::NewGitScraper.new(@repo, :max_bytes => 1024**2,
-                                               :max_seconds => 20)
-    end
-
-    def reopen_scraper
-      @scraper.close
-      @scraper = RightScale::NewGitScraper.new(@repo, :max_bytes => 1024**2,
+      @scraper = RightScale::NewGitScraper.new(@repo,
+                                               :max_bytes => 1024**2,
                                                :max_seconds => 20)
     end
 
     after(:each) do
       @scraper.close
-      @helper.close
       @scraper = nil
+    end
+  end
+
+  def archive_skeleton(archive)
+    files = Set.new
+    Archive.read_open_memory(archive) do |ar|
+      while entry = ar.next_header
+        files << [entry.pathname, ar.read_data]
+      end
+    end
+    files
+  end
+
+  def check_cookbook(cookbook, params={})
+    position = params[:position] || "."
+    cookbook.should_not == nil
+    cookbook.repository.should == @repo
+    cookbook.position.should == position
+    cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
+    root = File.join(params[:rootdir] || @helper.repo_path, position)
+    tarball = `tar -C #{root} -c --exclude .git .`
+    # We would compare these literally, but minor metadata changes
+    # will completely hose you, so it's enough to make sure that the
+    # files are in the same place and have the same content.
+    archive_skeleton(cookbook.archive).should ==
+      archive_skeleton(tarball)
+  end
+
+  context 'given a git repository' do
+    before(:each) do
+      @helper = RightScale::GitScraperSpecHelper.new
+      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                               :repo_type    => :git,
+                                               :url          => @helper.repo_path)
+    end
+
+    after(:each) do
+      @helper.close unless @helper.nil?
       @helper = nil
     end
 
-    def archive_skeleton(archive)
-      files = Set.new
-      Archive.read_open_memory(archive) do |ar|
-        while entry = ar.next_header
-          files << [entry.pathname, ar.read_data]
-        end
+    context 'with one cookbook' do
+      it_should_behave_like "From-scratch scraping"
+
+      it 'should scrape the master branch' do
+        check_cookbook @scraper.next
       end
-      files
-    end
 
-    def check_cookbook(cookbook, params={})
-      position = params[:position] || "."
-      cookbook.should_not == nil
-      cookbook.repository.should == @repo
-      cookbook.position.should == position
-      cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
-      root = File.join(params[:rootdir] || @helper.repo_path, position)
-      tarball = `tar -C #{root} -c --exclude .git .`
-      # We would compare these literally, but minor metadata changes
-      # will completely hose you, so it's enough to make sure that the
-      # files are in the same place and have the same content.
-      archive_skeleton(cookbook.archive).should ==
-        archive_skeleton(tarball)
-    end
-
-    it 'should scrape the master branch' do
-      check_cookbook @scraper.next
-    end
-
-    it 'should only see one cookbook in the simple case' do
-      @scraper.next.should_not == nil
-      @scraper.next.should == nil
+      it 'should only see one cookbook in the simple case' do
+        @scraper.next.should_not == nil
+        @scraper.next.should == nil
+      end
     end
 
     context 'with multiple cookbooks' do
@@ -100,8 +105,10 @@ describe RightScale::NewGitScraper do
                             File.join(@helper.repo_path, "other_random_place")]
         @cookbook_places.each {|place| secondary_cookbook(place)}
         @helper.commit_content("secondary cookbooks added")
-        reopen_scraper
       end
+
+      it_should_behave_like "From-scratch scraping"
+
       it 'should scrape' do
         @cookbook_places.each do |place|
           check_cookbook @scraper.next, :position => place[@helper.repo_path.length+1..-1]
@@ -122,8 +129,9 @@ describe RightScale::NewGitScraper do
                                                  :repo_type    => :git,
                                                  :url          => @helper.repo_path,
                                                  :tag          => 'test_branch')
-        reopen_scraper
       end
+
+      it_should_behave_like "From-scratch scraping"
 
       it 'should scrape a branch' do
         check_cookbook @scraper.next
@@ -139,8 +147,9 @@ describe RightScale::NewGitScraper do
                                                  :repo_type    => :git,
                                                  :url          => @helper.repo_path,
                                                  :tag          => @helper.commit_id(1))
-        reopen_scraper
       end
+
+      it_should_behave_like "From-scratch scraping"
 
       it 'should scrape a sha' do
         check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.checkout_path

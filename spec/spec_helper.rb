@@ -114,7 +114,11 @@ module RightScale
       dirs + files.sort
     end
            
- 
+    Spec::Matchers.define :begin_with do |path|
+      match do |directory|
+        directory[0...path.length] == path
+      end
+    end
   end
   
 end
