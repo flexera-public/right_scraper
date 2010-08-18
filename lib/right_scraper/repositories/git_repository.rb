@@ -24,6 +24,11 @@
 module RightScale
   # A cookbook repository stored in a Git repository.
   class GitRepository < Repository
+    def initialize(*args)
+      super
+      @tag = "master" if @tag.nil?
+    end
+
     # (String) Type of the repository, here 'git'.
     def repo_type
       :git
