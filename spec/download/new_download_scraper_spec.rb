@@ -70,8 +70,9 @@ describe RightScale::NewDownloadScraper do
                                                :url          => url,
                                                :first_credential => @username,
                                                :second_credential => @password)
-      @scraper = RightScale::NewDownloadScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewDownloadScraper.new(@repo,
+                                                    :max_bytes => 1024**2,
+                                                    :max_seconds => 20)
     end
 
     it 'should scrape' do
@@ -92,7 +93,9 @@ describe RightScale::NewDownloadScraper do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      @scraper = RightScale::NewDownloadScraper.new(@repo, max_bytes=1024**2, max_seconds=20)
+      @scraper = RightScale::NewDownloadScraper.new(@repo,
+                                                    :max_bytes => 1024**2,
+                                                    :max_seconds => 20)
       FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
     end
 

@@ -36,14 +36,14 @@ describe RightScale::NewGitScraper do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :git,
                                                :url          => @helper.repo_path)
-      @scraper = RightScale::NewGitScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewGitScraper.new(@repo, :max_bytes => 1024**2,
+                                               :max_seconds => 20)
     end
 
     def reopen_scraper
       @scraper.close
-      @scraper = RightScale::NewGitScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewGitScraper.new(@repo, :max_bytes => 1024**2,
+                                               :max_seconds => 20)
     end
 
     after(:each) do

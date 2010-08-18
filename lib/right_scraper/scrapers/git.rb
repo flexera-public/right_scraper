@@ -28,7 +28,7 @@ require 'tmpdir'
 module RightScale
   class NewGitScraper < FilesystemBasedScraper
     def do_checkout
-      git = Git.clone(@repository.url, @tmpdir)
+      git = Git.clone(@repository.url, checkout_path)
       git.checkout(@repository.tag) if @repository.tag
     end
 

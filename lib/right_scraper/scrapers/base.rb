@@ -41,10 +41,10 @@ module RightScale
     # RightScale::Repository:: repository currently being scraped
     attr_reader :repository
 
-    def initialize(repository,max_bytes=nil,max_seconds=nil)
+    def initialize(repository,options={})
       @repository = repository
-      @max_bytes = max_bytes
-      @max_seconds = max_seconds
+      @max_bytes = options[:max_bytes] || nil
+      @max_seconds = options[:max_seconds] || nil
     end
 
     # Return next Cookbook object from the stream.
@@ -96,9 +96,10 @@ module RightScale
   end
 
   class FilesystemBasedScraper < NewScraperBase
-    def initialize(*args)
+    def initialize(repository, options={})
       super
-      @tmpdir = Dir.mktmpdir
+      @basedir = options[:directory] || Dir.mktmpdir
+      @temporary = options.has_key?(:directory)
       do_checkout
       @stack = []
       rewind
@@ -112,17 +113,17 @@ module RightScale
     end
 
     def checkout_path
-      @tmpdir
+      @basedir
     end
 
     def close
       @stack.each {|s| s.close}
-      FileUtils.remove_entry_secure @tmpdir
+      FileUtils.remove_entry_secure @basedir if @temporary
     end
 
     def rewind
       @stack.each {|s| s.close}
-      @stack = [Dir.open(@tmpdir)]
+      @stack = [Dir.open(@basedir)]
     end
 
     # Return the position of the scraper.  Here, the position is the
@@ -132,7 +133,7 @@ module RightScale
     end
 
     def strip_tmpdir(path)
-      res = path[@tmpdir.length+1..-1]
+      res = path[@basedir.length+1..-1]
       if res == nil || res == ""
         "."
       else

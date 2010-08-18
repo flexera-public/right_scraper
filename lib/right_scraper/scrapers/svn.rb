@@ -58,7 +58,7 @@ module RightScale
     def do_checkout
       client = SvnClient.new(@repository)
       client.with_context {|ctx|
-        ctx.checkout(@repository.url, @tmpdir, @repository.tag || nil)
+        ctx.checkout(@repository.url, checkout_path, @repository.tag || nil)
       }
     end
 

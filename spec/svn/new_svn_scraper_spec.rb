@@ -55,8 +55,8 @@ describe RightScale::NewSvnScraper do
                                                :url          => url,
                                                :first_credential => @username,
                                                :second_credential => @password)
-      @scraper = RightScale::NewSvnScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewSvnScraper.new(@repo, :max_bytes => 1024**2,
+                                               :max_seconds => 20)
     end
 
     def reopen_scraper
@@ -95,14 +95,14 @@ describe RightScale::NewSvnScraper do
     before(:each) do
       @helper = RightScale::SvnScraperSpecHelper.new
       @repo = @helper.repo
-      @scraper = RightScale::NewSvnScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewSvnScraper.new(@repo, :max_bytes => 1024**2,
+                                               :max_seconds => 20)
     end
 
     def reopen_scraper
       @scraper.close
-      @scraper = RightScale::NewSvnScraper.new(@repo, max_bytes=1024**2,
-                                               max_seconds=20)
+      @scraper = RightScale::NewSvnScraper.new(@repo, :max_bytes => 1024**2,
+                                               :max_seconds => 20)
     end
     
     after(:each) do
