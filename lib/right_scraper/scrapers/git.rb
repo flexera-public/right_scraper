@@ -27,7 +27,33 @@ require 'tmpdir'
 
 module RightScale
   class NewGitScraper < CheckoutBasedScraper
+    def exists?
+      File.exists?(File.join(checkout_path, '.git'))
+    end
+
+    def do_update
+      begin
+        git = Git.open(checkout_path)
+        git.checkout(@repository.tag) if @repository.tag
+        possibles = git.branches.local.select {|branch| branch.name == @repository.tag}
+        # if possibles is empty, then tag is a SHA or a tag and in any
+        # case fetching makes no sense.
+        unless possibles.empty?
+          branch = possibles.first
+          remotename = git.config("branch.#{branch.name}.remote")
+          remote = git.remote(remotename)
+          remote.fetch
+          remote.merge
+        end
+      rescue Git::GitExecuteError
+        puts "AAARGH " + $!
+        FileUtils.remove_entry_secure checkout_path
+        do_checkout
+      end
+    end
+
     def do_checkout
+      FileUtils.mkdir_p(checkout_path)
       git = Git.clone(@repository.url, checkout_path)
       git.checkout(@repository.tag) if @repository.tag
     end

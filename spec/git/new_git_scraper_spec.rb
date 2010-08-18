@@ -155,5 +155,58 @@ describe RightScale::NewGitScraper do
         check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.checkout_path
       end
     end
+
+    context 'and an incremental scraper' do
+      before(:each) do
+        @scraper = RightScale::NewGitScraper.new(@repo,
+                                                 :directory => @helper.scraper_path,
+                                                 :max_bytes => 1024**2,
+                                                 :max_seconds => 20)
+      end
+
+      after(:each) do
+        @scraper.close
+        @scraper = nil
+      end
+
+      it 'the scraper should store intermediate versions where we expect' do
+        @scraper.checkout_path.should begin_with @helper.scraper_path
+      end
+
+      it 'the scraper should scrape' do
+        check_cookbook @scraper.next
+      end
+
+      it 'the scraper should only see one cookbook' do
+        @scraper.next.should_not == nil
+        @scraper.next.should == nil
+      end
+
+      context 'when a change is made to the master repo' do
+        before(:each) do
+          @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
+          @helper.commit_content
+        end
+
+        context 'a new scraper' do
+          before(:each) do
+            @olddir = @scraper.checkout_path
+            @scraper.close
+            @scraper = RightScale::NewGitScraper.new(@repo,
+                                                     :directory => @helper.scraper_path,
+                                                     :max_bytes => 1024**2,
+                                                     :max_seconds => 20)
+          end
+
+          it 'should use the same directory for files' do
+            @olddir.should == @scraper.checkout_path
+          end
+
+          it 'should see the new change' do
+            File.exists?(File.join(@olddir, 'branch_folder', 'bfile1')).should be_true
+          end
+        end
+      end
+    end
   end
 end
