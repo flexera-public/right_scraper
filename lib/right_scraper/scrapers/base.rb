@@ -98,22 +98,15 @@ module RightScale
   class FilesystemBasedScraper < NewScraperBase
     def initialize(repository, options={})
       super
+      @temporary = !options.has_key?(:directory)
       @basedir = options[:directory] || Dir.mktmpdir
-      @temporary = options.has_key?(:directory)
-      do_checkout
+      FileUtils.mkdir(@basedir) unless File.exists?(@basedir)
       @stack = []
       rewind
     end
 
-    def do_checkout
-    end
-
     def ignorable_paths
       []
-    end
-
-    def checkout_path
-      @basedir
     end
 
     def close
@@ -195,6 +188,32 @@ module RightScale
         end
       end
       nil
+    end
+  end
+
+  class CheckoutBasedScraper < FilesystemBasedScraper
+    def initialize(repository, options={})
+      super
+      if exists?
+        do_update
+      else
+        do_checkout
+      end
+    end
+
+    def exists?
+      false
+    end
+
+    def do_update
+      do_checkout
+    end
+
+    def do_checkout
+    end
+
+    def checkout_path
+      @basedir
     end
   end
 end

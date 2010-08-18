@@ -54,7 +54,7 @@ module RightScale
     end
   end
 
-  class NewSvnScraper < FilesystemBasedScraper
+  class NewSvnScraper < CheckoutBasedScraper
     def do_checkout
       client = SvnClient.new(@repository)
       client.with_context {|ctx|

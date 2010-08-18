@@ -26,7 +26,7 @@ require 'libarchive_ruby'
 require 'tmpdir'
 
 module RightScale
-  class NewGitScraper < FilesystemBasedScraper
+  class NewGitScraper < CheckoutBasedScraper
     def do_checkout
       git = Git.clone(@repository.url, checkout_path)
       git.checkout(@repository.tag) if @repository.tag
