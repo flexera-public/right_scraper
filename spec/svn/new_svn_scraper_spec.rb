@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -21,8 +21,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'svn'))
 require 'set'
@@ -30,15 +30,10 @@ require 'libarchive_ruby'
 require 'highline/import'
 
 describe RightScale::NewSvnScraper do
-  def archive_skeleton(archive)
-    files = Set.new
-    Archive.read_open_memory(archive) do |ar|
-      while entry = ar.next_header
-        files << [entry.pathname, ar.read_data]
-      end
-    end
-    files
-  end
+  include RightScale::ScraperHelper
+
+  SCRAPERCLASS = RightScale::NewSvnScraper
+  IGNORE = ['.svn']
 
   TEST_REMOTE=false
 
@@ -95,43 +90,24 @@ describe RightScale::NewSvnScraper do
     before(:each) do
       @helper = RightScale::SvnScraperSpecHelper.new
       @repo = @helper.repo
-      @scraper = RightScale::NewSvnScraper.new(@repo, :max_bytes => 1024**2,
-                                               :max_seconds => 20)
     end
 
-    def reopen_scraper
-      @scraper.close
-      @scraper = RightScale::NewSvnScraper.new(@repo, :max_bytes => 1024**2,
-                                               :max_seconds => 20)
-    end
-    
     after(:each) do
-      @scraper.close
-      @helper.close
+      @helper.close unless @helper.nil?
+      @helper = nil
     end
 
-    def check_cookbook(cookbook, params={})
-      position = params[:position] || "."
-      cookbook.should_not == nil
-      cookbook.repository.should == @repo
-      cookbook.position.should == position
-      cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
-      root = File.join(params[:rootdir] || @helper.repo_path, position)
-      tarball = `tar -C #{root} -c --exclude .svn .`
-      # We would compare these literally, but minor metadata changes
-      # will completely hose you, so it's enough to make sure that the
-      # files are in the same place and have the same content.
-      archive_skeleton(cookbook.archive).should ==
-        archive_skeleton(tarball)
-    end
+    context 'with one cookbook' do
+      it_should_behave_like "From-scratch scraping"
 
-    it 'should scrape the master branch' do
-      check_cookbook @scraper.next
-    end
+      it 'should scrape the master branch' do
+        check_cookbook @scraper.next
+      end
 
-    it 'should only see one cookbook in the simple case' do
-      @scraper.next.should_not == nil
-      @scraper.next.should == nil
+      it 'should only see one cookbook' do
+        @scraper.next.should_not == nil
+        @scraper.next.should == nil
+      end
     end
 
     context 'with multiple cookbooks' do
@@ -147,8 +123,10 @@ describe RightScale::NewSvnScraper do
                             File.join(@helper.repo_path, "other_random_place")]
         @cookbook_places.each {|place| secondary_cookbook(place)}
         @helper.commit_content("secondary cookbooks added")
-        reopen_scraper
       end
+
+      it_should_behave_like "From-scratch scraping"
+
       it 'should scrape' do
         @cookbook_places.each do |place|
           check_cookbook @scraper.next, :position => place[@helper.repo_path.length+1..-1]
@@ -168,8 +146,9 @@ describe RightScale::NewSvnScraper do
         @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
         @helper.commit_content
         @repo.tag = @helper.commit_id(1)
-        reopen_scraper
       end
+
+      it_should_behave_like "From-scratch scraping"
 
       it 'should scrape a revision' do
         check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.checkout_path

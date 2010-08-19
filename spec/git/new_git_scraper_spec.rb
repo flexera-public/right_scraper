@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -22,49 +22,17 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'git_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'git'))
 require 'set'
 require 'libarchive_ruby'
 
 describe RightScale::NewGitScraper do
-  shared_examples_for "From-scratch scraping" do
-    before(:each) do
-      @scraper = RightScale::NewGitScraper.new(@repo,
-                                               :max_bytes => 1024**2,
-                                               :max_seconds => 20)
-    end
+  include RightScale::ScraperHelper
 
-    after(:each) do
-      @scraper.close
-      @scraper = nil
-    end
-  end
-
-  def archive_skeleton(archive)
-    files = Set.new
-    Archive.read_open_memory(archive) do |ar|
-      while entry = ar.next_header
-        files << [entry.pathname, ar.read_data]
-      end
-    end
-    files
-  end
-
-  def check_cookbook(cookbook, params={})
-    position = params[:position] || "."
-    cookbook.should_not == nil
-    cookbook.repository.should == @repo
-    cookbook.position.should == position
-    cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
-    root = File.join(params[:rootdir] || @helper.repo_path, position)
-    tarball = `tar -C #{root} -c --exclude .git .`
-    # We would compare these literally, but minor metadata changes
-    # will completely hose you, so it's enough to make sure that the
-    # files are in the same place and have the same content.
-    archive_skeleton(cookbook.archive).should ==
-      archive_skeleton(tarball)
-  end
+  SCRAPERCLASS = RightScale::NewGitScraper
+  IGNORE = ['.git']
 
   context 'given a git repository' do
     before(:each) do
@@ -86,7 +54,7 @@ describe RightScale::NewGitScraper do
         check_cookbook @scraper.next
       end
 
-      it 'should only see one cookbook in the simple case' do
+      it 'should only see one cookbook' do
         @scraper.next.should_not == nil
         @scraper.next.should == nil
       end

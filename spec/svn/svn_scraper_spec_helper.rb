@@ -50,7 +50,7 @@ module RightScale
                                                :url          => repo_url)
       @client = SvnClient.new(@repo)
       @svnrepo = Svn::Repos.create(svn_repo_path, {}, {})
-      @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)} 
+      @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)}
       create_cookbook(repo_path, repo_content)
       commit_content
     end
@@ -76,7 +76,7 @@ module RightScale
     def commit_id(index_from_last=0)
       @client.with_context('fetching logs') {|ctx|
         seen = []
-        ctx.log(repo_path, 1, "HEAD", 0, true, nil, 
+        ctx.log(repo_path, 1, "HEAD", 0, true, nil,
                 nil) {|changed, rev, author, date, message|
           seen << rev
           seen.shift if seen.length > index_from_last+1
