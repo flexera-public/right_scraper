@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require 'uri'
+require 'digest/sha1'
 
 module RightScale
   # Description of remote repository that needs to be scraped.
@@ -82,7 +83,19 @@ module RightScale
       nil
     end
 
+    def repository_hash
+      digest("#{repo_type} #{url}")
+    end
+
+    def checkout_hash
+      repository_hash
+    end
+
     protected
+    def digest(string)
+      Digest::SHA1.hexdigest(string)
+    end
+
     USERPW = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}]|[:@/]", false, 'N').freeze
 
     def add_users_to(uri, username=nil, password=nil)

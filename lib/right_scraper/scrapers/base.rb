@@ -21,7 +21,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'digest/md5'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
 require 'tmpdir'
 require 'libarchive_ruby'
@@ -87,7 +86,7 @@ module RightScale
     # repo_dir(String):: Path to local directory that corresponds to given repository
     def self.repo_dir(root_dir, repo)
       repo = Repository.from_hash(repo) if repo.is_a?(Hash)
-      dir_name  = Digest::SHA1.hexdigest("#{repo.repo_type},#{repo.url}")
+      dir_name  = repo.repository_hash
       dir_path  = File.join(root_dir, dir_name)
       repo_dir = "#{dir_path}/repo"
     end

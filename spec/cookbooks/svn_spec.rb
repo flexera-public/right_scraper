@@ -51,6 +51,27 @@ describe RightScale::Cookbook do
     it 'should have a tag' do
       parse_url(@repository)[:tag].should == "HEAD"
     end
+
+    it 'should have a cookbook hash' do
+      example_cookbook(@repository).cookbook_hash.should == 'bac54f7e9b87f35fd63f8f6e79f3428c374ddb10'
+    end
+
+    it 'should have a cookbook hash invariant under credential changes' do
+      old_hash = example_cookbook(@repository).cookbook_hash
+      @repository.first_credential = "b-key"
+      example_cookbook(@repository).cookbook_hash.should == old_hash
+    end
+
+    it 'should have a cookbook hash that varies when the tag changes' do
+      old_hash = example_cookbook(@repository).cookbook_hash
+      @repository.tag = "tag"
+      example_cookbook(@repository).cookbook_hash.should_not == old_hash
+    end
+
+    it 'should have a cookbook hash that varies when the position changes' do
+      example_cookbook(@repository, "foo").cookbook_hash.should_not ==
+        example_cookbook(@repository, "bar").cookbook_hash
+    end
   end
 
   context 'with a SVN repository with a tag' do

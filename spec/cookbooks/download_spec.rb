@@ -50,6 +50,21 @@ describe RightScale::Cookbook do
     end
 
     it_should_behave_like 'download repositories'
+
+    it 'should have a cookbook hash' do
+      example_cookbook(@repository).cookbook_hash.should == '2d33f8913c5b693c5929562a31d8d9ecdb2cb128'
+    end
+
+    it 'should have a cookbook hash invariant under credential changes' do
+      old_hash = example_cookbook(@repository).cookbook_hash
+      @repository.first_credential = "b-key"
+      example_cookbook(@repository).cookbook_hash.should == old_hash
+    end
+
+    it 'should have a cookbook hash that varies when the position changes' do
+      example_cookbook(@repository, "foo").cookbook_hash.should_not ==
+        example_cookbook(@repository, "bar").cookbook_hash
+    end
   end
 
   context 'with a download repository with a port' do

@@ -44,13 +44,8 @@ module RightScale
     # (String) Optional, SVN password
     attr_accessor :second_credential
 
-    # Unique representation for this repo, should resolve to the same string
-    # for repos that should be cloned in same directory
-    #
-    # === Returns
-    # res(String):: Unique representation for this repo
-    def to_s
-      res = "svn #{url}:#{tag}"
+    def checkout_hash
+      digest("#{repo_type} #{url} #{tag}")
     end
 
     def to_url
