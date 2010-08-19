@@ -37,8 +37,6 @@ describe RightScale::SvnScraper do
     @ignore = ['.svn']
   end
 
-  TEST_REMOTE=false
-
   context 'given a remote SVN repository' do
     before(:all) do
       @username = ask('Username: ')
@@ -86,7 +84,7 @@ describe RightScale::SvnScraper do
                                    "cookbooks/rs_utils",
                                    "cookbooks/web_apache"])
     end
-  end if TEST_REMOTE
+  end if ENV['TEST_REMOTE']
 
   context 'given a SVN repository' do
     before(:each) do

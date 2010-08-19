@@ -59,8 +59,6 @@ describe RightScale::DownloadScraper do
     @scraperclass = RightScale::DownloadScraper
   end
 
-  TEST_REMOTE=false
-
   context 'given a password protected repository' do
     before(:all) do
       @username = ask('Username: ')
@@ -85,7 +83,7 @@ describe RightScale::DownloadScraper do
       cookbook.metadata.should_not == nil
       cookbook.metadata["name"].should == "app_rails"
     end
-  end if TEST_REMOTE
+  end if ENV['TEST_REMOTE']
 
   context 'given a download repository' do
 
