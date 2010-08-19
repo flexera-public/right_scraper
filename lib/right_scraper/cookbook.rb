@@ -22,6 +22,7 @@
 #++
 
 require 'json'
+require 'uri'
 
 module RightScale
   # Localized representation of a cookbook.  Contains the repository
@@ -64,6 +65,62 @@ module RightScale
       scraper = repo.scraper
       scraper.seek(position)
       scraper.next
+    end
+
+    def to_url
+      repo_url = @repository.to_url
+      position_portion = position.nil? ? "" : "?p=#{position}"
+      tag_portion = @repository.revision.nil? ? "" : "\##{@repository.revision}"
+      "#{@repository.repo_type}:#{repo_url}#{position_portion}#{tag_portion}"
+    end
+
+    def self.from_url(url)
+      hash, position = split_url(url)
+      @repo = Repository.from_hash(hash)
+      Cookbook.new(@repo, nil, nil, position)
+    end
+
+    def self.parse_query(string)
+      CGI::parse(string)
+    end
+
+    def self.unparse_query(hash)
+      keys = hash.keys.sort
+      keys.map do |key|
+        hash[key].sort.map do |value|
+          CGI::escape(key) + "=" + CGI::escape(value)
+        end.join(";")
+      end.join(';')
+    end
+
+    def self.split_url(url)
+      scheme, full_url = url.split(":", 2)
+      uri = URI.parse(full_url)
+      userinfo, query, tag = uri.select(:userinfo, :query, :fragment)
+      unless userinfo.nil?
+        username, password = userinfo.split(":", 2).map {|str| URI.unescape str}
+        uri.user = nil
+        uri.password = nil
+      end
+      unless query.nil?
+        hash = parse_query(query)
+        position = hash["p"][0]
+        hash.delete("p")
+        result = unparse_query(hash)
+        if result == ""
+          uri.query = nil
+        else
+          uri.query = result
+        end
+      end
+      uri.fragment = nil unless tag.nil?
+      hash = Hash.new
+      hash[:repo_type] = scheme.to_sym
+      hash[:url] = uri.to_s
+      hash[:first_credential] = username unless username.nil?
+      hash[:second_credential] = password unless password.nil?
+      hash[:tag] = tag unless tag.nil?
+      [hash, position]
     end
   end
 end

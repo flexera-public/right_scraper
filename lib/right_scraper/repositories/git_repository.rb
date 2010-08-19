@@ -36,6 +36,7 @@ module RightScale
 
     # (String) Optional, tag or branch of repository that should be downloaded
     attr_accessor :tag
+    alias_method :revision, :tag
     
     # (String) Optional, git private SSH key content
     attr_accessor :first_credential
@@ -47,6 +48,15 @@ module RightScale
     # res(String):: Unique representation for this repo
     def to_s
       res = "git #{url}:#{tag}"
+    end
+
+    def to_url
+      if first_credential
+        uri = add_users_to(url, first_credential)
+      else
+        uri = URI.parse(url)
+      end
+      uri
     end
 
     # (ScraperBase class) Appropriate class for scraping this sort of

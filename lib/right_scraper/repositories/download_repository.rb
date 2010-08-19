@@ -20,6 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require 'uri'
 
 module RightScale
   # A "repository" that is just a file hanging off a web server
@@ -43,6 +44,10 @@ module RightScale
     # res(String):: Unique representation for this repo
     def to_s
       res = "download #{url}"
+    end
+
+    def to_url
+      add_users_to(url, first_credential, second_credential)
     end
 
     # (ScraperBase class) Appropriate class for scraping this sort of

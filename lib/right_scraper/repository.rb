@@ -20,6 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require 'uri'
 
 module RightScale
   # Description of remote repository that needs to be scraped.
@@ -75,6 +76,27 @@ module RightScale
     # res(String):: Unique representation for this repo
     def to_s
       res = "#{repo_type} #{url}"
+    end
+
+    def to_url
+      "#{repo_type}:#{url}"
+    end
+
+    def revision
+      nil
+    end
+
+    protected
+    USERPW = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}]|[:@/]", false, 'N').freeze
+
+    def add_users_to(uri, username=nil, password=nil)
+      uri = URI.parse(uri) if uri.instance_of?(String)
+      if username
+        userinfo = URI.escape(username, USERPW)
+        userinfo += ":" + URI.escape(password, USERPW) unless password.nil?
+        uri.userinfo = userinfo
+      end
+      uri
     end
   end
   
