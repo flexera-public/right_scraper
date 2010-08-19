@@ -36,6 +36,10 @@ module RightScale
 
     attr_reader :repo
 
+    def scraper_path
+      File.join(@tmpdir, "scraper")
+    end
+
     def repo_url
       file_prefix = 'file://'
       file_prefix += '/' if RUBY_PLATFORM =~ /mswin/
