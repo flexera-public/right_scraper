@@ -28,9 +28,9 @@ module RightScale
   module ScraperHelper
     shared_examples_for "From-scratch scraping" do
       before(:each) do
-        @scraper = SCRAPERCLASS.new(@repo,
-                                    :max_bytes => 1024**2,
-                                    :max_seconds => 20)
+        @scraper = @scraperclass.new(@repo,
+                                     :max_bytes => 1024**2,
+                                     :max_seconds => 20)
       end
 
       after(:each) do
@@ -57,7 +57,7 @@ module RightScale
       cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
       root = File.join(params[:rootdir] || @helper.repo_path, position)
       exclude_declarations =
-        IGNORE.map {|path| "--exclude #{path}"}.join(' ')
+        @ignore.map {|path| "--exclude #{path}"}.join(' ')
       tarball = `tar -C #{root} -c #{exclude_declarations} .`
       # We would compare these literally, but minor metadata changes
       # will completely hose you, so it's enough to make sure that the

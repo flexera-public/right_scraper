@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -27,10 +27,9 @@ require 'tmpdir'
 require 'libarchive_ruby'
 
 module RightScale
-
   # Base class for all scrapers.  Actual scraper implementation should
   # override next, seek, position, rewind
-  class NewScraperBase
+  class ScraperBase
     # Integer:: optional maximum size permitted for repositories
     attr_accessor :max_bytes
 
@@ -78,10 +77,25 @@ module RightScale
     def close
     end
 
-    def watch(command)
+    # Path to directory where given repo should be or was downloaded
+    #
+    # === Parameters
+    # root_dir(String):: Path to directory containing all scraped repositories
+    # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
+    #
+    # === Return
+    # repo_dir(String):: Path to local directory that corresponds to given repository
+    def self.repo_dir(root_dir, repo)
+      repo = Repository.from_hash(repo) if repo.is_a?(Hash)
+      dir_name  = Digest::SHA1.hexdigest("#{repo.repo_type},#{repo.url}")
+      dir_path  = File.join(root_dir, dir_name)
+      repo_dir = "#{dir_path}/repo"
+    end
+
+    def watch(command, *args)
       watcher = Watcher.new(max_bytes, max_seconds)
       Dir.mktmpdir {|dir|
-        result = watcher.launch_and_watch(command, dir)
+        result = watcher.launch_and_watch(command, args, dir)
         if result.status == :timeout
           raise "Timeout error"
         elsif result.status == :size_exceeded
@@ -93,9 +107,40 @@ module RightScale
         end
       }
     end
+
+    # Spawn given process, wait for it to complete, and return its output The exit status
+    # of the process is available in the $? global. Functions similarly to the backtick
+    # operator, only it avoids invoking the command interpreter under operating systems
+    # that support fork-and-exec.
+    #
+    # This method accepts a variable number of parameters; the first param is always the
+    # command to run; successive parameters are command-line arguments for the process.
+    #
+    # === Parameters
+    # cmd(String):: Name of the command to run
+    # arg1(String):: Optional, first command-line argumument
+    # arg2(String):: Optional, first command-line argumument
+    # ...
+    # argN(String):: Optional, Nth command-line argumument
+    #
+    # === Return
+    # output(String):: The process' output
+    def run(cmd, *args)
+      pm = ProcessMonitor.new
+      output = StringIO.new
+
+      pm.spawn(cmd, *args) do |options|
+        output << options[:output] if options[:output]
+      end
+
+      pm.cleanup
+      output.close
+      output = output.string
+      return output
+    end
   end
 
-  class FilesystemBasedScraper < NewScraperBase
+  class FilesystemBasedScraper < ScraperBase
     def initialize(repository, options={})
       super
       @temporary = !options.has_key?(:directory)
@@ -182,7 +227,7 @@ module RightScale
           exclude_declarations =
             ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
           cookbook.archive =
-            watch("tar -C #{File.dirname fullpath} -c #{exclude_declarations} .")
+            watch("tar", "-C", File.dirname fullpath, "-c", "exclude_declarations", ".")
 
           return cookbook
         end
@@ -191,6 +236,11 @@ module RightScale
     end
   end
 
+  # Base class for FS based scrapers that want to do version control
+  # operations (CVS, SVN, etc.).  Subclasses can get away with
+  # implementing only #do_checkout but to support incremental
+  # operation need to implement #exists? and #do_update, in addition
+  # to FilesystemBasedScraper#ignorable_paths.
   class CheckoutBasedScraper < FilesystemBasedScraper
     def initialize(repository, options={})
       super

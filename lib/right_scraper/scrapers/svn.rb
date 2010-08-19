@@ -54,7 +54,7 @@ module RightScale
     end
   end
 
-  class NewSvnScraper < CheckoutBasedScraper
+  class SvnScraper < CheckoutBasedScraper
     def exists?
       File.exists?(File.join(checkout_path, '.svn'))
     end

@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -20,13 +20,12 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'right_scraper/scrapers/base'
+require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'curb'
 require 'libarchive_ruby'
 
 module RightScale
-
-  class NewDownloadScraper < NewScraperBase
+  class DownloadScraper < ScraperBase
     def initialize(*args)
       super(*args)
       @done = false
@@ -45,16 +44,22 @@ module RightScale
       true
     end
 
+    def is_useful?(credential)
+      credential && !credential.strip.empty?
+    end
+    def useful_part(credential)
+      credential.strip
+    end
     def next
       return nil if @done
 
       archive = Curl::Easy.http_get(@repository.url) { |curl|
-        if @repository.first_credential && @repository.second_credential
+        if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
           curl.http_auth_types = [:any]
           curl.timeout = @max_seconds if @max_seconds
           # Curl::Easy doesn't support bailing if too large
-          curl.username = @repository.first_credential
-          curl.password = @repository.second_credential
+          curl.username = useful_part(@repository.first_credential)
+          curl.password = useful_part(@repository.second_credential)
         end
       }.body_str
 
