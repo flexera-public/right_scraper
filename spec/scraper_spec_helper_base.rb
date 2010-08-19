@@ -53,14 +53,11 @@ module RightScale
       File.join(@tmpdir, "repository")
     end
 
-    attr_reader :repo_content
     # Default test repo content
     #
     # === Return
     # content(String):: Default test repo content
-    def repo_content
-      @repo_content
-    end
+    attr_reader :repo_content
 
     # Test branch content
     #
