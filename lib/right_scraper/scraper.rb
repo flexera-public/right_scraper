@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -25,11 +25,6 @@ module RightScale
   # Library main entry point. Instantiate this class and call the scrape
   # method to download or update a remote repository to the local disk.
   class Scraper
-
-    # (String) Path to directory where remote repository was downloaded
-    # Note: This will be a subfolder of the scrape directory (directory given to initializer)
-    attr_reader :last_repo_dir
-    
     # Initialize scrape destination directory
     #
     # === Parameters
@@ -75,16 +70,16 @@ module RightScale
       @last_repo_dir = @scraper.current_repo_dir
       @scraper.succeeded?
     end
-    
-    # Retrieve directory path where repo was or would be downloaded
+
+    # Path to directory where given repo should be or was downloaded
     #
     # === Parameters
     # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
     #
-    # === Return 
-    # repo_dir(String):: Path to local directory that corresponds to given repository
+    # === Return
+    # String:: Path to local directory that corresponds to given repository
     def repo_dir(repo)
-      repo_dir = RightScale::ScraperBase.repo_dir(scrape_dir, repo)
+      RightScale::ScraperBase.repo_dir(scrape_dir, repo)
     end
 
     # Error messages in case of failure
