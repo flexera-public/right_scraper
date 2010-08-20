@@ -64,6 +64,7 @@ module RightScale
       # files are in the same place and have the same content.
       archive_skeleton(cookbook.archive).should ==
         archive_skeleton(tarball)
+      cookbook.manifest.should == @helper.manifest
     end
   end
 end

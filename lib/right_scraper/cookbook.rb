@@ -38,6 +38,9 @@ module RightScale
     # (Hash) Metadata from the cookbook.
     attr_accessor :metadata
 
+    # (Hash) Manifest for cookbook.  A hash of path => SHA-1 digests.
+    attr_accessor :manifest
+
     # Position in the repository.  A datum gotten from the scraper and
     # associated with it.
     attr_accessor :position

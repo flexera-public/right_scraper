@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'digest/sha1'
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'tmpdir'
 
@@ -58,6 +59,28 @@ module RightScale
     # === Return
     # content(String):: Default test repo content
     attr_reader :repo_content
+
+    def manifest
+      hash = {}
+      scan(@repo_content, hash, nil)
+      hash['metadata.json'] = Digest::SHA1.hexdigest(@repo_content.to_json + "\n")
+      hash
+    end
+
+    def scan(contents, hash, position)
+      contents.each do |object|
+        if object.instance_of?(Hash)
+          object.each do |key, value|
+            relative_position = position ? File.join(position, key) : key
+            scan(value, hash, relative_position)
+          end
+        else
+          relative_position = position ? File.join(position, object) : object
+          hash[relative_position] = Digest::SHA1.hexdigest(object + "\n")
+        end
+      end
+    end
+    private :scan
 
     # Test branch content
     #

@@ -222,6 +222,8 @@ module RightScale
 
           cookbook.metadata = JSON.parse(open(fullpath) {|f| f.read })
 
+          cookbook.manifest = make_manifest(dir.path)
+
           # make new archive rooted here
           exclude_declarations =
             ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
@@ -233,6 +235,33 @@ module RightScale
       end
       nil
     end
+
+    def make_manifest(path)
+      hash = {}
+      scan(Dir.new(path), hash, nil)
+      hash
+    end
+
+    def scan(directory, hash, position)
+      directory.each do |entry|
+        next if entry == '.' || entry == '..'
+        next if ignorable?(entry)
+
+        fullpath = File.join(directory.path, entry)
+        relative_position = position ? File.join(position, entry) : entry
+
+        if File.directory?(fullpath)
+          scan(Dir.new(fullpath), hash, relative_position)
+        else
+          digest = Digest::SHA1.new
+          open(fullpath) do |f|
+            digest << f.read(2048) until f.eof?
+          end
+          hash[relative_position] = digest.hexdigest
+        end
+      end
+    end
+    private :scan
   end
 
   # Base class for FS based scrapers that want to do version control
