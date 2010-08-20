@@ -21,39 +21,9 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_base'))
-require 'svn/client'
-require 'tmpdir'
+require File.expand_path(File.join(File.dirname(__FILE__), 'client'))
 
 module RightScale
-  class SvnClient
-    def initialize(repo)
-      @repository = repo
-    end
-
-    def with_context(log="")
-      ctx = Svn::Client::Context.new
-      ctx.set_log_msg_func do |items|
-        [true, log]
-      end
-      ctx.add_simple_prompt_provider(0) do |cred, realm, username, may_save|
-        cred.username = @repository.first_credential unless @repository.first_credential.nil?
-        cred.password = @repository.second_credential unless @repository.second_credential.nil?
-        cred.may_save = false
-      end
-      ctx.add_username_prompt_provider(0) do |cred, realm, username, may_save|
-        cred.username = @repository.first_credential unless @repository.first_credential.nil?
-        cred.password = @repository.second_credential unless @repository.second_credential.nil?
-        cred.may_save = false
-      end
-      return ctx unless block_given?
-      begin
-        yield ctx
-      ensure
-        ctx.destroy
-      end
-    end
-  end
-
   class SvnScraper < CheckoutBasedScraper
     def exists?
       File.exists?(File.join(checkout_path, '.svn'))
