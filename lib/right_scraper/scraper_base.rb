@@ -22,6 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'watcher'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
 require 'tmpdir'
 require 'libarchive_ruby'
 
@@ -43,6 +44,8 @@ module RightScale
       @repository = repository
       @max_bytes = options[:max_bytes] || nil
       @max_seconds = options[:max_seconds] || nil
+      @logger = options[:logger] || Logger.new
+      @logger.repository = repository
     end
 
     # Return next Cookbook object from the stream.

@@ -20,35 +20,19 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'checkout_scraper_base'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'client'))
 
 module RightScale
-  class SvnScraper < CheckoutBasedScraper
-    def exists?
-      File.exists?(File.join(checkout_path, '.svn'))
-    end
-
-    def do_update
-      client = SvnClient.new(@repository)
-      client.with_context do |ctx|
-        @logger.operation(:update) do
-          ctx.update(checkout_path, @repository.tag || nil)
-        end
+  class Logger
+    attr_writer :repository
+    def operation(type, explanation="")
+      begin
+        yield
+      rescue
+        note_error($!)
+        raise
       end
     end
-    def do_checkout
-      super
-      client = SvnClient.new(@repository)
-      client.with_context do |ctx|
-        @logger.operation(:checkout_revision) do
-          ctx.checkout(@repository.url, checkout_path, @repository.tag || nil)
-        end
-      end
-    end
-
-    def ignorable_paths
-      ['.svn']
+    def note_error(exception, explanation="")
     end
   end
 end

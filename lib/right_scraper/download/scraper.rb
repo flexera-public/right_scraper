@@ -53,24 +53,28 @@ module RightScale
     def next
       return nil if @done
 
-      archive = Curl::Easy.http_get(@repository.url) { |curl|
-        if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
-          curl.http_auth_types = [:any]
-          curl.timeout = @max_seconds if @max_seconds
-          # Curl::Easy doesn't support bailing if too large
-          curl.username = useful_part(@repository.first_credential)
-          curl.password = useful_part(@repository.second_credential)
-        end
-      }.body_str
+      archive = @logger.operation(:downloading) do
+        Curl::Easy.http_get(@repository.url) { |curl|
+          if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
+            curl.http_auth_types = [:any]
+            curl.timeout = @max_seconds if @max_seconds
+            # Curl::Easy doesn't support bailing if too large
+            curl.username = useful_part(@repository.first_credential)
+            curl.password = useful_part(@repository.second_credential)
+          end
+        }.body_str
+      end
 
       cookbook = RightScale::Cookbook.new(@repository, archive, nil, position)
 
-      Archive.read_open_memory(archive) do |ar|
-        while entry = ar.next_header
-          if File.basename(entry.pathname) == "metadata.json"
-            cookbook.metadata = JSON.parse(ar.read_data)
-            @done = true
-            return cookbook
+      @logger.operation(:reading_metadata) do
+        Archive.read_open_memory(archive) do |ar|
+          while entry = ar.next_header
+            if File.basename(entry.pathname) == "metadata.json"
+              cookbook.metadata = JSON.parse(ar.read_data)
+              @done = true
+              return cookbook
+            end
           end
         end
       end

@@ -36,14 +36,20 @@ module RightScale
       super
       if exists?
         begin
-          do_update
+          @logger.operation(:updating) do
+            do_update
+          end
         rescue
-          puts "AARGH " + $!
+          @logger.note_error($!, "switching to checkout")
           FileUtils.remove_entry_secure checkout_path
-          do_checkout
+          @logger.operation(:checkout) do
+            do_checkout
+          end
         end
       else
-        do_checkout
+        @logger.operation(:checkout) do
+          do_checkout
+        end
       end
     end
 
@@ -56,6 +62,7 @@ module RightScale
     end
 
     def do_checkout
+      FileUtils.mkdir_p(checkout_path)
     end
 
     def checkout_path

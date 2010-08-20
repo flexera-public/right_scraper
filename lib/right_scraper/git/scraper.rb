@@ -33,7 +33,9 @@ module RightScale
 
     def do_update
       git = Git.open(checkout_path)
-      git.checkout(@repository.tag) if @repository.tag
+      @logger.operation(:checkout_revision) do
+        git.checkout(@repository.tag)
+      end if @repository.tag
       possibles = git.branches.local.select {|branch| branch.name == @repository.tag}
       # if possibles is empty, then tag is a SHA or a tag and in any
       # case fetching makes no sense.
@@ -41,15 +43,23 @@ module RightScale
         branch = possibles.first
         remotename = git.config("branch.#{branch.name}.remote")
         remote = git.remote(remotename)
-        remote.fetch
-        remote.merge
+        @logger.operation(:fetch) do
+          remote.fetch
+        end
+        @logger.operation(:merge) do
+          remote.merge
+        end
       end
     end
 
     def do_checkout
-      FileUtils.mkdir_p(checkout_path)
-      git = Git.clone(@repository.url, checkout_path)
-      git.checkout(@repository.tag) if @repository.tag
+      super
+      git = @logger.operation(:cloning, "to #{checkout_path}") do
+        Git.clone(@repository.url, checkout_path)
+      end
+      @logger.operation(:checkout_revision) do
+        git.checkout(@repository.tag)
+      end if @repository.tag
     end
 
     def ignorable_paths

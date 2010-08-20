@@ -31,9 +31,11 @@ module RightScale
       super
       @temporary = !options.has_key?(:directory)
       @basedir = options[:directory] || Dir.mktmpdir
-      FileUtils.mkdir(@basedir) unless File.exists?(@basedir)
-      @stack = []
-      rewind
+      @logger.operation(:initialize, "setting up in #{@basedir}") do
+        FileUtils.mkdir(@basedir) unless File.exists?(@basedir)
+        @stack = []
+        rewind
+      end
     end
 
     def ignorable_paths
@@ -41,13 +43,17 @@ module RightScale
     end
 
     def close
-      @stack.each {|s| s.close}
-      FileUtils.remove_entry_secure @basedir if @temporary
+      @logger.operation(:close) do
+        @stack.each {|s| s.close}
+        FileUtils.remove_entry_secure @basedir if @temporary
+      end
     end
 
     def rewind
-      @stack.each {|s| s.close}
-      @stack = [Dir.open(@basedir)]
+      @logger.operation(:rewind) do
+        @stack.each {|s| s.close}
+        @stack = [Dir.open(@basedir)]
+      end
     end
 
     # Return the position of the scraper.  Here, the position is the
@@ -67,19 +73,21 @@ module RightScale
 
     # Seek to the given position.
     def seek(position)
-      dirs = position.split(File::SEPARATOR)
-      rewind
-      until dirs.empty?
-        name = dirs.shift
-        dir = @stack.last
-        entry = dir.read
-        until entry == nil || entry == name
+      @logger.operation(:seek, "to #{position}") do
+        dirs = position.split(File::SEPARATOR)
+        rewind
+        until dirs.empty?
+          name = dirs.shift
+          dir = @stack.last
           entry = dir.read
+          until entry == nil || entry == name
+            entry = dir.read
+          end
+          raise "Position #{position} no longer exists!" if entry == nil
+          @stack << Dir.open(File.join(dir.path, name))
         end
-        raise "Position #{position} no longer exists!" if entry == nil
-        @stack << Dir.open(File.join(dir.path, name))
+        @stack.last.rewind # to make sure we don't miss a metadata.json here.
       end
-      @stack.last.rewind # to make sure we don't miss a metadata.json here.
     end
 
     def ignorable?(entry)
@@ -87,40 +95,48 @@ module RightScale
     end
 
     def next
-      until @stack.empty?
-        dir = @stack.last
-        entry = dir.read
-        if entry == nil
-          dir.close
-          @stack.pop
-          next
+      @logger.operation(:next) do
+        until @stack.empty?
+          dir = @stack.last
+          entry = dir.read
+          if entry == nil
+            dir.close
+            @stack.pop
+            next
+          end
+
+          fullpath = File.join(dir.path, entry)
+
+          next if entry == '.' || entry == '..'
+          next if ignorable?(entry)
+
+          if File.directory?(fullpath)
+            @stack << Dir.new(fullpath)
+            next
+          elsif entry == 'metadata.json'
+            cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
+
+            @logger.operation(:reading_metadata) do
+              cookbook.metadata = JSON.parse(open(fullpath) {|f| f.read })
+            end
+
+            @logger.operation(:creating_manifest) do
+              cookbook.manifest = make_manifest(dir.path)
+            end
+
+            @logger.operation(:creating_archive) do
+              # make new archive rooted here
+              exclude_declarations =
+                ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
+              cookbook.archive =
+                watch("tar -C #{File.dirname fullpath} -c #{exclude_declarations} .")
+            end
+
+            return cookbook
+          end
         end
-
-        fullpath = File.join(dir.path, entry)
-
-        next if entry == '.' || entry == '..'
-        next if ignorable?(entry)
-
-        if File.directory?(fullpath)
-          @stack << Dir.new(fullpath)
-          next
-        elsif entry == 'metadata.json'
-          cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
-
-          cookbook.metadata = JSON.parse(open(fullpath) {|f| f.read })
-
-          cookbook.manifest = make_manifest(dir.path)
-
-          # make new archive rooted here
-          exclude_declarations =
-            ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
-          cookbook.archive =
-            watch("tar -C #{File.dirname fullpath} -c #{exclude_declarations} .")
-
-          return cookbook
-        end
+        nil
       end
-      nil
     end
 
     def make_manifest(path)
@@ -149,36 +165,5 @@ module RightScale
       end
     end
     private :scan
-  end
-
-  # Base class for FS based scrapers that want to do version control
-  # operations (CVS, SVN, etc.).  Subclasses can get away with
-  # implementing only #do_checkout but to support incremental
-  # operation need to implement #exists? and #do_update, in addition
-  # to FilesystemBasedScraper#ignorable_paths.
-  class CheckoutBasedScraper < FilesystemBasedScraper
-    def initialize(repository, options={})
-      super
-      if exists?
-        do_update
-      else
-        do_checkout
-      end
-    end
-
-    def exists?
-      false
-    end
-
-    def do_update
-      do_checkout
-    end
-
-    def do_checkout
-    end
-
-    def checkout_path
-      @basedir
-    end
   end
 end
