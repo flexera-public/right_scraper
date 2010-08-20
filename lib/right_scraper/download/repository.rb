@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -20,22 +20,21 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
+require 'uri'
 
 module RightScale
-  # A "repository" that is just there for testing.
-  class MockRepository < Repository
-    def initialize
-      @repo_type = :mock
-    end
+  # A "cookbook repository" that is just an archive file hanging off a
+  # web server somewhere.
+  class DownloadRepository < Repository
     # (String) Type of the repository, here 'download'.
-    attr_accessor :repo_type
+    def repo_type
+      :download
+    end
 
-    # (String) Optional, tag or branch of repository that should be downloaded
-    attr_accessor :tag
-    
     # (String) Optional, username
     attr_accessor :first_credential
-    
+
     # (String) Optional, password
     attr_accessor :second_credential
 
@@ -45,20 +44,20 @@ module RightScale
     # === Returns
     # res(String):: Unique representation for this repo
     def to_s
-      res = "mock #{url}:#{tag}"
+      res = "download #{url}"
+    end
+
+    def to_url
+      add_users_to(url, first_credential, second_credential)
     end
 
     # (ScraperBase class) Appropriate class for scraping this sort of
     # repository.
     def scraper
-      @@scraper || raise("Scraper for mocks isn't defined yet")
-    end
-
-    def self.scraper=(scraper)
-      @@scraper = scraper
+      RightScale::DownloadScraper
     end
 
     # Add this repository to the list of available types.
-    @@types[:mock] = RightScale::MockRepository
+    @@types[:download] = RightScale::DownloadRepository
   end
 end

@@ -24,7 +24,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'svn'))
 require 'set'
 require 'libarchive_ruby'
 require 'highline/import'

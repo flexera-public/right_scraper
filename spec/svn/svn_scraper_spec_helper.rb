@@ -22,7 +22,6 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_spec_helper_base'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'svn'))
 require 'svn/repos'
 
 module RightScale

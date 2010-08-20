@@ -20,47 +20,46 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
 
 module RightScale
-  # A cookbook repository stored in a Git repository.
-  class GitRepository < Repository
-    def initialize(*args)
-      super
-      @tag = "master" if @tag.nil?
+  # A "repository" that is just there for testing.
+  class MockRepository < Repository
+    def initialize
+      @repo_type = :mock
     end
-
-    # (String) Type of the repository, here 'git'.
-    def repo_type
-      :git
-    end
+    # (String) Type of the repository, here 'download'.
+    attr_accessor :repo_type
 
     # (String) Optional, tag or branch of repository that should be downloaded
     attr_accessor :tag
-    alias_method :revision, :tag
 
-    # (String) Optional, git private SSH key content
+    # (String) Optional, username
     attr_accessor :first_credential
 
-    def checkout_hash
-      digest("#{repo_type} #{url} #{tag}")
-    end
+    # (String) Optional, password
+    attr_accessor :second_credential
 
-    def to_url
-      if first_credential
-        uri = add_users_to(url, first_credential)
-      else
-        uri = URI.parse(url)
-      end
-      uri
+    # Unique representation for this repo, should resolve to the same string
+    # for repos that should be cloned in same directory
+    #
+    # === Returns
+    # res(String):: Unique representation for this repo
+    def to_s
+      res = "mock #{url}:#{tag}"
     end
 
     # (ScraperBase class) Appropriate class for scraping this sort of
     # repository.
     def scraper
-      RightScale::GitScraper
+      @@scraper || raise("Scraper for mocks isn't defined yet")
+    end
+
+    def self.scraper=(scraper)
+      @@scraper = scraper
     end
 
     # Add this repository to the list of available types.
-    @@types[:git] = RightScale::GitRepository
+    @@types[:mock] = RightScale::MockRepository
   end
 end

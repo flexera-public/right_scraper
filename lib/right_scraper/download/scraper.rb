@@ -20,7 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_base'))
 require 'curb'
 require 'libarchive_ruby'
 

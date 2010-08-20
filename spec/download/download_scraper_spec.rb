@@ -26,7 +26,6 @@ unless RUBY_PLATFORM=~/mswin/
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'scrapers', 'download'))
 require 'tmpdir'
 require 'highline/import'
 

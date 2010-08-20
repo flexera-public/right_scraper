@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'watcher'))
 require 'tmpdir'
 require 'libarchive_ruby'
 

@@ -23,13 +23,12 @@
 
 # Explicitely list required files to make IDEs happy
 require 'fileutils'
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'download'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'git'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scrapers', 'svn'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'cookbook'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repository'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'download_repository'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'svn_repository'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'repositories', 'git_repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'download', 'repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'git', 'repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'svn', 'repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'download', 'scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'git', 'scraper'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'svn', 'scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'scraper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper', 'watcher'))
