@@ -20,31 +20,46 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'checkout_scraper_base'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'client'))
+
+require File.expand_path(File.join(File.dirname(__FILE__), 'fs_scraper_base'))
+require 'tmpdir'
+require 'libarchive_ruby'
 
 module RightScale
-  class SvnScraper < CheckoutBasedScraper
+  # Base class for FS based scrapers that want to do version control
+  # operations (CVS, SVN, etc.).  Subclasses can get away with
+  # implementing only #do_checkout but to support incremental
+  # operation need to implement #exists? and #do_update, in addition
+  # to FilesystemBasedScraper#ignorable_paths.
+  class CheckoutBasedScraper < FilesystemBasedScraper
+    def initialize(repository, options={})
+      super
+      if exists?
+        begin
+          do_update
+        rescue
+          puts "AARGH " + $!
+          FileUtils.remove_entry_secure checkout_path
+          do_checkout
+        end
+      else
+        do_checkout
+      end
+    end
+
     def exists?
-      File.exists?(File.join(checkout_path, '.svn'))
+      false
     end
 
     def do_update
-      client = SvnClient.new(@repository)
-      client.with_context do |ctx|
-        ctx.update(checkout_path, @repository.tag || nil)
-      end
-    end
-    def do_checkout
-      FileUtils.mkdir_p(checkout_path)
-      client = SvnClient.new(@repository)
-      client.with_context do |ctx|
-        ctx.checkout(@repository.url, checkout_path, @repository.tag || nil)
-      end
+      do_checkout
     end
 
-    def ignorable_paths
-      ['.svn']
+    def do_checkout
+    end
+
+    def checkout_path
+      @basedir
     end
   end
 end

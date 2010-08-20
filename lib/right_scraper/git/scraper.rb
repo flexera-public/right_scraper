@@ -20,7 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_base'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'checkout_scraper_base'))
 require 'git'
 require 'libarchive_ruby'
 require 'tmpdir'
@@ -32,23 +32,17 @@ module RightScale
     end
 
     def do_update
-      begin
-        git = Git.open(checkout_path)
-        git.checkout(@repository.tag) if @repository.tag
-        possibles = git.branches.local.select {|branch| branch.name == @repository.tag}
-        # if possibles is empty, then tag is a SHA or a tag and in any
-        # case fetching makes no sense.
-        unless possibles.empty?
-          branch = possibles.first
-          remotename = git.config("branch.#{branch.name}.remote")
-          remote = git.remote(remotename)
-          remote.fetch
-          remote.merge
-        end
-      rescue Git::GitExecuteError
-        puts "AAARGH " + $!
-        FileUtils.remove_entry_secure checkout_path
-        do_checkout
+      git = Git.open(checkout_path)
+      git.checkout(@repository.tag) if @repository.tag
+      possibles = git.branches.local.select {|branch| branch.name == @repository.tag}
+      # if possibles is empty, then tag is a SHA or a tag and in any
+      # case fetching makes no sense.
+      unless possibles.empty?
+        branch = possibles.first
+        remotename = git.config("branch.#{branch.name}.remote")
+        remote = git.remote(remotename)
+        remote.fetch
+        remote.merge
       end
     end
 
