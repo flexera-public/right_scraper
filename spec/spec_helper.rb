@@ -5,14 +5,14 @@
 # a copy of this software and associated documentation files (the
 # 'Software'), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to 
+# distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -27,13 +27,13 @@ require 'spec'
 require 'find'
 require 'json'
 
-$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper')))
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
 
 Spec::Runner.configuration.mock_with :flexmock
 
 # Helper module
 module RightScale
-  
+
   module SpecHelpers
 
     # Set the 'verbose' environment variable for debugging a failing spec
@@ -83,11 +83,11 @@ module RightScale
           end
         else
           File.open(File.join(path, elem.to_s), 'w') { |f| f.puts elem.to_s }
-        end  
+        end
       end
       true
     end
-    
+
     # Extract array representing file layout for given directory
     #
     # === Parameters
@@ -113,12 +113,12 @@ module RightScale
       end
       dirs + files.sort
     end
-           
+
     Spec::Matchers.define :begin_with do |path|
       match do |directory|
         directory[0...path.length] == path
       end
     end
   end
-  
+
 end
