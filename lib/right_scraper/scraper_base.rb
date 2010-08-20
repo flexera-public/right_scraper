@@ -93,52 +93,5 @@ module RightScale
       dir_path  = File.join(root_dir, dir_name)
       repo_dir = "#{dir_path}/repo"
     end
-
-    def watch(command, *args)
-      watcher = Watcher.new(max_bytes, max_seconds)
-      Dir.mktmpdir {|dir|
-        result = watcher.launch_and_watch(command, args, dir)
-        if result.status == :timeout
-          raise "Timeout error"
-        elsif result.status == :size_exceeded
-          raise "Command took too much space"
-        elsif result.exit_code != 0
-          raise "Unknown error: #{result.exit_code} output #{result.output}"
-        else
-          result.output
-        end
-      }
-    end
-
-    # Spawn given process, wait for it to complete, and return its output The exit status
-    # of the process is available in the $? global. Functions similarly to the backtick
-    # operator, only it avoids invoking the command interpreter under operating systems
-    # that support fork-and-exec.
-    #
-    # This method accepts a variable number of parameters; the first param is always the
-    # command to run; successive parameters are command-line arguments for the process.
-    #
-    # === Parameters
-    # cmd(String):: Name of the command to run
-    # arg1(String):: Optional, first command-line argumument
-    # arg2(String):: Optional, first command-line argumument
-    # ...
-    # argN(String):: Optional, Nth command-line argumument
-    #
-    # === Return
-    # output(String):: The process' output
-    def run(cmd, *args)
-      pm = ProcessMonitor.new
-      output = StringIO.new
-
-      pm.spawn(cmd, *args) do |options|
-        output << options[:output] if options[:output]
-      end
-
-      pm.cleanup
-      output.close
-      output = output.string
-      return output
-    end
   end
 end

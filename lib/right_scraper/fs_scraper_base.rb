@@ -22,15 +22,37 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'scraper_base'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'archive'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'manifest'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'metadata'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'union'))
 require 'tmpdir'
 require 'libarchive_ruby'
 
 module RightScale
   class FilesystemBasedScraper < ScraperBase
+    # Create a new scraper.  In addition to the options recognized by
+    # ScraperBase#initialize, this class recognizes _:directory_ and
+    # _:builders_.
+    #
+    # === Options ===
+    # _:directory_:: Directory to perform scraper work in
+    # _:builders_:: List of Builder classes to use, defaulting to
+    #               ArchiveBuilder, MetadataBuilder and ManifestBuilder
+    #
+    # === Parameters ===
+    # repository(RightScale::Repository):: repository to scrape
+    # options(Hash):: scraper options
     def initialize(repository, options={})
       super
       @temporary = !options.has_key?(:directory)
       @basedir = options[:directory] || Dir.mktmpdir
+      builders = options[:builders] || [ArchiveBuilder, MetadataBuilder, ManifestBuilder]
+      @builder = UnionBuilder.new(builders,
+                                  :scraper => self,
+                                  :logger => @logger,
+                                  :max_bytes => max_bytes,
+                                  :max_seconds => max_seconds)
       @logger.operation(:initialize, "setting up in #{@basedir}") do
         FileUtils.mkdir(@basedir) unless File.exists?(@basedir)
         @stack = []
@@ -116,21 +138,7 @@ module RightScale
           elsif entry == 'metadata.json'
             cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
 
-            @logger.operation(:reading_metadata) do
-              cookbook.metadata = JSON.parse(open(fullpath) {|f| f.read })
-            end
-
-            @logger.operation(:creating_manifest) do
-              cookbook.manifest = make_manifest(dir.path)
-            end
-
-            @logger.operation(:creating_archive) do
-              # make new archive rooted here
-              exclude_declarations =
-                ignorable_paths.map {|path| "--exclude #{path}"}.join(' ')
-              cookbook.archive =
-                watch("tar -C #{File.dirname fullpath} -c #{exclude_declarations} .")
-            end
+            @builder.go(dir.path, cookbook)
 
             return cookbook
           end
@@ -138,32 +146,5 @@ module RightScale
         nil
       end
     end
-
-    def make_manifest(path)
-      hash = {}
-      scan(Dir.new(path), hash, nil)
-      hash
-    end
-
-    def scan(directory, hash, position)
-      directory.each do |entry|
-        next if entry == '.' || entry == '..'
-        next if ignorable?(entry)
-
-        fullpath = File.join(directory.path, entry)
-        relative_position = position ? File.join(position, entry) : entry
-
-        if File.directory?(fullpath)
-          scan(Dir.new(fullpath), hash, relative_position)
-        else
-          digest = Digest::SHA1.new
-          open(fullpath) do |f|
-            digest << f.read(2048) until f.eof?
-          end
-          hash[relative_position] = digest.hexdigest
-        end
-      end
-    end
-    private :scan
   end
 end
