@@ -23,11 +23,22 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'checkout_scraper_base'))
 require 'curb'
 require 'libarchive_ruby'
+require 'tempfile'
 
 module RightScale
   class DownloadScraper < ScraperBase
-    def initialize(*args)
-      super(*args)
+    # Create a new DownloadScraper.  In addition to the options recognized by
+    # ScraperBase#initialize, this class recognizes _:directory_.
+    #
+    # === Options ===
+    # _:directory_:: Directory to perform scraper work in
+    #
+    # === Parameters ===
+    # repository(RightScale::Repository):: repository to scrape
+    # options(Hash):: scraper options
+    def initialize(repository, options={})
+      super
+      @basedir = options[:directory]
       @done = false
     end
     # Return the position of the scraper.  This always returns true,
@@ -53,8 +64,15 @@ module RightScale
     def next
       return nil if @done
 
-      archive = @logger.operation(:downloading) do
-        Curl::Easy.http_get(@repository.url) { |curl|
+      if @basedir.nil?
+        file = Tempfile.new("archive")
+      else
+        file = Tempfile.new("archive", tmpdir=@basedir)
+      end
+      bytecount = 0
+
+      @logger.operation(:downloading) do
+        Curl::Easy.http_get(@repository.url) do |curl|
           if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
             curl.http_auth_types = [:any]
             curl.timeout = @max_seconds if @max_seconds
@@ -62,13 +80,27 @@ module RightScale
             curl.username = useful_part(@repository.first_credential)
             curl.password = useful_part(@repository.second_credential)
           end
-        }.body_str
+          curl.on_body do |body_data|
+            file.write body_data
+            bytecount += body_data.length
+            if bytecount > @max_bytes
+              raise "Command took too much space"
+            end
+            body_data.length
+          end
+        end
       end
 
-      cookbook = RightScale::Cookbook.new(@repository, archive, nil, position)
+      file.close
+
+      cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
+
+      file.open
+      cookbook.archive = file.read
+      file.close
 
       @logger.operation(:reading_metadata) do
-        Archive.read_open_memory(archive) do |ar|
+        Archive.read_open_filename(file.path) do |ar|
           while entry = ar.next_header
             if File.basename(entry.pathname) == "metadata.json"
               cookbook.metadata = JSON.parse(ar.read_data)
@@ -78,6 +110,8 @@ module RightScale
           end
         end
       end
+
+      file.close(true)
 
       raise "No metadata found for {#repository}"
     end
