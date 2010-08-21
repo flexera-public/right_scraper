@@ -39,7 +39,7 @@ module RightScale
       @logger.operation(:creating_archive) do
         exclude_declarations =
           @scraper.ignorable_paths.map {|path| ["--exclude", path]}
-        cookbook.archive =
+        cookbook.data[:archive] =
           watch("tar", *["-C", dir, "-c", exclude_declarations, "."].flatten)
       end
     end

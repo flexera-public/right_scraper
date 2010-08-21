@@ -55,15 +55,17 @@ module RightScale
       cookbook.repository.should == @repo
       cookbook.position.should == position
       cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
-      root = File.join(params[:rootdir] || @helper.repo_path, position)
-      exclude_declarations =
-        @ignore.map {|path| "--exclude #{path}"}.join(' ')
-      tarball = `tar -C #{root} -c #{exclude_declarations} .`
-      # We would compare these literally, but minor metadata changes
-      # will completely hose you, so it's enough to make sure that the
-      # files are in the same place and have the same content.
-      archive_skeleton(cookbook.archive).should ==
-        archive_skeleton(tarball)
+      if cookbook.data.key?(:archive)
+        root = File.join(params[:rootdir] || @helper.repo_path, position)
+        exclude_declarations =
+          @ignore.map {|path| "--exclude #{path}"}.join(' ')
+        tarball = `tar -C #{root} -c #{exclude_declarations} .`
+        # We would compare these literally, but minor metadata changes
+        # will completely hose you, so it's enough to make sure that the
+        # files are in the same place and have the same content.
+        archive_skeleton(cookbook.data[:archive]).should ==
+          archive_skeleton(tarball)
+      end
       cookbook.manifest.should == @helper.manifest
     end
   end

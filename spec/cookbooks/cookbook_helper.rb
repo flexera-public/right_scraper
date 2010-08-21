@@ -70,7 +70,7 @@ module RightScale
 
     def example_cookbook(repository, position=nil)
       @helper = RightScale::ScraperSpecHelperBase.new if @helper.nil?
-      RightScale::Cookbook.new(repository, "", @helper.repo_content, position)
+      RightScale::Cookbook.new(repository, @helper.repo_content, position)
     end
 
     def parse_url(*args)

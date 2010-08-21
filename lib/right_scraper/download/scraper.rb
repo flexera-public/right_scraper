@@ -93,10 +93,10 @@ module RightScale
 
       file.close
 
-      cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
+      cookbook = RightScale::Cookbook.new(@repository, nil, position)
 
       file.open
-      cookbook.archive = file.read
+      cookbook.data[:archive] = file.read
       file.close
 
       @logger.operation(:reading_metadata) do

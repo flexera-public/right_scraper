@@ -32,11 +32,12 @@ module RightScale
     # (RightScale::Repository) Repository the cookbook was fetched from.
     attr_accessor :repository
 
-    # (Archive) Archive of the cookbook.
-    attr_accessor :archive
-
     # (Hash) Metadata from the cookbook.
     attr_accessor :metadata
+
+    # (Hash) Miscellaneous unsynchronized data; currently used to
+    # store the archive itself.
+    attr_accessor :data
 
     # (Hash) Manifest for cookbook.  A hash of path => SHA-1 digests.
     attr_accessor :manifest
@@ -49,12 +50,11 @@ module RightScale
     #
     # === Parameters
     # repo(RightScale::Repository):: repository to load cookbook from
-    # archive(Archive):: cookbook archive
     # metadata(Hash):: metadata for the cookbook
     # position:: position in the repository
-    def initialize(repo, archive, metadata, position)
+    def initialize(repo, metadata, position)
       @repository = repo
-      @archive = archive
+      @data = {}
       @metadata = metadata
       @position = position
     end
@@ -84,7 +84,7 @@ module RightScale
     def self.from_url(url)
       hash, position = split_url(url)
       @repo = Repository.from_hash(hash)
-      Cookbook.new(@repo, nil, nil, position)
+      Cookbook.new(@repo, nil, position)
     end
 
     def self.parse_query(string)

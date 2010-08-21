@@ -38,7 +38,7 @@ module RightScale
     # === Options ===
     # _:directory_:: Directory to perform scraper work in
     # _:builders_:: List of Builder classes to use, defaulting to
-    #               ArchiveBuilder, MetadataBuilder and ManifestBuilder
+    #               FilesystemBuilder
     #
     # === Parameters ===
     # repository(RightScale::Repository):: repository to scrape
@@ -47,7 +47,7 @@ module RightScale
       super
       @temporary = !options.has_key?(:directory)
       @basedir = options[:directory] || Dir.mktmpdir
-      builders = options[:builders] || [ArchiveBuilder, MetadataBuilder, ManifestBuilder]
+      builders = options[:builders] || [FilesystemBuilder]
       @builder = UnionBuilder.new(builders,
                                   :scraper => self,
                                   :logger => @logger,
@@ -136,7 +136,7 @@ module RightScale
             @stack << Dir.new(fullpath)
             next
           elsif entry == 'metadata.json'
-            cookbook = RightScale::Cookbook.new(@repository, nil, nil, position)
+            cookbook = RightScale::Cookbook.new(@repository, nil, position)
 
             @builder.go(dir.path, cookbook)
 

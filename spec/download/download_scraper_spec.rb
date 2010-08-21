@@ -124,7 +124,7 @@ describe RightScale::DownloadScraper do
       cookbook = @scraper.next
       cookbook.should_not == nil
       example = File.open(@download_file, 'r').read
-      cookbook.archive.should == example
+      cookbook.data[:archive].should == example
       cookbook.repository.should == @repo
       cookbook.position.should == true
       cookbook.metadata.should == @repo_content
@@ -138,7 +138,7 @@ describe RightScale::DownloadScraper do
         cookbook = @scraper.next
         cookbook.should_not == nil
         example = File.open(@download_file + ".gz", 'r').read
-        cookbook.archive.should == example
+        cookbook.data[:archive].should == example
         cookbook.repository.should == @repo
         cookbook.position.should == true
         cookbook.metadata.should == @repo_content
@@ -155,7 +155,7 @@ describe RightScale::DownloadScraper do
         cookbook = @scraper.next
         cookbook.should_not == nil
         example = File.open(@download_file + ".bz2", 'r').read
-        cookbook.archive.should == example
+        cookbook.data[:archive].should == example
         cookbook.repository.should == @repo
         cookbook.position.should == true
         cookbook.metadata.should == @repo_content
