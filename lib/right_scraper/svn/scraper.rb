@@ -33,7 +33,7 @@ module RightScale
     # Boolean:: true if the checkout already exists (and thus
     #           incremental updating can occur).
     def exists?
-      File.exists?(File.join(checkout_path, '.svn'))
+      File.exists?(File.join(basedir, '.svn'))
     end
 
     # Incrementally update the checkout.  The operations are as follows:
@@ -45,19 +45,19 @@ module RightScale
       client = SvnClient.new(@repository)
       client.with_context do |ctx|
         @logger.operation(:update) do
-          ctx.update(checkout_path, @repository.tag || nil)
+          ctx.update(basedir, @repository.tag || nil)
         end
       end
     end
 
     # Check out the remote repository.  The operations are as follows:
-    # * checkout repository at #tag to #checkout_path
+    # * checkout repository at #tag to #basedir
     def do_checkout
       super
       client = SvnClient.new(@repository)
       client.with_context do |ctx|
         @logger.operation(:checkout_revision) do
-          ctx.checkout(@repository.url, checkout_path, @repository.tag || nil)
+          ctx.checkout(@repository.url, basedir, @repository.tag || nil)
         end
       end
     end

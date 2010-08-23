@@ -121,7 +121,7 @@ describe RightScale::GitScraper do
       it_should_behave_like "From-scratch scraping"
 
       it 'should scrape a sha' do
-        check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.checkout_path
+        check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.basedir
       end
     end
 
@@ -139,7 +139,7 @@ describe RightScale::GitScraper do
       end
 
       it 'the scraper should store intermediate versions where we expect' do
-        @scraper.checkout_path.should begin_with @helper.scraper_path
+        @scraper.basedir.should begin_with @helper.scraper_path
       end
 
       it 'the scraper should scrape' do
@@ -159,7 +159,7 @@ describe RightScale::GitScraper do
 
         context 'a new scraper' do
           before(:each) do
-            @olddir = @scraper.checkout_path
+            @olddir = @scraper.basedir
             @scraper.close
             @scraper = @scraperclass.new(@repo,
                                          :directory => @helper.scraper_path,
@@ -168,7 +168,7 @@ describe RightScale::GitScraper do
           end
 
           it 'should use the same directory for files' do
-            @olddir.should == @scraper.checkout_path
+            @olddir.should == @scraper.basedir
           end
 
           it 'should see the new change' do

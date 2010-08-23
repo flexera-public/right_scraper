@@ -78,12 +78,12 @@ module RightScale
     # Perform a de novo full checkout of the repository.  Subclasses
     # must override this to do anything useful.
     def do_checkout
-      FileUtils.mkdir_p(checkout_path)
+      FileUtils.mkdir_p(basedir)
     end
 
-    # Path to check repository to.  Currently @basedir.
-    def checkout_path
-      @basedir
+    # Path to check repository to.  Currently @basedir/repository hash.
+    def basedir
+      File.join(@basedir, @repository.repository_hash)
     end
   end
 end

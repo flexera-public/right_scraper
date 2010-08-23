@@ -67,12 +67,15 @@ module RightScale
                                   :logger => @logger,
                                   :max_bytes => max_bytes,
                                   :max_seconds => max_seconds)
-      @logger.operation(:initialize, "setting up in #{@basedir}") do
-        FileUtils.mkdir(@basedir) unless File.exists?(@basedir)
+      @logger.operation(:initialize, "setting up in #{basedir}") do
+        FileUtils.mkdir_p(basedir)
         @stack = []
         rewind
       end
     end
+
+    # (String) Base directory where filesystem will be located.
+    attr_reader :basedir
 
     # Paths to ignore when traversing the filesystem.  Mostly used for
     # things like Git and Subversion version control directories.
@@ -106,7 +109,7 @@ module RightScale
     def rewind
       @logger.operation(:rewind) do
         @stack.each {|s| s.close}
-        @stack = [Dir.open(@basedir)]
+        @stack = [Dir.open(basedir)]
       end
     end
 
@@ -119,7 +122,7 @@ module RightScale
     alias_method :tell, :pos
 
     # Turn path from an absolute filesystem location to a relative
-    # file location from @basedir.
+    # file location from #basedir.
     #
     # === Parameters
     # path(String):: absolute path to relativize
@@ -127,7 +130,7 @@ module RightScale
     # === Returns
     # res(String):: relative pathname for path
     def strip_basedir(path)
-      res = path[@basedir.length+1..-1]
+      res = path[basedir.length+1..-1]
       if res == nil || res == ""
         "."
       else

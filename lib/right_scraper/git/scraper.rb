@@ -35,7 +35,7 @@ module RightScale
     # Boolean:: true if the checkout already exists (and thus
     #           incremental updating can occur).
     def exists?
-      File.exists?(File.join(checkout_path, '.git'))
+      File.exists?(File.join(basedir, '.git'))
     end
 
     # Incrementally update the checkout.  The operations are as follows:
@@ -47,7 +47,7 @@ module RightScale
     # Note that if #tag is a SHA revision or a tag that exists in the
     # current repository, no fetching is done.
     def do_update
-      git = Git.open(checkout_path)
+      git = Git.open(basedir)
       @logger.operation(:checkout_revision) do
         git.checkout(@repository.tag)
       end if @repository.tag
@@ -68,12 +68,12 @@ module RightScale
     end
 
     # Clone the remote repository.  The operations are as follows:
-    # * clone repository to #checkout_path
+    # * clone repository to #basedir
     # * checkout #tag
     def do_checkout
       super
-      git = @logger.operation(:cloning, "to #{checkout_path}") do
-        Git.clone(@repository.url, checkout_path)
+      git = @logger.operation(:cloning, "to #{basedir}") do
+        Git.clone(@repository.url, basedir)
       end
       @logger.operation(:checkout_revision) do
         git.checkout(@repository.tag)
