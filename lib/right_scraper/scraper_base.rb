@@ -23,6 +23,9 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'watcher'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'scanners', 'manifest'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'scanners', 'metadata'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'scanners', 'union'))
 require 'tmpdir'
 require 'libarchive_ruby'
 
@@ -59,6 +62,8 @@ module RightScale
     # _:max_bytes_:: Maximum number of bytes to read
     # _:max_seconds_:: Maximum number of seconds to spend reading
     # _:logger_:: Logger to use
+    # _:scanners_:: List of Scanner classes to use, defaulting to
+    #               ManifestScanner and MetadataScanner
     #
     # === Parameters ===
     # repository(RightScale::Repository):: repository to scrape
@@ -69,6 +74,8 @@ module RightScale
       @max_seconds = options[:max_seconds] || nil
       @logger = options[:logger] || Logger.new
       @logger.repository = repository
+      scanners = options[:scanners] || [MetadataScanner, ManifestScanner]
+      @scanner = UnionScanner.new(scanners, options)
     end
 
     # Return next cookbook from the stream, or nil if none.

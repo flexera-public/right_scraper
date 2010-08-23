@@ -21,56 +21,52 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require 'json'
-require 'digest/sha1'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
 module RightScale
-  # Class for building manifests from filesystem based checkouts.
-  class ManifestBuilder < Builder
-    # Create a new ManifestBuilder.  In addition to the options
-    # recognized by Builder#initialize, recognizes _:scraper_.
+  # Build metadata by scanning the filesystem.
+  class FilesystemBuilder < Builder
+    # Create a new filesystem scanner.  In addition to the options
+    # recognized by Builder, this class recognizes _:scraper_ and
+    # _:scanner:_.
     #
     # === Options ===
     # _:scraper_:: Required.  FilesystemBasedScraper currently being used
+    # _:scanner_:: Required.  Scanner currently being used
+    #
+    # === Parameters ===
+    # options(Hash):: scraper options
     def initialize(options={})
       super
       @scraper = options.fetch(:scraper)
+      @scanner = options.fetch(:scanner)
     end
 
-    # Build manifest, storing it in Cookbook#manifest.
+    # Run builder for this cookbook.
     #
     # === Parameters ===
-    # dir(String):: directory where cookbook exists
-    # cookbook(RightScale::Cookbook):: cookbook being built
+    # dir(String):: directory cookbook exists at
+    # cookbook(RightScale::Cookbook):: cookbook instance being built
     def go(dir, cookbook)
-      @logger.operation(:creating_manifest) do
-        cookbook.manifest = make_manifest(dir)
+      @logger.operation(:scanning_filesystem, "rooted at #{dir}") do
+        @scanner.begin(cookbook)
+        maybe_scan(Dir.new(dir), nil)
+        @scanner.end(cookbook)
       end
     end
 
-    private
-
-    # Build a manifest starting at path.
-    #
-    # === Parameters ===
-    # path(String):: path to begin making the manifest
-    #
-    # === Returns ===
-    # hash(Hash):: relative pathname => digest manifest
-    def make_manifest(path)
-      hash = {}
-      scan(Dir.new(path), hash, nil)
-      hash
+    def maybe_scan(directory, position)
+      if @scanner.notice_dir(position)
+        scan(directory, position)
+      end
     end
 
-    # Build manifests for this directory.
+    # Scan the contents of directory.
     #
     # === Parameters ===
     # directory(Dir):: directory to scan
-    # hash(Hash):: partial manifest
     # position(String):: relative pathname for _directory_ from root of cookbook
-    def scan(directory, hash, position)
+    def scan(directory, position)
       directory.each do |entry|
         next if entry == '.' || entry == '..'
         next if @scraper.ignorable?(entry)
@@ -79,13 +75,11 @@ module RightScale
         relative_position = position ? File.join(position, entry) : entry
 
         if File.directory?(fullpath)
-          scan(Dir.new(fullpath), hash, relative_position)
+          maybe_scan(Dir.new(fullpath), relative_position)
         else
-          digest = Digest::SHA1.new
-          open(fullpath) do |f|
-            digest << f.read(2048) until f.eof?
+          @scanner.notice(relative_position) do
+            open(fullpath) {|f| f.read}
           end
-          hash[relative_position] = digest.hexdigest
         end
       end
     end

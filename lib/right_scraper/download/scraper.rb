@@ -108,21 +108,22 @@ module RightScale
       cookbook.data[:archive] = file.read
       file.close
 
+      @scanner.begin(cookbook)
       @logger.operation(:reading_metadata) do
         Archive.read_open_filename(file.path) do |ar|
           while entry = ar.next_header
-            if File.basename(entry.pathname) == "metadata.json"
-              cookbook.metadata = JSON.parse(ar.read_data)
-              @done = true
-              return cookbook
-            end
+            next unless entry.regular?
+            @scanner.notice(entry.pathname) {ar.read_data}
           end
         end
       end
+      @scanner.end(cookbook)
 
       file.close(true)
+      @done = true
 
-      raise "No metadata found for {#repository}"
+      raise "No metadata found for {#repository}" unless cookbook.metadata
+      cookbook
     end
   end
 end

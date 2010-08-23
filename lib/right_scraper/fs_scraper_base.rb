@@ -23,8 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'scraper_base'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'archive'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'manifest'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'metadata'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'filesystem'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'builders', 'union'))
 require 'tmpdir'
 require 'libarchive_ruby'
@@ -53,6 +52,8 @@ module RightScale
     # _:directory_:: Directory to perform scraper work in
     # _:builders_:: List of Builder classes to use, defaulting to
     #               FilesystemBuilder
+    # _:scanners_:: List of Scanner classes to use, defaulting to
+    #               ManifestScanner and MetadataScanner
     #
     # === Parameters ===
     # repository(RightScale::Repository):: repository to scrape
@@ -61,9 +62,12 @@ module RightScale
       super
       @temporary = !options.has_key?(:directory)
       @basedir = options[:directory] || Dir.mktmpdir
+      scanners = options[:scanners] || [MetadataScanner, ManifestScanner]
       builders = options[:builders] || [FilesystemBuilder]
+      scanner = UnionScanner.new(scanners, :logger => @logger)
       @builder = UnionBuilder.new(builders,
                                   :scraper => self,
+                                  :scanner => scanner,
                                   :logger => @logger,
                                   :max_bytes => max_bytes,
                                   :max_seconds => max_seconds)

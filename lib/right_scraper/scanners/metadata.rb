@@ -25,17 +25,42 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'json'
 
 module RightScale
-  # Class for reading JSON metadata from filesystem based checkouts.
-  class MetadataBuilder < Builder
-    # Read metadata, storing it in Cookbook#metadata.
+  # Load cookbook metadata from a filesystem.
+  class MetadataScanner < Scanner
+    # Begin a scan for the given cookbook.
     #
     # === Parameters ===
-    # dir(String):: directory where cookbook exists
-    # cookbook(RightScale::Cookbook):: cookbook being built
-    def go(dir, cookbook)
-      @logger.operation(:reading_metadata) do
-        cookbook.metadata = JSON.parse(open(File.join(dir, "metadata.json")) {|f| f.read })
+    # cookbook(RightScale::Cookbook):: cookbook to scan
+    def begin(cookbook)
+      @cookbook = cookbook
+    end
+
+    # Notice a file during scanning.
+    #
+    # === Block ===
+    # Return the data for this file.  We use a block because it may
+    # not always be necessary to read the data.
+    #
+    # === Parameters ===
+    # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+    def notice(relative_position)
+      if relative_position == "metadata.json"
+        @cookbook.metadata = JSON.parse(yield)
       end
+    end
+
+    # Notice a directory during scanning.  Since metadata.json is by
+    # definition only in the root directory we don't need to recurse,
+    # but we do need to go into the first directory (identified by
+    # _relative_position_ being _nil_).
+    #
+    # === Parameters ===
+    # relative_position(String):: relative pathname for the directory from root of cookbook
+    #
+    # === Returns ===
+    # Boolean:: should the scanning recurse into the directory
+    def notice_dir(relative_position)
+      relative_position == nil
     end
   end
 end
