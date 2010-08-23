@@ -74,11 +74,28 @@ module RightScale
     # describes where and how to fetch the cookbook.  It should always
     # be the case that
     #   Cookbook.from_url(cookbook.to_url) == cookbook
+    #
+    # One caveat is that the credentials required to access the
+    # repository this cookbook points to are not encoded as a part of
+    # this URL, meaning that it is not necessarily possible to
+    # rescrape a cookbook without knowing those credentials elsewhere.
+    # However due to the definition of Repository#repository_hash and
+    # Repository#checkout_hash, those hashes are accurate.
     def to_url
       repo_url = @repository.to_url
-      position_portion = pos.nil? ? "" : "?p=#{pos}"
-      tag_portion = @repository.revision.nil? ? "" : "\##{@repository.revision}"
-      "#{@repository.repo_type}:#{repo_url}#{position_portion}#{tag_portion}"
+      if repo_url.userinfo
+        repo_url.user = nil
+        repo_url.password = nil
+      end
+      unless pos.nil?
+        query = Cookbook.parse_query(repo_url.query || "")
+        query["p"] = [pos.to_s]
+        repo_url.query = Cookbook.unparse_query(query)
+      end
+      unless @repository.revision.nil?
+        repo_url.fragment = @repository.revision
+      end
+      "#{@repository.repo_type}:#{repo_url}"
     end
 
     # Return a hexadecimal string that uniquely identifies this

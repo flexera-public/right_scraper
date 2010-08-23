@@ -32,8 +32,8 @@ describe RightScale::Cookbook do
       parse_url(@repository, "/a")[:position].should == "/a"
     end
     it 'should have the appropriate credentials' do
-      parse_url(@repository)[:username].should == @repository.first_credential
-      parse_url(@repository)[:password].should == @repository.second_credential
+      parse_url(@repository)[:username].should be_nil
+      parse_url(@repository)[:password].should be_nil
     end
   end
 
