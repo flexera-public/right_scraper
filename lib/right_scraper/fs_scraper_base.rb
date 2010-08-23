@@ -30,6 +30,20 @@ require 'tmpdir'
 require 'libarchive_ruby'
 
 module RightScale
+  # Base class for generic filesystem based scrapers.  Subclasses
+  # should override #ignorable_paths, and add some setup code to
+  # #initialize so that the scraper has something to scrape.
+  #
+  # It is important to call #close when you are done with the scraper
+  # so that various open file descriptors and temporary files and the
+  # like can be cleaned up.  Ideally, use begin/ensure for this, like
+  # follows:
+  #   begin
+  #     fs = FilesystemBasedScraper.new(...)
+  #     ...
+  #   ensure
+  #     fs.close
+  #   end
   class FilesystemBasedScraper < ScraperBase
     # Create a new scraper.  In addition to the options recognized by
     # ScraperBase#initialize, this class recognizes _:directory_ and
@@ -60,17 +74,35 @@ module RightScale
       end
     end
 
+    # Paths to ignore when traversing the filesystem.  Mostly used for
+    # things like Git and Subversion version control directories.
+    #
+    # === Returns
+    # List:: list of filenames to ignore.
     def ignorable_paths
       []
     end
 
+    # Close the scraper, cleaning up any temporary data.
     def close
       @logger.operation(:close) do
         @stack.each {|s| s.close}
+        @stack = []
         FileUtils.remove_entry_secure @basedir if @temporary
       end
     end
 
+    # Return true if this scraper is closed.
+    #
+    # === Returns
+    # Boolean:: true if this scraper is closed
+    def closed?
+      stack.empty?
+    end
+
+    # Reset the scraper to start scraping the filesystem from the
+    # beginning.  Akin to IO#rewind or Dir#rewind and used for the
+    # same sort of operation.
     def rewind
       @logger.operation(:rewind) do
         @stack.each {|s| s.close}
@@ -79,12 +111,22 @@ module RightScale
     end
 
     # Return the position of the scraper.  Here, the position is the
-    # path relative from the top of the temporary directory.
-    def position
-      return strip_tmpdir(@stack.last.path)
+    # path relative from the top of the temporary directory.  Akin to
+    # IO#pos or IO#tell.
+    def pos
+      return strip_basedir(@stack.last.path)
     end
+    alias_method :tell, :pos
 
-    def strip_tmpdir(path)
+    # Turn path from an absolute filesystem location to a relative
+    # file location from @basedir.
+    #
+    # === Parameters
+    # path(String):: absolute path to relativize
+    #
+    # === Returns
+    # res(String):: relative pathname for path
+    def strip_basedir(path)
       res = path[@basedir.length+1..-1]
       if res == nil || res == ""
         "."
@@ -92,8 +134,13 @@ module RightScale
         res
       end
     end
+    private :strip_basedir
 
-    # Seek to the given position.
+    # Seek to the given position.  Akin to IO#seek.  Position is an
+    # opaque datum returned by #pos.
+    #
+    # === Parameters
+    # position:: opaque datum listing where to seek.
     def seek(position)
       @logger.operation(:seek, "to #{position}") do
         dirs = position.split(File::SEPARATOR)
@@ -112,10 +159,23 @@ module RightScale
       end
     end
 
+    # Test if the entry given is ignorable.  By default just uses
+    # #ignorable_paths
+    #
+    # === Parameters
+    # entry(String):: file name to check
+    #
+    # === Returns
+    # Boolean:: true if the entry should be ignored
     def ignorable?(entry)
       ignorable_paths.include?(entry)
     end
 
+    # Return the next cookbook in the filesystem, or nil if none.  As
+    # a part of building the cookbooks, calls @builder.go
+    #
+    # === Returns
+    # Cookbook:: next cookbook in filesystem, or nil if none.
     def next
       @logger.operation(:next) do
         until @stack.empty?
@@ -136,7 +196,7 @@ module RightScale
             @stack << Dir.new(fullpath)
             next
           elsif entry == 'metadata.json'
-            cookbook = RightScale::Cookbook.new(@repository, nil, position)
+            cookbook = RightScale::Cookbook.new(@repository, nil, pos)
 
             @builder.go(dir.path, cookbook)
 

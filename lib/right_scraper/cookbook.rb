@@ -44,19 +44,19 @@ module RightScale
 
     # Position in the repository.  A datum gotten from the scraper and
     # associated with it.
-    attr_accessor :position
+    attr_accessor :pos
 
     # Create a new Cookbook from the given parameters.
     #
     # === Parameters
     # repo(RightScale::Repository):: repository to load cookbook from
     # metadata(Hash):: metadata for the cookbook
-    # position:: position in the repository
-    def initialize(repo, metadata, position)
+    # pos:: position in the repository
+    def initialize(repo, metadata, pos)
       @repository = repo
       @data = {}
       @metadata = metadata
-      @position = position
+      @pos = pos
     end
 
     # Load a cookbook from a repository and a position in the repository.
@@ -64,33 +64,71 @@ module RightScale
     # === Parameters
     # repo(RightScale::Repository):: repository to load cookbook from
     # position:: position in the repository
-    def self.fetch(repo, position)
+    def self.fetch(repo, pos)
       scraper = repo.scraper
-      scraper.seek(position)
+      scraper.seek(pos)
       scraper.next
     end
 
+    # Convert this Cookbook to a Cookbook URL that completely
+    # describes where and how to fetch the cookbook.  It should always
+    # be the case that
+    #   Cookbook.from_url(cookbook.to_url) == cookbook
     def to_url
       repo_url = @repository.to_url
-      position_portion = position.nil? ? "" : "?p=#{position}"
+      position_portion = pos.nil? ? "" : "?p=#{pos}"
       tag_portion = @repository.revision.nil? ? "" : "\##{@repository.revision}"
       "#{@repository.repo_type}:#{repo_url}#{position_portion}#{tag_portion}"
     end
 
+    # Return a hexadecimal string that uniquely identifies this
+    # cookbook.
     def cookbook_hash
-      Digest::SHA1.hexdigest("#{@repository.checkout_hash} #{position}")
+      Digest::SHA1.hexdigest("#{@repository.checkout_hash} #{pos}")
     end
 
+    # Create a new Cookbook from the given Cookbook URL.  It should
+    # always be the case that
+    #   Cookbook.from_url(cookbook.to_url) == cookbook
+    #
+    # === Parameters
+    # url(String):: URL to create cookbook from.
     def self.from_url(url)
-      hash, position = split_url(url)
+      hash, pos = split_url(url)
       @repo = Repository.from_hash(hash)
-      Cookbook.new(@repo, nil, position)
+      Cookbook.new(@repo, nil, pos)
     end
 
+    private
+
+    # Parse the query component of a URL into a hash.  Currently
+    # implemented in terms of CGI::parse.  Should always be the case that
+    #  parse_query(unparse_query(hash)) == hash
+    #
+    # The converse may not be true because HTTP query strings are not
+    # unique; in particular & and ; are interchangable.
+    #
+    # === Parameters
+    # string(String):: Query component of URL.
+    #
+    # === Returns
+    # Hash:: association from keys to (possibly multiple) values.
     def self.parse_query(string)
       CGI::parse(string)
     end
 
+    # Turn a CGI-style hash into the query component of a URL into a
+    # hash.    Should always be the case that
+    #  parse_query(unparse_query(hash)) == hash
+    #
+    # The converse may not be true because HTTP query strings are not
+    # unique; in particular & and ; are interchangable.
+    #
+    # === Parameters
+    # hash(Hash):: association from keys to (possibly multiple) values.
+    #
+    # === Returns
+    # String:: Corresponding query component of URL.
     def self.unparse_query(hash)
       keys = hash.keys.sort
       keys.map do |key|
@@ -100,6 +138,21 @@ module RightScale
       end.join(';')
     end
 
+    # Split a Cookbook URL into its component parts.  The bulk is in
+    # _hash_, which has the following keys:
+    # _:repo_type_:: Required.  Repository type, which should be a value suitable for Repository#from_hash.
+    # _:url_:: Required.  Remaining URL after Cookbook specific parts have been parsed out.
+    # _:first_credential_:: Optional.  First credential required for access (usually username).
+    # _:second_credential_:: Optional.  Second credential required for access (usually password).
+    # _:tag_:: Optional.  Tag of the checkout in question.
+    #
+    # === Parameters
+    # url(String):: Cookbook URL to parse.
+    #
+    # === Returns
+    # Two values, hash and position, defined as follows:
+    # hash(Hash):: components of the Cookbook URL, defined above.
+    # position(String):: position of the Cookbook in the repository.
     def self.split_url(url)
       scheme, full_url = url.split(":", 2)
       uri = URI.parse(full_url)

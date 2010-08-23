@@ -72,9 +72,9 @@ describe RightScale::SvnScraper do
     it 'should scrape 5 repositories' do
       locations = Set.new
       (1..5).each {|n|
-        repo = @scraper.next
-        locations << repo.position
-        repo.should_not == nil
+        cookbook = @scraper.next
+        locations << cookbook.pos
+        cookbook.should_not == nil
       }
       @scraper.next.should == nil
       locations.should == Set.new(["cookbooks/app_rails",

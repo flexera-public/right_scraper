@@ -111,7 +111,7 @@ describe RightScale::Cookbook do
         @cookbook.repository.second_credential.should == "password"
       end
       it 'should record the position' do
-        @cookbook.position.should == "foo"
+        @cookbook.pos.should == "foo"
       end
     end
 
@@ -165,7 +165,7 @@ describe RightScale::Cookbook do
         @cookbook.repository.url.should == "http://baz.com/foo/bar/baz?a=b;a=z;b=blah;q=blah"
       end
       it 'should have no position' do
-        @cookbook.position.should be_nil
+        @cookbook.pos.should be_nil
       end
     end
   end

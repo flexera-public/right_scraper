@@ -53,7 +53,7 @@ module RightScale
       position = params[:position] || "."
       cookbook.should_not == nil
       cookbook.repository.should == @repo
-      cookbook.position.should == position
+      cookbook.pos.should == position
       cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
       if cookbook.data.key?(:archive)
         root = File.join(params[:rootdir] || @helper.repo_path, position)

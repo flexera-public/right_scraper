@@ -26,11 +26,26 @@ require 'libarchive_ruby'
 require 'tmpdir'
 
 module RightScale
+  # Scraper for cookbooks stored in a git repository.
   class GitScraper < CheckoutBasedScraper
+    # Return true if a checkout exists.  Currently tests for .git in
+    # the checkout.
+    #
+    # === Returns ===
+    # Boolean:: true if the checkout already exists (and thus
+    #           incremental updating can occur).
     def exists?
       File.exists?(File.join(checkout_path, '.git'))
     end
 
+    # Incrementally update the checkout.  The operations are as follows:
+    # * checkout #tag
+    # * if #tag is the head of a branch:
+    #   * find that branch's remote
+    #   * fetch it
+    #   * merge changes
+    # Note that if #tag is a SHA revision or a tag that exists in the
+    # current repository, no fetching is done.
     def do_update
       git = Git.open(checkout_path)
       @logger.operation(:checkout_revision) do
@@ -52,6 +67,9 @@ module RightScale
       end
     end
 
+    # Clone the remote repository.  The operations are as follows:
+    # * clone repository to #checkout_path
+    # * checkout #tag
     def do_checkout
       super
       git = @logger.operation(:cloning, "to #{checkout_path}") do
@@ -62,6 +80,7 @@ module RightScale
       end if @repository.tag
     end
 
+    # Ignore .git directories.
     def ignorable_paths
       ['.git']
     end

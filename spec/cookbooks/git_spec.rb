@@ -107,7 +107,7 @@ describe RightScale::Cookbook do
         @cookbook.repository.first_credential.should == "sshkey"
       end
       it 'should record the position' do
-        @cookbook.position.should == "foo"
+        @cookbook.pos.should == "foo"
       end
     end
     context 'for a git repository without a tag' do
@@ -125,7 +125,7 @@ describe RightScale::Cookbook do
         @cookbook = RightScale::Cookbook.from_url @url
       end
       it 'should not have a position' do
-        @cookbook.position.should be_nil
+        @cookbook.pos.should be_nil
       end
     end
   end

@@ -104,10 +104,10 @@ describe RightScale::DownloadScraper do
       delete_download_repo
     end
 
-    it 'should always have position be the same' do
-      first = @scraper.position
+    it 'should always have the same position' do
+      first = @scraper.pos
       @scraper.next
-      @scraper.position.should == first
+      @scraper.pos.should == first
     end
 
     it 'should ignore seek' do
@@ -126,7 +126,7 @@ describe RightScale::DownloadScraper do
       example = File.open(@download_file, 'r').read
       cookbook.data[:archive].should == example
       cookbook.repository.should == @repo
-      cookbook.position.should == true
+      cookbook.pos.should == true
       cookbook.metadata.should == @repo_content
     end
 
@@ -140,7 +140,7 @@ describe RightScale::DownloadScraper do
         example = File.open(@download_file + ".gz", 'r').read
         cookbook.data[:archive].should == example
         cookbook.repository.should == @repo
-        cookbook.position.should == true
+        cookbook.pos.should == true
         cookbook.metadata.should == @repo_content
       ensure
         File.unlink(@download_file + ".gz")
@@ -157,7 +157,7 @@ describe RightScale::DownloadScraper do
         example = File.open(@download_file + ".bz2", 'r').read
         cookbook.data[:archive].should == example
         cookbook.repository.should == @repo
-        cookbook.position.should == true
+        cookbook.pos.should == true
         cookbook.metadata.should == @repo_content
       ensure
         File.unlink(@download_file + ".bz2")

@@ -26,6 +26,8 @@ require 'libarchive_ruby'
 require 'tempfile'
 
 module RightScale
+  # A scraper for cookbooks stored in archives on a web server
+  # somewhere.
   class DownloadScraper < ScraperBase
     # Create a new DownloadScraper.  In addition to the options recognized by
     # ScraperBase#initialize, this class recognizes _:directory_.
@@ -44,7 +46,7 @@ module RightScale
     # Return the position of the scraper.  This always returns true,
     # because we only support one cookbook per tarball and so it is
     # always at the same position.
-    def position
+    def pos
       true
     end
 
@@ -55,12 +57,19 @@ module RightScale
       true
     end
 
+    # Return true iff this credential is useful.  Currently "useful"
+    # means "nonempty and not all spaces".
     def is_useful?(credential)
       credential && !credential.strip.empty?
     end
+
+    # Return the useful portion of this credential.  Currently strips
+    # out any spaces.
     def useful_part(credential)
       credential.strip
     end
+
+    # Return next cookbook from the stream, or nil if none.
     def next
       return nil if @done
 
@@ -93,7 +102,7 @@ module RightScale
 
       file.close
 
-      cookbook = RightScale::Cookbook.new(@repository, nil, position)
+      cookbook = RightScale::Cookbook.new(@repository, nil, pos)
 
       file.open
       cookbook.data[:archive] = file.read

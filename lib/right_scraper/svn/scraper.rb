@@ -24,11 +24,23 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'checkout_scrap
 require File.expand_path(File.join(File.dirname(__FILE__), 'client'))
 
 module RightScale
+  # Scraper for cookbooks stored in a Subversion repository.
   class SvnScraper < CheckoutBasedScraper
+    # Return true if a checkout exists.  Currently tests for .svn in
+    # the checkout.
+    #
+    # === Returns ===
+    # Boolean:: true if the checkout already exists (and thus
+    #           incremental updating can occur).
     def exists?
       File.exists?(File.join(checkout_path, '.svn'))
     end
 
+    # Incrementally update the checkout.  The operations are as follows:
+    # * update to #tag
+    # In theory if #tag is a revision number that already exists no
+    # update is necessary.  It's not clear if the SVN client libraries
+    # are bright enough to notice this.
     def do_update
       client = SvnClient.new(@repository)
       client.with_context do |ctx|
@@ -37,6 +49,9 @@ module RightScale
         end
       end
     end
+
+    # Check out the remote repository.  The operations are as follows:
+    # * checkout repository at #tag to #checkout_path
     def do_checkout
       super
       client = SvnClient.new(@repository)
@@ -47,6 +62,7 @@ module RightScale
       end
     end
 
+    # Ignore .svn directories.
     def ignorable_paths
       ['.svn']
     end

@@ -25,6 +25,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
 module RightScale
   # A repository that is stored in a Subversion server.
   class SvnRepository < Repository
+    # Create a new SvnRepository.  If the tag is not specified,
+    # defaults to HEAD.
     def initialize(*args)
       super
       @tag = "HEAD" if @tag.nil?
@@ -45,10 +47,18 @@ module RightScale
     # (String) Optional, SVN password
     attr_accessor :second_credential
 
+    # Return a unique identifier for this revision in this repository.
+    #
+    # === Returns
+    # String:: opaque unique ID for this revision in this repository
     def checkout_hash
       digest("#{repo_type} #{url} #{tag}")
     end
 
+    # Convert this repository to a URL in the style of Cookbook URLs.
+    #
+    # === Returns
+    # String:: URL representing this repository
     def to_url
       if first_credential
         uri = add_users_to(url, first_credential, second_credential)

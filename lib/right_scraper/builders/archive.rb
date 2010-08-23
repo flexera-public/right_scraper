@@ -27,7 +27,16 @@ require 'json'
 require 'digest/sha1'
 
 module RightScale
+  # Class for building tarballs from filesystem based checkouts.
   class ArchiveBuilder < Builder
+    # Create a new ArchiveBuilder.  In addition to the options
+    # recognized by Builder#initialize, recognizes _:scraper_,
+    # _:max_bytes_, and _:max_seconds_.
+    #
+    # === Options ===
+    # _:scraper_:: Required.  FilesystemBasedScraper currently being used
+    # _:max_bytes:: Optional.  Maximum size of archive to attempt to create.
+    # _:max_seconds:: Optional.  Maximum amount of time to attempt to create the archive.
     def initialize(options={})
       super
       @scraper = options.fetch(:scraper)
@@ -35,6 +44,11 @@ module RightScale
       @max_seconds = options[:max_seconds]
     end
 
+    # Build archive.
+    #
+    # === Parameters ===
+    # dir(String):: directory where cookbook exists
+    # cookbook(RightScale::Cookbook):: cookbook being built
     def go(dir, cookbook)
       @logger.operation(:creating_archive) do
         exclude_declarations =
@@ -44,18 +58,28 @@ module RightScale
       end
     end
 
+    # Watch command, respecting @max_bytes and @max_seconds.
+    #
+    # === Parameters ===
+    # command(String):: command to run
+    # args(Array):: arguments for the command
+    #
+    # === Returns ===
+    # String:: output of command
     def watch(command, *args)
       watcher = Watcher.new(@max_bytes, @max_seconds)
       Dir.mktmpdir {|dir|
-        result = watcher.launch_and_watch(command, args, dir)
-        if result.status == :timeout
-          raise "Timeout error"
-        elsif result.status == :size_exceeded
-          raise "Command took too much space"
-        elsif result.exit_code != 0
-          raise "Unknown error: #{result.exit_code} output #{result.output}"
-        else
-          result.output
+        @logger.operation(:running_command, "in #{dir}, running #{command} #{args}") do
+          result = watcher.launch_and_watch(command, args, dir)
+          if result.status == :timeout
+            raise "Timeout error"
+          elsif result.status == :size_exceeded
+            raise "Command took too much space"
+          elsif result.exit_code != 0
+            raise "Unknown error: #{result.exit_code} output #{result.output}"
+          else
+            result.output
+          end
         end
       }
     end

@@ -23,8 +23,10 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
 
 module RightScale
-  # A "repository" that is just there for testing.
+  # A "repository" that is just there for testing.  This class is not
+  # loaded by default.
   class MockRepository < Repository
+    # Create a new MockRepository.
     def initialize
       @repo_type = :mock
     end
@@ -55,6 +57,7 @@ module RightScale
       @@scraper || raise("Scraper for mocks isn't defined yet")
     end
 
+    # Set the correct sort of scraper to use for MockRepositories.
     def self.scraper=(scraper)
       @@scraper = scraper
     end

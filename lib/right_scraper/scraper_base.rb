@@ -28,7 +28,18 @@ require 'libarchive_ruby'
 
 module RightScale
   # Base class for all scrapers.  Actual scraper implementation should
-  # override next, seek, position, rewind
+  # override #next, #seek, #pos, and #rewind.
+  #
+  # It is important to call #close when you are done with the scraper
+  # so that various open file descriptors and temporary files and the
+  # like can be cleaned up.  Ideally, use begin/ensure for this, like
+  # follows:
+  #   begin
+  #     scraper = ScraperBase.new(...)
+  #     ...
+  #   ensure
+  #     scraper.close
+  #   end
   class ScraperBase
     # Integer:: optional maximum size permitted for repositories
     attr_accessor :max_bytes
@@ -40,6 +51,18 @@ module RightScale
     # RightScale::Repository:: repository currently being scraped
     attr_reader :repository
 
+    # Create a new scraper for the given repository.  This class
+    # recognizes several options, and subclasses may recognize
+    # additional options.  Options may never be required.
+    #
+    # === Options ===
+    # _:max_bytes_:: Maximum number of bytes to read
+    # _:max_seconds_:: Maximum number of seconds to spend reading
+    # _:logger_:: Logger to use
+    #
+    # === Parameters ===
+    # repository(RightScale::Repository):: repository to scrape
+    # options(Hash):: scraper options
     def initialize(repository,options={})
       @repository = repository
       @max_bytes = options[:max_bytes] || nil
@@ -48,34 +71,37 @@ module RightScale
       @logger.repository = repository
     end
 
-    # Return next Cookbook object from the stream.
+    # Return next cookbook from the stream, or nil if none.
     def next
       raise NotImplementedError
     end
 
-    # Move the scraper into the given position.
+    # Seek to the given position.  Akin to IO#seek.  Position is an
+    # opaque datum returned by #pos.
+    #
+    # === Parameters
+    # position:: opaque datum listing where to seek.
     def seek(position)
       raise NotImplementedError
     end
+    alias_method :pos=, :seek
 
-    # Retrieve the current position of the scraper.
-    def position
+    # Return the position of the scraper.  Here, the position is the
+    # path relative from the top of the temporary directory.  Akin to
+    # IO#pos or IO#tell.
+    def pos
       raise NotImplementedError
     end
+    alias_method :tell, :pos
 
-    # Set the scraper back to the beginning of scanning this repository.
+    # Reset the scraper to start scraping the filesystem from the
+    # beginning.  Akin to IO#rewind or Dir#rewind and used for the
+    # same sort of operation.
     def rewind
       raise NotImplementedError
     end
 
     # Close the scraper, removing any temporary files.
-    # Should be used as follows:
-    #  scraper = ...
-    #  begin
-    #    # use the scraper
-    #  ensure
-    #    scraper.close
-    #  end
     def close
     end
 

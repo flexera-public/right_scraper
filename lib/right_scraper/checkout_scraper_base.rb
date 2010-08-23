@@ -32,6 +32,13 @@ module RightScale
   # operation need to implement #exists? and #do_update, in addition
   # to FilesystemBasedScraper#ignorable_paths.
   class CheckoutBasedScraper < FilesystemBasedScraper
+    # Create a new scraper.  This class does not recognize any new
+    # options, so see FilesystemBasedScraper#initialize for option
+    # handling.
+    #
+    # === Parameters ===
+    # repository(RightScale::Repository):: repository to scrape
+    # options(Hash):: scraper options
     def initialize(repository, options={})
       super
       if exists?
@@ -40,8 +47,8 @@ module RightScale
             do_update
           end
         rescue
-          @logger.note_error($!, "switching to checkout")
-          FileUtils.remove_entry_secure checkout_path
+          @logger.note_error($!, :updating, "switching to using checkout")
+          FileUtils.remove_entry_secure basedir
           @logger.operation(:checkout) do
             do_checkout
           end
@@ -53,18 +60,28 @@ module RightScale
       end
     end
 
+    # Return true if a checkout exists.
+    #
+    # === Returns ===
+    # Boolean:: true if the checkout already exists (and thus
+    #           incremental updating can occur).
     def exists?
       false
     end
 
+    # Perform an incremental update of the checkout.  Subclasses that
+    # want to handle incremental updating need to override this.
     def do_update
       do_checkout
     end
 
+    # Perform a de novo full checkout of the repository.  Subclasses
+    # must override this to do anything useful.
     def do_checkout
       FileUtils.mkdir_p(checkout_path)
     end
 
+    # Path to check repository to.  Currently @basedir.
     def checkout_path
       @basedir
     end

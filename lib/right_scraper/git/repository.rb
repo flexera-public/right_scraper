@@ -42,10 +42,18 @@ module RightScale
     # (String) Optional, git private SSH key content
     attr_accessor :first_credential
 
+    # Return a unique identifier for this revision in this repository.
+    #
+    # === Returns
+    # String:: opaque unique ID for this revision in this repository
     def checkout_hash
       digest("#{repo_type} #{url} #{tag}")
     end
 
+    # Convert this repository to a URL in the style of Cookbook URLs.
+    #
+    # === Returns
+    # String:: URL representing this repository
     def to_url
       if first_credential
         uri = add_users_to(url, first_credential)

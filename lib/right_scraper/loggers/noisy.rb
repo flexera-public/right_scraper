@@ -24,12 +24,38 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
 module RightScale
+  # A very noisy logger, useful for debugging.
   class NoisyLogger < Logger
+    # Initialize the logger, setting the current operation depth to 1.
     def initialize(*args)
       super
       @level = 1
     end
-    def level
+    # Begin an operation that merits logging.  Will write to stdout
+    # the details, including a visual indicator of how many nested
+    # operations are currently pending.
+    #
+    # === Parameters
+    # type(Symbol):: operation type identifier
+    # explanation(String):: optional explanation
+    def operation(type, explanation="")
+      oldlevel = @level
+      begin
+        puts "#{level_str} begin #{type}#{maybe_explain(explanation)}"
+        @level += 1
+        result = super
+        @level = oldlevel
+        puts "#{level_str} close #{type}#{maybe_explain(explanation)}"
+        return result
+      rescue
+        @level = oldlevel
+        puts "#{level_str} abort #{type}#{maybe_explain(explanation)}"
+        raise
+      end
+    end
+
+    private
+    def level_str
       '>' * @level
     end
     def maybe_explain(explanation)
@@ -37,21 +63,6 @@ module RightScale
         ": #{explanation}"
       else
         ""
-      end
-    end
-    def operation(type, explanation="")
-      oldlevel = @level
-      begin
-        puts "#{level} begin #{type}#{maybe_explain(explanation)}"
-        @level += 1
-        result = super
-        @level = oldlevel
-        puts "#{level} close #{type}#{maybe_explain(explanation)}"
-        return result
-      rescue
-        @level = oldlevel
-        puts "#{level} abort #{type}#{maybe_explain(explanation)}"
-        raise
       end
     end
   end

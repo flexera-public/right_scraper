@@ -26,24 +26,50 @@ require 'json'
 require 'digest/sha1'
 
 module RightScale
+  # Class for building manifests from filesystem based checkouts.
   class ManifestBuilder < Builder
+    # Create a new ManifestBuilder.  In addition to the options
+    # recognized by Builder#initialize, recognizes _:scraper_.
+    #
+    # === Options ===
+    # _:scraper_:: Required.  FilesystemBasedScraper currently being used
     def initialize(options={})
       super
       @scraper = options.fetch(:scraper)
     end
 
+    # Build manifest, storing it in Cookbook#manifest.
+    #
+    # === Parameters ===
+    # dir(String):: directory where cookbook exists
+    # cookbook(RightScale::Cookbook):: cookbook being built
     def go(dir, cookbook)
       @logger.operation(:creating_manifest) do
         cookbook.manifest = make_manifest(dir)
       end
     end
 
+    private
+
+    # Build a manifest starting at path.
+    #
+    # === Parameters ===
+    # path(String):: path to begin making the manifest
+    #
+    # === Returns ===
+    # hash(Hash):: relative pathname => digest manifest
     def make_manifest(path)
       hash = {}
       scan(Dir.new(path), hash, nil)
       hash
     end
 
+    # Build manifests for this directory.
+    #
+    # === Parameters ===
+    # directory(Dir):: directory to scan
+    # hash(Hash):: partial manifest
+    # position(String):: relative pathname for _directory_ from root of cookbook
     def scan(directory, hash, position)
       directory.each do |entry|
         next if entry == '.' || entry == '..'
@@ -63,6 +89,5 @@ module RightScale
         end
       end
     end
-    private :scan
   end
 end

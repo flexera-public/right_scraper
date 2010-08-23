@@ -22,17 +22,34 @@
 #++
 
 module RightScale
+  # Very simplistic logger for scraper operations.
   class Logger
+    # (RightScale::Repository) Repository currently being examined.
     attr_writer :repository
+
+    # Begin an operation that merits logging.  Will call #note_error
+    # if an exception is raised during the operation.
+    #
+    # === Parameters
+    # type(Symbol):: operation type identifier
+    # explanation(String):: optional explanation
     def operation(type, explanation="")
       begin
         yield
       rescue
-        note_error($!)
+        note_error($!, type, explanation)
         raise
       end
     end
-    def note_error(exception, explanation="")
+
+    # Log an error, with the given exception and explanation of what
+    # was going on.
+    #
+    # === Parameters
+    # exception(Exception):: exception raised
+    # type(Symbol):: operation type identifier
+    # explanation(String):: optional explanation
+    def note_error(exception, type, explanation="")
     end
   end
 end

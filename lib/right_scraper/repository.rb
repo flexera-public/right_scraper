@@ -75,29 +75,63 @@ module RightScale
       res = "#{repo_type} #{url}"
     end
 
+    # Convert this repository to a URL in the style of Cookbook URLs.
+    #
+    # === Returns
+    # String:: URL representing this repository
     def to_url
-      "#{repo_type}:#{url}"
+      "#{url}"
     end
 
+    # Return the revision this repository is currently looking at.
+    #
+    # === Returns
+    # String:: opaque revision type
     def revision
       nil
     end
 
+    # Return a unique identifier for this repository ignoring the tags
+    # to check out.
+    #
+    # === Returns
+    # String:: opaque unique ID for this repository
     def repository_hash
       digest("#{repo_type} #{url}")
     end
 
+
+    # Return a unique identifier for this revision in this repository.
+    #
+    # === Returns
+    # String:: opaque unique ID for this revision in this repository
     def checkout_hash
       repository_hash
     end
 
     protected
+    # Compute a unique identifier for the given string.  Currently uses SHA1.
+    #
+    # === Parameters
+    # string(String):: string to compute unique identifier for
+    #
+    # === Returns
+    # String:: unique identifier
     def digest(string)
       Digest::SHA1.hexdigest(string)
     end
 
+    # Regexp matching everything not allowed in a URI and also ':',
+    # '@' and '/', to be used for encoding usernames and passwords.
     USERPW = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}]|[:@/]", false, 'N').freeze
 
+    # Return a URI with the given username and password set.
+    #
+    # === Parameters
+    # uri(URI or String):: URI to add user identification to
+    #
+    # === Returns
+    # URI:: URI with username and password identification added
     def add_users_to(uri, username=nil, password=nil)
       uri = URI.parse(uri) if uri.instance_of?(String)
       if username
@@ -108,5 +142,4 @@ module RightScale
       uri
     end
   end
-
 end

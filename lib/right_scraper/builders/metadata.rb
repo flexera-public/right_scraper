@@ -25,7 +25,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'json'
 
 module RightScale
+  # Class for reading JSON metadata from filesystem based checkouts.
   class MetadataBuilder < Builder
+    # Read metadata, storing it in Cookbook#metadata.
+    #
+    # === Parameters ===
+    # dir(String):: directory where cookbook exists
+    # cookbook(RightScale::Cookbook):: cookbook being built
     def go(dir, cookbook)
       @logger.operation(:reading_metadata) do
         cookbook.metadata = JSON.parse(open(File.join(dir, "metadata.json")) {|f| f.read })
