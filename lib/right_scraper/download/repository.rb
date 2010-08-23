@@ -50,7 +50,7 @@ module RightScale
     # Convert this repository to a URL in the style of Cookbook URLs.
     #
     # === Returns
-    # String:: URL representing this repository
+    # URI:: URL representing this repository
     def to_url
       add_users_to(url, first_credential, second_credential)
     end

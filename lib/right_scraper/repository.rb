@@ -78,9 +78,9 @@ module RightScale
     # Convert this repository to a URL in the style of Cookbook URLs.
     #
     # === Returns
-    # String:: URL representing this repository
+    # URI:: URL representing this repository
     def to_url
-      "#{url}"
+      URI.parse(url)
     end
 
     # Return the revision this repository is currently looking at.
