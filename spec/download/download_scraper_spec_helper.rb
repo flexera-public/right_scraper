@@ -63,6 +63,7 @@ module RightScale
       cookbook.repository.should == repository
       cookbook.pos.should == true
       cookbook.metadata.should == repo_content
+      cookbook.manifest.should == manifest
     end
   end
 end
