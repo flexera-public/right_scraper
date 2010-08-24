@@ -26,7 +26,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_he
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'set'
 require 'libarchive_ruby'
-require 'highline/import'
 
 describe RightScale::SvnScraper do
   include RightScale::ScraperHelper
@@ -37,18 +36,13 @@ describe RightScale::SvnScraper do
   end
 
   context 'given a remote SVN repository' do
-    before(:all) do
-      @username = ask('Username: ')
-      @password = ask('Password: ') {|q| q.echo = '*'}
-    end
-
     before(:each) do
       url = 'https://wush.net/svn/rightscale/cookbooks_test/'
       @repo = RightScale::Repository.from_hash(:display_name => 'wush',
                                                :repo_type    => :svn,
                                                :url          => url,
-                                               :first_credential => @username,
-                                               :second_credential => @password)
+                                               :first_credential => ENV['REMOTE_USER'],
+                                               :second_credential => ENV['REMOTE_PASSWORD'])
       @scraper = @scraperclass.new(@repo, :max_bytes => 1024**2,
                                    :max_seconds => 20)
     end
@@ -83,7 +77,7 @@ describe RightScale::SvnScraper do
                                    "cookbooks/rs_utils",
                                    "cookbooks/web_apache"])
     end
-  end if ENV['TEST_REMOTE']
+  end if ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
 
   context 'given a SVN repository' do
     before(:each) do

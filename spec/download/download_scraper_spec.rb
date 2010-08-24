@@ -27,7 +27,6 @@ unless RUBY_PLATFORM=~/mswin/
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'tmpdir'
-require 'highline/import'
 
 describe RightScale::DownloadScraper do
 
@@ -59,18 +58,13 @@ describe RightScale::DownloadScraper do
   end
 
   context 'given a password protected repository' do
-    before(:all) do
-      @username = ask('Username: ')
-      @password = ask('Password: ') {|q| q.echo = '*'}
-    end
-
     before(:each) do
       url = 'https://wush.net/svn/rightscale/cookbooks_test/cookbooks/app_rails.tar.gz'
       @repo = RightScale::Repository.from_hash(:display_name => 'wush',
                                                :repo_type    => :download,
                                                :url          => url,
-                                               :first_credential => @username,
-                                               :second_credential => @password)
+                                               :first_credential => ENV['REMOTE_USER'],
+                                               :second_credential => ENV['REMOTE_PASSWORD'])
       @scraper = @scraperclass.new(@repo,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
@@ -82,7 +76,7 @@ describe RightScale::DownloadScraper do
       cookbook.metadata.should_not == nil
       cookbook.metadata["name"].should == "app_rails"
     end
-  end if ENV['TEST_REMOTE']
+  end if ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
 
   context 'given a download repository' do
 
