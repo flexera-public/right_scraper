@@ -30,6 +30,11 @@ require 'libarchive_ruby'
 describe RightScale::GitScraper do
   include RightScale::ScraperHelper
 
+  def secondary_cookbook(where)
+    FileUtils.mkdir_p(where)
+    @helper.create_cookbook(where, @helper.repo_content)
+  end
+
   before(:all) do
     @scraperclass = RightScale::GitScraper
     @ignore = ['.git']
@@ -61,12 +66,27 @@ describe RightScale::GitScraper do
       end
     end
 
-    context 'with multiple cookbooks' do
-      def secondary_cookbook(where)
-        FileUtils.mkdir_p(where)
-        @helper.create_cookbook(where, @helper.repo_content)
+    context 'with a subcookbook' do
+      before(:each) do
+        subdir = File.join(@helper.repo_path, "cookbook")
+        secondary_cookbook(subdir)
+        @helper.commit_content("subcookbook added")
       end
 
+      it_should_behave_like "From-scratch scraping"
+
+      it 'should still see only one cookbook' do
+        @scraper.next.should_not == nil
+        @scraper.next.should == nil
+      end
+
+      it 'should have the subcookbook in the manifest' do
+        cookbook = @scraper.next
+        cookbook.manifest["cookbook/metadata.json"].should == "c2901d21c81ba5a152a37a5cfae35a8e092f7b39"
+      end
+    end
+
+    context 'with multiple cookbooks' do
       before(:each) do
         FileUtils.rm(File.join(@helper.repo_path, "metadata.json"))
         @cookbook_places = [File.join(@helper.repo_path, "cookbooks", "first"),

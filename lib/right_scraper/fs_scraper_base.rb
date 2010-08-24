@@ -71,11 +71,15 @@ module RightScale
                                   :logger => @logger,
                                   :max_bytes => max_bytes,
                                   :max_seconds => max_seconds)
+      setup_dir
       @logger.operation(:initialize, "setting up in #{basedir}") do
         FileUtils.mkdir_p(basedir)
         @stack = []
-        rewind
+        @next = find_next(Dir.new(basedir))
       end
+    end
+
+    def setup_dir
     end
 
     # (String) Base directory where filesystem will be located.
@@ -90,11 +94,15 @@ module RightScale
       []
     end
 
+    def reset_stack
+      @stack.each {|s| s.close}
+      @stack = []
+    end
+
     # Close the scraper, cleaning up any temporary data.
     def close
       @logger.operation(:close) do
-        @stack.each {|s| s.close}
-        @stack = []
+        reset_stack
         FileUtils.remove_entry_secure @basedir if @temporary
       end
     end
@@ -112,8 +120,8 @@ module RightScale
     # same sort of operation.
     def rewind
       @logger.operation(:rewind) do
-        @stack.each {|s| s.close}
-        @stack = [Dir.open(basedir)]
+        reset_stack
+        @next = find_next(Dir.new(basedir))
       end
     end
 
@@ -121,7 +129,7 @@ module RightScale
     # path relative from the top of the temporary directory.  Akin to
     # IO#pos or IO#tell.
     def pos
-      return strip_basedir(@stack.last.path)
+      strip_basedir(@stack.last.path)
     end
     alias_method :tell, :pos
 
@@ -151,18 +159,15 @@ module RightScale
     def seek(position)
       @logger.operation(:seek, "to #{position}") do
         dirs = position.split(File::SEPARATOR)
-        rewind
+        reset_stack
+        @stack << Dir.new(basedir)
         until dirs.empty?
           name = dirs.shift
           dir = @stack.last
-          entry = dir.read
-          until entry == nil || entry == name
-            entry = dir.read
-          end
-          raise "Position #{position} no longer exists!" if entry == nil
+          raise "Position #{position} no longer exists!" if seek_to_named(dir, name).nil?
           @stack << Dir.open(File.join(dir.path, name))
         end
-        @stack.last.rewind # to make sure we don't miss a metadata.json here.
+        @next = find_next(@stack.pop)
       end
     end
 
@@ -178,13 +183,27 @@ module RightScale
       ignorable_paths.include?(entry)
     end
 
-    # Return the next cookbook in the filesystem, or nil if none.  As
-    # a part of building the cookbooks, calls @builder.go
-    #
-    # === Returns
-    # Cookbook:: next cookbook in filesystem, or nil if none.
-    def next
-      @logger.operation(:next) do
+    def find_next(dir)
+      @logger.operation(:finding_next_cookbook, "examining #{dir.path}") do
+        if File.exists?(File.join(dir.path, 'metadata.json'))
+          read_cookbook(dir)
+        else
+          @stack << dir
+          search_dirs
+        end
+      end
+    end
+
+    def read_cookbook(dir)
+      @logger.operation(:reading_cookbook, "reading cookbook from #{dir.path}") do
+        cookbook = RightScale::Cookbook.new(@repository, nil, strip_basedir(dir.path))
+        @builder.go(dir.path, cookbook)
+        cookbook
+      end
+    end
+
+    def search_dirs
+      @logger.operation(:searching, "looking for next cookbook") do
         until @stack.empty?
           dir = @stack.last
           entry = dir.read
@@ -194,23 +213,48 @@ module RightScale
             next
           end
 
-          fullpath = File.join(dir.path, entry)
-
           next if entry == '.' || entry == '..'
           next if ignorable?(entry)
 
+          fullpath = File.join(dir.path, entry)
+
           if File.directory?(fullpath)
-            @stack << Dir.new(fullpath)
-            next
-          elsif entry == 'metadata.json'
-            cookbook = RightScale::Cookbook.new(@repository, nil, pos)
-
-            @builder.go(dir.path, cookbook)
-
-            return cookbook
+            result = find_next(Dir.new(fullpath))
+            break
           end
         end
-        nil
+        result
+      end
+    end
+
+    def seek_to_named(dir, name)
+      @logger.operation(:seeking, "seeking to #{name} in #{dir.path}") do
+        dir.rewind
+        loop do
+          lastpos = dir.pos
+          entry = dir.read
+          if entry.nil?
+            return nil
+          elsif entry == name
+            return lastpos
+          end
+        end
+      end
+    end
+    private :seek_to_named
+
+    # Return the next cookbook in the filesystem, or nil if none.  As
+    # a part of building the cookbooks, calls @builder.go
+    #
+    # === Returns
+    # Cookbook:: next cookbook in filesystem, or nil if none.
+    def next
+      @logger.operation(:next) do
+        next nil if @next.nil?
+
+        value = @next
+        @next = search_dirs
+        value
       end
     end
   end

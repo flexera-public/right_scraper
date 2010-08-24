@@ -39,8 +39,7 @@ module RightScale
     # === Parameters ===
     # repository(RightScale::Repository):: repository to scrape
     # options(Hash):: scraper options
-    def initialize(repository, options={})
-      super
+    def setup_dir
       if exists?
         begin
           @logger.operation(:updating) do
