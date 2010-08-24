@@ -24,33 +24,21 @@
 # Not supported on Windows
 unless RUBY_PLATFORM=~/mswin/
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
-require 'tmpdir'
+require File.expand_path(File.join(File.dirname(__FILE__), 'download_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
 
 describe RightScale::DownloadScraper do
-
+  include RightScale::ScraperHelper
   include RightScale::SpecHelpers
 
-  # Create download repository following given layout
-  # Update @repo_path with path to repository
-  # Delete any previously created repo
-  def setup_download_repo
-    @tmpdir = Dir.mktmpdir
-    @download_repo_path = File.join(@tmpdir, "download")
-    @repo_path = File.join(@tmpdir, "repo")
-    @repo_content = [ { 'folder1' => [ 'file2', 'file3' ] }, { 'folder2' => [ { 'folder3' => [ 'file4' ] } ] }, 'file1' ]
-    create_cookbook(@download_repo_path, @repo_content)
-    @download_file = File.join(@tmpdir, "file.tar")
-    Dir.chdir(@download_repo_path) do
-      res, status = exec("tar cf \"#{@download_file}\" *")
-      raise "Failed to create tarball: #{res}" unless status.success?
-    end
+  before(:each) do
+    @helper = RightScale::DownloadScraperHelper.new
+    @repo = @helper.repo
   end
 
-  # Cleanup after ourselves
-  def delete_download_repo
-    FileUtils.remove_entry_secure @tmpdir
+  after(:each) do
+    @helper.close unless @helper.nil?
+    @helper = nil
   end
 
   before(:all) do
@@ -60,11 +48,8 @@ describe RightScale::DownloadScraper do
   context 'given a password protected repository' do
     before(:each) do
       url = 'https://wush.net/svn/rightscale/cookbooks_test/cookbooks/app_rails.tar.gz'
-      @repo = RightScale::Repository.from_hash(:display_name => 'wush',
-                                               :repo_type    => :download,
-                                               :url          => url,
-                                               :first_credential => ENV['REMOTE_USER'],
-                                               :second_credential => ENV['REMOTE_PASSWORD'])
+      @repo.url = url
+      @repo.display_name = 'wush'
       @scraper = @scraperclass.new(@repo,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
@@ -79,23 +64,11 @@ describe RightScale::DownloadScraper do
   end if ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
 
   context 'given a download repository' do
-
-    before(:all) do
-      setup_download_repo
-    end
-
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
-                                               :repo_type    => :download,
-                                               :url          => "file:///#{@download_file}")
       @scraper = @scraperclass.new(@repo,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
-      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
-    end
-
-    after(:all) do
-      delete_download_repo
+      @download_file = @helper.download_file
     end
 
     it 'should always have the same position' do
@@ -115,13 +88,7 @@ describe RightScale::DownloadScraper do
     end
 
     it 'should scrape' do
-      cookbook = @scraper.next
-      cookbook.should_not == nil
-      example = File.open(@download_file, 'r').read
-      cookbook.data[:archive].should == example
-      cookbook.repository.should == @repo
-      cookbook.pos.should == true
-      cookbook.metadata.should == @repo_content
+      @helper.check_cookbook(@scraper.next, @download_file, @repo)
     end
 
     it 'should scrape a gzipped tarball' do
@@ -129,13 +96,7 @@ describe RightScale::DownloadScraper do
       raise "Failed to gzip tarball: #{res}" unless status.success?
       begin
         @repo.url += ".gz"
-        cookbook = @scraper.next
-        cookbook.should_not == nil
-        example = File.open(@download_file + ".gz", 'r').read
-        cookbook.data[:archive].should == example
-        cookbook.repository.should == @repo
-        cookbook.pos.should == true
-        cookbook.metadata.should == @repo_content
+        @helper.check_cookbook(@scraper.next, @download_file + ".gz", @repo)
       ensure
         File.unlink(@download_file + ".gz")
       end
@@ -146,20 +107,12 @@ describe RightScale::DownloadScraper do
       raise "Failed to bzip tarball: #{res}" unless status.success?
       begin
         @repo.url += ".bz2"
-        cookbook = @scraper.next
-        cookbook.should_not == nil
-        example = File.open(@download_file + ".bz2", 'r').read
-        cookbook.data[:archive].should == example
-        cookbook.repository.should == @repo
-        cookbook.pos.should == true
-        cookbook.metadata.should == @repo_content
+        @helper.check_cookbook(@scraper.next, @download_file + ".bz2", @repo)
       ensure
         File.unlink(@download_file + ".bz2")
       end
     end
-
   end
-
 end
 
 end # unless RUBY_PLATFORM=~/mswin/
