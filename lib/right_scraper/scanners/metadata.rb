@@ -45,7 +45,9 @@ module RightScale
     # relative_position(String):: relative pathname for _pathname_ from root of cookbook
     def notice(relative_position)
       if relative_position == "metadata.json"
-        @cookbook.metadata = JSON.parse(yield)
+        @logger.operation(:metadata_parsing, "in #{@cookbook}") do
+          @cookbook.metadata = JSON.parse(yield)
+        end
       end
     end
 
