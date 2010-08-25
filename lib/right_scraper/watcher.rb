@@ -70,7 +70,8 @@ module RightScale
     # Note: This method is not thread-safe, instantiate one watcher per thread
     #
     # === Parameters
-    # cmd(String):: Command line to be launched
+    # cmd(String):: command to run
+    # args(Array):: arguments for +cmd+
     # dest_dir(String):: Watched directory
     #
     # === Return

@@ -71,4 +71,12 @@ describe RightScale::Watcher do
     status.output.should == "42\n"
   end
 
+  it 'should permit array arguments' do
+    watcher = RightScale::Watcher.new(max_bytes=-1, max_seconds=-1)
+    status = watcher.launch_and_watch(["echo", "$HOME", ";", "echo", "broken"], @dest_dir)
+    status.status.should == :success
+    status.exit_code.should == 0
+    status.output.should == "$HOME ; echo broken\n"
+  end
+
 end
