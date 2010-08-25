@@ -40,7 +40,7 @@ module RightScale
       watcher = Watcher.new(max_bytes, max_seconds)
       logger = @logger || Logger.new
       Dir.mktmpdir do |dir|
-        @logger.operation(:running_command, "in #{dir}, running #{command} #{args}") do
+        logger.operation(:running_command, "in #{dir}, running #{command} #{args}") do
           result = watcher.launch_and_watch(command, args, dir)
           if result.status == :timeout
             raise "Timeout error"

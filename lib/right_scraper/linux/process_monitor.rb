@@ -46,26 +46,43 @@ module RightScale
     # pid(Integer):: Spawned process pid
     def spawn(cmd, *args)
       args = args.map { |a| a.to_s } #exec only likes string arguments
-      
+
       #Run subprocess; capture its output using a pipe
       pr, pw = IO::pipe
       @pid = fork do
+        oldstderr = STDERR.clone
         pr.close
         STDIN.reopen(File.open('/dev/null', 'r'))
         STDOUT.reopen(pw)
         STDERR.reopen(pw)
-        exec(cmd, *args)
+        begin
+          exec(cmd, *args)
+        rescue
+          oldstderr.puts "Couldn't exec: #{$!}"
+        end
       end
 
       #Monitor subprocess output and status in a dedicated thread
       pw.close
       @io = pr
       @reader = Thread.new do
-        until @io.eof?
-          yield(:output => @io.read)
+        wait_result = nil
+        loop do
+          wait_result = Process.waitpid2(@pid, Process::WNOHANG)
+          break unless wait_result.nil?
+          array = select([@io], nil, nil, 0.1)
+          array[0].each do |fdes|
+            unless fdes.eof?
+              # HACK HACK HACK 4096 is a magic number I pulled out of my
+              # ass, the real one should depend on the kernel's buffer
+              # sizes.
+              result = fdes.readpartial(4096)
+              yield(:output => result)
+            end
+          end unless array.nil?
         end
-        Process.wait(@pid)
-        yield(:exit_code => $?.exitstatus)
+        dontcare, status = wait_result
+        yield(:exit_code => status.exitstatus)
       end
 
       return @pid
