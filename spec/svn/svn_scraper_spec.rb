@@ -22,16 +22,15 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'set'
-require 'libarchive_ruby'
 
-describe RightScale::SvnScraper do
+describe RightScale::Scrapers::Svn do
   include RightScale::ScraperHelper
 
   before(:all) do
-    @scraperclass = RightScale::SvnScraper
+    @scraperclass = RightScale::Scrapers::Svn
     @ignore = ['.svn']
   end
 

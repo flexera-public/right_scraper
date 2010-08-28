@@ -22,9 +22,9 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'watcher'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'processes', 'watcher'))
 
-describe RightScale::Watcher do
+describe RightScale::Processes::Watcher do
 
   before(:each) do
     @dest_dir = File.join(File.dirname(__FILE__), '__destdir')
@@ -36,7 +36,7 @@ describe RightScale::Watcher do
   end
 
   it 'should launch and watch well-behaved processes' do
-    watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=5)
+    watcher = RightScale::Processes::Watcher.new(max_bytes=1, max_seconds=5)
     ruby = "trap('INT', 'IGNORE'); puts 42; exit 42"
     status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :success
@@ -45,7 +45,7 @@ describe RightScale::Watcher do
   end
 
   it 'should report timeouts' do
-    watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=2)
+    watcher = RightScale::Processes::Watcher.new(max_bytes=1, max_seconds=2)
     ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; sleep 5"
     status = watcher.launch_and_watch('ruby',  ['-e', ruby], @dest_dir)
     status.status.should == :timeout
@@ -54,7 +54,7 @@ describe RightScale::Watcher do
   end
 
   it 'should report size exceeded' do
-    watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=5)
+    watcher = RightScale::Processes::Watcher.new(max_bytes=1, max_seconds=5)
     ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; File.open(File.join('#{@dest_dir}', 'test'), 'w') { |f| f.puts 'MORE THAN 2 CHARS' }; sleep 5 rescue nil"
     status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :size_exceeded
@@ -63,7 +63,7 @@ describe RightScale::Watcher do
   end
 
   it 'should allow infinite size and timeout' do
-    watcher = RightScale::Watcher.new(max_bytes=-1, max_seconds=-1)
+    watcher = RightScale::Processes::Watcher.new(max_bytes=-1, max_seconds=-1)
     ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; File.open(File.join('#{@dest_dir}', 'test'), 'w') { |f| f.puts 'MORE THAN 2 CHARS' }; sleep 2 rescue nil"
     status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :success
@@ -72,11 +72,10 @@ describe RightScale::Watcher do
   end
 
   it 'should permit array arguments' do
-    watcher = RightScale::Watcher.new(max_bytes=-1, max_seconds=-1)
+    watcher = RightScale::Processes::Watcher.new(max_bytes=-1, max_seconds=-1)
     status = watcher.launch_and_watch(["echo", "$HOME", ";", "echo", "broken"], @dest_dir)
     status.status.should == :success
     status.exit_code.should == 0
     status.output.should == "$HOME ; echo broken\n"
   end
-
 end

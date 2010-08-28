@@ -22,61 +22,63 @@
 #++
 
 module RightScale
-  # Union scanner, to permit running multiple scanners while only
-  # walking the fs once.
-  class UnionScanner
-    # Create a new UnionScanner.  Recognizes no new options.
-    #
-    # === Parameters ===
-    # classes(List):: List of Scanner classes to run
-    # options(Hash):: scanner options
-    def initialize(classes, options={})
-      @subscanners = classes.map {|klass| klass.new(options)}
-    end
+  module Scanners
+    # Union scanner, to permit running multiple scanners while only
+    # walking the fs once.
+    class Union
+      # Create a new union scanner.  Recognizes no new options.
+      #
+      # === Parameters ===
+      # classes(List):: List of Scanner classes to run
+      # options(Hash):: scanner options
+      def initialize(classes, options={})
+        @subscanners = classes.map {|klass| klass.new(options)}
+      end
 
-    # Begin a scan for the given cookbook.
-    #
-    # === Parameters ===
-    # cookbook(RightScale::Cookbook):: cookbook to scan
-    def begin(cookbook)
-      @subscanners.each {|scanner| scanner.begin(cookbook)}
-    end
+      # Begin a scan for the given cookbook.
+      #
+      # === Parameters ===
+      # cookbook(RightScale::Cookbook):: cookbook to scan
+      def begin(cookbook)
+        @subscanners.each {|scanner| scanner.begin(cookbook)}
+      end
 
-    # Finish a scan for the given cookbook.
-    #
-    # === Parameters ===
-    # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
-    def end(cookbook)
-      @subscanners.each {|scanner| scanner.end(cookbook)}
-    end
+      # Finish a scan for the given cookbook.
+      #
+      # === Parameters ===
+      # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
+      def end(cookbook)
+        @subscanners.each {|scanner| scanner.end(cookbook)}
+      end
 
-    # Notice a file during scanning.
-    #
-    # === Block ===
-    # Return the data for this file.  We use a block because it may
-    # not always be necessary to read the data.
-    #
-    # === Parameters ===
-    # relative_position(String):: relative pathname for _pathname_ from root of cookbook
-    def notice(relative_position)
-      data = nil
-      @subscanners.each {|scanner| scanner.notice(relative_position) {
-          data = yield if data.nil?
-          data
+      # Notice a file during scanning.
+      #
+      # === Block ===
+      # Return the data for this file.  We use a block because it may
+      # not always be necessary to read the data.
+      #
+      # === Parameters ===
+      # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+      def notice(relative_position)
+        data = nil
+        @subscanners.each {|scanner| scanner.notice(relative_position) {
+            data = yield if data.nil?
+            data
+          }
         }
-      }
-    end
+      end
 
-    # Notice a directory during scanning.  Returns true if any of the
-    # subscanners report that they should recurse into the directory.
-    #
-    # === Parameters ===
-    # relative_position(String):: relative pathname for directory from root of cookbook
-    #
-    # === Returns ===
-    # Boolean:: should the scanning recurse into the directory
-    def notice_dir(relative_position)
-      @subscanners.any? {|scanner| scanner.notice_dir(relative_position)}
+      # Notice a directory during scanning.  Returns true if any of the
+      # subscanners report that they should recurse into the directory.
+      #
+      # === Parameters ===
+      # relative_position(String):: relative pathname for directory from root of cookbook
+      #
+      # === Returns ===
+      # Boolean:: should the scanning recurse into the directory
+      def notice_dir(relative_position)
+        @subscanners.any? {|scanner| scanner.notice_dir(relative_position)}
+      end
     end
   end
 end

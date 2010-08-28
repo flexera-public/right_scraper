@@ -21,8 +21,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'processes', 'watcher'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
 
 module RightScale
   module ProcessWatcher
@@ -37,7 +37,7 @@ module RightScale
     # === Returns ===
     # String:: output of command
     def watch(command, args, max_bytes, max_seconds)
-      watcher = Watcher.new(max_bytes, max_seconds)
+      watcher = RightScale::Processes::Watcher.new(max_bytes, max_seconds)
       logger = @logger || Logger.new
       Dir.mktmpdir do |dir|
         logger.operation(:running_command, "in #{dir}, running #{command} #{args}") do
@@ -73,7 +73,7 @@ module RightScale
     # === Return
     # output(String):: The process' output
     def run(cmd, *args)
-      pm = ProcessMonitor.new
+      pm = RightScale::Processes::ProcessMonitor.new
       output = StringIO.new
 
       pm.spawn(cmd, *args) do |options|

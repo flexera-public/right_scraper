@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'mock', 'repository'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'repositories', 'mock'))
 
 describe RightScale::Repository do
   before(:each) do
@@ -54,7 +54,7 @@ describe RightScale::Repository do
   end
 end
 
-describe RightScale::DownloadRepository do
+describe RightScale::Repositories::Download do
   before(:each) do
     @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :download,
@@ -78,7 +78,7 @@ describe RightScale::DownloadRepository do
   end
 end
 
-describe RightScale::SvnRepository do
+describe RightScale::Repositories::Svn do
   before(:each) do
     @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :svn,
@@ -123,7 +123,7 @@ describe RightScale::SvnRepository do
   end
 end
 
-describe RightScale::GitRepository do
+describe RightScale::Repositories::Git do
   before(:each) do
     @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :git,

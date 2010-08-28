@@ -79,7 +79,7 @@ module RightScale
     # === Return
     # String:: Path to local directory that corresponds to given repository
     def repo_dir(repo)
-      RightScale::ScraperBase.repo_dir(scrape_dir, repo)
+      RightScale::Scrapers::ScraperBase.repo_dir(scrape_dir, repo)
     end
 
     # Error messages in case of failure

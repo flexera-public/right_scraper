@@ -21,64 +21,66 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 
 module RightScale
-  # Build metadata by scanning the filesystem.
-  class FilesystemBuilder < Builder
-    # Create a new filesystem scanner.  In addition to the options
-    # recognized by Builder, this class recognizes _:scraper_ and
-    # _:scanner:_.
-    #
-    # === Options ===
-    # _:scraper_:: Required.  FilesystemBasedScraper currently being used
-    # _:scanner_:: Required.  Scanner currently being used
-    #
-    # === Parameters ===
-    # options(Hash):: scraper options
-    def initialize(options={})
-      super
-      @scraper = options.fetch(:scraper)
-      @scanner = options.fetch(:scanner)
-    end
-
-    # Run builder for this cookbook.
-    #
-    # === Parameters ===
-    # dir(String):: directory cookbook exists at
-    # cookbook(RightScale::Cookbook):: cookbook instance being built
-    def go(dir, cookbook)
-      @logger.operation(:scanning_filesystem, "rooted at #{dir}") do
-        @scanner.begin(cookbook)
-        maybe_scan(Dir.new(dir), nil)
-        @scanner.end(cookbook)
+  module Builders
+    # Build metadata by scanning the filesystem.
+    class Filesystem < Builder
+      # Create a new filesystem scanner.  In addition to the options
+      # recognized by Builder, this class recognizes _:scraper_ and
+      # _:scanner:_.
+      #
+      # === Options ===
+      # _:scraper_:: Required.  FilesystemBasedScraper currently being used
+      # _:scanner_:: Required.  Scanner currently being used
+      #
+      # === Parameters ===
+      # options(Hash):: scraper options
+      def initialize(options={})
+        super
+        @scraper = options.fetch(:scraper)
+        @scanner = options.fetch(:scanner)
       end
-    end
 
-    def maybe_scan(directory, position)
-      if @scanner.notice_dir(position)
-        scan(directory, position)
+      # Run builder for this cookbook.
+      #
+      # === Parameters ===
+      # dir(String):: directory cookbook exists at
+      # cookbook(RightScale::Cookbook):: cookbook instance being built
+      def go(dir, cookbook)
+        @logger.operation(:scanning_filesystem, "rooted at #{dir}") do
+          @scanner.begin(cookbook)
+          maybe_scan(Dir.new(dir), nil)
+          @scanner.end(cookbook)
+        end
       end
-    end
 
-    # Scan the contents of directory.
-    #
-    # === Parameters ===
-    # directory(Dir):: directory to scan
-    # position(String):: relative pathname for _directory_ from root of cookbook
-    def scan(directory, position)
-      directory.each do |entry|
-        next if entry == '.' || entry == '..'
-        next if @scraper.ignorable?(entry)
+      def maybe_scan(directory, position)
+        if @scanner.notice_dir(position)
+          scan(directory, position)
+        end
+      end
 
-        fullpath = File.join(directory.path, entry)
-        relative_position = position ? File.join(position, entry) : entry
+      # Scan the contents of directory.
+      #
+      # === Parameters ===
+      # directory(Dir):: directory to scan
+      # position(String):: relative pathname for _directory_ from root of cookbook
+      def scan(directory, position)
+        directory.each do |entry|
+          next if entry == '.' || entry == '..'
+          next if @scraper.ignorable?(entry)
 
-        if File.directory?(fullpath)
-          maybe_scan(Dir.new(fullpath), relative_position)
-        else
-          @scanner.notice(relative_position) do
-            open(fullpath) {|f| f.read}
+          fullpath = File.join(directory.path, entry)
+          relative_position = position ? File.join(position, entry) : entry
+
+          if File.directory?(fullpath)
+            maybe_scan(Dir.new(fullpath), relative_position)
+          else
+            @scanner.notice(relative_position) do
+              open(fullpath) {|f| f.read}
+            end
           end
         end
       end

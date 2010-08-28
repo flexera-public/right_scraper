@@ -25,9 +25,9 @@
 unless RUBY_PLATFORM=~/mswin/
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'download_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 
-describe RightScale::DownloadScraper do
+describe RightScale::Scrapers::Download do
   include RightScale::ScraperHelper
   include RightScale::SpecHelpers
 
@@ -42,7 +42,7 @@ describe RightScale::DownloadScraper do
   end
 
   before(:all) do
-    @scraperclass = RightScale::DownloadScraper
+    @scraperclass = RightScale::Scrapers::Download
   end
 
   context 'given a password protected repository' do

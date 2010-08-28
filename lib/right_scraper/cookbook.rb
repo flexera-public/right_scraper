@@ -21,7 +21,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require 'digest/sha1'
-require 'json'
 require 'uri'
 
 module RightScale

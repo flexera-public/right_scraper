@@ -22,12 +22,12 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'git_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'new_scraper_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 require 'set'
 require 'libarchive_ruby'
 
-describe RightScale::GitScraper do
+describe RightScale::Scrapers::Git do
   include RightScale::ScraperHelper
 
   def secondary_cookbook(where)
@@ -36,7 +36,7 @@ describe RightScale::GitScraper do
   end
 
   before(:all) do
-    @scraperclass = RightScale::GitScraper
+    @scraperclass = RightScale::Scrapers::Git
     @ignore = ['.git']
   end
 

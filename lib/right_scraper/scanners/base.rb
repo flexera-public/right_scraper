@@ -24,57 +24,59 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
 module RightScale
-  # Base class for scanning filesystems.  Subclasses should override
-  # #notice and possibly #notice_dir.
-  class Scanner
-    # Create a new Scanner.  Recognizes options as given.  Some
-    # options may be required, others optional.  This class recognizes
-    # only _:logger_.
-    #
-    # === Options ===
-    # _:logger_:: Optional.  Logger currently being used
-    #
-    # === Parameters ===
-    # options(Hash):: scanner options
-    def initialize(options={})
-      @logger = options.fetch(:logger, Logger.new)
-    end
+  module Scanners
+    # Base class for scanning filesystems.  Subclasses should override
+    # #notice and possibly #notice_dir.
+    class Scanner
+      # Create a new Scanner.  Recognizes options as given.  Some
+      # options may be required, others optional.  This class recognizes
+      # only _:logger_.
+      #
+      # === Options ===
+      # _:logger_:: Optional.  Logger currently being used
+      #
+      # === Parameters ===
+      # options(Hash):: scanner options
+      def initialize(options={})
+        @logger = options.fetch(:logger, Logger.new)
+      end
 
-    # Begin a scan for the given cookbook.
-    #
-    # === Parameters ===
-    # cookbook(RightScale::Cookbook):: cookbook to scan
-    def begin(cookbook)
-    end
+      # Begin a scan for the given cookbook.
+      #
+      # === Parameters ===
+      # cookbook(RightScale::Cookbook):: cookbook to scan
+      def begin(cookbook)
+      end
 
-    # Finish a scan for the given cookbook.
-    #
-    # === Parameters ===
-    # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
-    def end(cookbook)
-    end
+      # Finish a scan for the given cookbook.
+      #
+      # === Parameters ===
+      # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
+      def end(cookbook)
+      end
 
-    # Notice a file during scanning.
-    #
-    # === Block ===
-    # Return the data for this file.  We use a block because it may
-    # not always be necessary to read the data.
-    #
-    # === Parameters ===
-    # relative_position(String):: relative pathname for _pathname_ from root of cookbook
-    def notice(relative_position)
-    end
+      # Notice a file during scanning.
+      #
+      # === Block ===
+      # Return the data for this file.  We use a block because it may
+      # not always be necessary to read the data.
+      #
+      # === Parameters ===
+      # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+      def notice(relative_position)
+      end
 
-    # Notice a directory during scanning.  Returns true if the scanner
-    # should recurse into the directory (the default behavior)
-    #
-    # === Parameters ===
-    # relative_position(String):: relative pathname for the directory from root of cookbook
-    #
-    # === Returns ===
-    # Boolean:: should the scanning recurse into the directory
-    def notice_dir(relative_position)
-      true
+      # Notice a directory during scanning.  Returns true if the scanner
+      # should recurse into the directory (the default behavior)
+      #
+      # === Parameters ===
+      # relative_position(String):: relative pathname for the directory from root of cookbook
+      #
+      # === Returns ===
+      # Boolean:: should the scanning recurse into the directory
+      def notice_dir(relative_position)
+        true
+      end
     end
   end
 end

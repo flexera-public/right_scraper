@@ -51,7 +51,7 @@ module RightScale
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
                                                :url          => repo_url)
-      @client = SvnClient.new(@repo)
+      @client = RightScale::SvnClient.new(@repo)
       @svnrepo = Svn::Repos.create(svn_repo_path, {}, {})
       @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)}
       create_cookbook(repo_path, repo_content)

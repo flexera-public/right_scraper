@@ -21,28 +21,28 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
-
 module RightScale
-  # Union builder, to permit running multiple builders in sequence
-  # with the same interface as running one.
-  class UnionBuilder
-    # Create a new UnionBuilder.  Recognizes no new options.
-    #
-    # === Parameters ===
-    # classes(List):: List of Builder classes to run
-    # options(Hash):: options to initialize each Builder with
-    def initialize(classes, options={})
-      @subbuilders = classes.map {|klass| klass.new(options)}
-    end
+  module Builders
+    # Union builder, to permit running multiple builders in sequence
+    # with the same interface as running one.
+    class Union
+      # Create a new union builder.  Recognizes no new options.
+      #
+      # === Parameters ===
+      # classes(List):: List of Builder classes to run
+      # options(Hash):: options to initialize each Builder with
+      def initialize(classes, options={})
+        @subbuilders = classes.map {|klass| klass.new(options)}
+      end
 
-    # Run each builder for this cookbook.
-    #
-    # === Parameters ===
-    # dir(String):: directory cookbook exists at
-    # cookbook(RightScale::Cookbook):: cookbook instance being built
-    def go(dir, cookbook)
-      @subbuilders.each {|builder| builder.go(dir, cookbook)}
+      # Run each builder for this cookbook.
+      #
+      # === Parameters ===
+      # dir(String):: directory cookbook exists at
+      # cookbook(RightScale::Cookbook):: cookbook instance being built
+      def go(dir, cookbook)
+        @subbuilders.each {|builder| builder.go(dir, cookbook)}
+      end
     end
   end
 end

@@ -27,7 +27,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'r
 require 'tmpdir'
 require 'digest/sha1'
 
-describe RightScale::S3UploadScanner do
+describe RightScale::Scanners::S3Upload do
 
   include RightScale::SpecHelpers
 
@@ -53,7 +53,7 @@ describe RightScale::S3UploadScanner do
   end
 
   before(:all) do
-    @scraperclass = RightScale::DownloadScraper
+    @scraperclass = RightScale::Scrapers::Download
   end
 
   context 'given a download repository with the S3UploadScanner' do
@@ -68,9 +68,9 @@ describe RightScale::S3UploadScanner do
                                                :url          => "file:///#{@download_file}")
       @bucket = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(@repo,
-                                   :scanners => [RightScale::MetadataScanner,
-                                                 RightScale::ManifestScanner,
-                                                 RightScale::S3UploadScanner],
+                                   :scanners => [RightScale::Scanners::Metadata,
+                                                 RightScale::Scanners::Manifest,
+                                                 RightScale::Scanners::S3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                    :s3_bucket => @bucket,

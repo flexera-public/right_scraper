@@ -22,42 +22,42 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'watcher'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'processes', 'watch'))
-require 'json'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'process_watcher'))
 require 'digest/sha1'
 
 module RightScale
-  # Class for building tarballs from filesystem based checkouts.
-  class ArchiveBuilder < Builder
-    include ProcessWatcher
+  module Builders
+    # Class for building tarballs from filesystem based checkouts.
+    class Archive < Builder
+      include ProcessWatcher
 
-    # Create a new ArchiveBuilder.  In addition to the options
-    # recognized by Builder#initialize, recognizes _:scraper_,
-    # _:max_bytes_, and _:max_seconds_.
-    #
-    # === Options ===
-    # _:scraper_:: Required.  FilesystemBasedScraper currently being used
-    # _:max_bytes:: Optional.  Maximum size of archive to attempt to create.
-    # _:max_seconds:: Optional.  Maximum amount of time to attempt to create the archive.
-    def initialize(options={})
-      super
-      @scraper = options.fetch(:scraper)
-      @max_bytes = options[:max_bytes]
-      @max_seconds = options[:max_seconds]
-    end
+      # Create a new ArchiveBuilder.  In addition to the options
+      # recognized by Builder#initialize, recognizes _:scraper_,
+      # _:max_bytes_, and _:max_seconds_.
+      #
+      # === Options ===
+      # _:scraper_:: Required.  FilesystemBasedScraper currently being used
+      # _:max_bytes:: Optional.  Maximum size of archive to attempt to create.
+      # _:max_seconds:: Optional.  Maximum amount of time to attempt to create the archive.
+      def initialize(options={})
+        super
+        @scraper = options.fetch(:scraper)
+        @max_bytes = options[:max_bytes]
+        @max_seconds = options[:max_seconds]
+      end
 
-    # Build archive.
-    #
-    # === Parameters ===
-    # dir(String):: directory where cookbook exists
-    # cookbook(RightScale::Cookbook):: cookbook being built
-    def go(dir, cookbook)
-      @logger.operation(:creating_archive) do
-        exclude_declarations =
-          @scraper.ignorable_paths.map {|path| ["--exclude", path]}
-        cookbook.data[:archive] =
-          watch("tar", ["-C", dir, "-c", exclude_declarations, "."].flatten, @max_bytes, @max_seconds)
+      # Build archive.
+      #
+      # === Parameters ===
+      # dir(String):: directory where cookbook exists
+      # cookbook(RightScale::Cookbook):: cookbook being built
+      def go(dir, cookbook)
+        @logger.operation(:creating_archive) do
+          exclude_declarations =
+            @scraper.ignorable_paths.map {|path| ["--exclude", path]}
+          cookbook.data[:archive] =
+            watch("tar", ["-C", dir, "-c", exclude_declarations, "."].flatten, @max_bytes, @max_seconds)
+        end
       end
     end
   end

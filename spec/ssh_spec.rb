@@ -49,6 +49,7 @@ describe RightScale::Processes::SSHAgent do
     RightScale::Processes::SSHAgent.with do |agent|
       demofile = File.expand_path(File.join(File.dirname(__FILE__), 'demokey'))
       File.chmod(0600, demofile)
+      demofile = File.join(File.dirname(__FILE__), 'demokey')
       agent.add_keyfile(demofile)
       `ssh-add -l`.should == "2048 3d:6a:4f:8b:ec:35:da:e9:7e:cc:e8:2d:03:2f:6f:23 #{demofile} (RSA)\n"
       `ssh-add -L`.should == <<FULLOUTPUT

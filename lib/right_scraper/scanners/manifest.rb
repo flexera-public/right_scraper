@@ -25,32 +25,34 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'digest/sha1'
 
 module RightScale
-  # Build manifests from a filesystem.
-  class ManifestScanner < Scanner
-    # Create a new ManifestScanner.  Does not accept any new arguments.
-    def initialize(*args)
-      super
-      @manifest = {}
-    end
+  module Scanners
+    # Build manifests from a filesystem.
+    class Manifest < Scanner
+      # Create a new manifest scanner.  Does not accept any new arguments.
+      def initialize(*args)
+        super
+        @manifest = {}
+      end
 
-    # Complete a scan for the given cookbook.
-    #
-    # === Parameters ===
-    # cookbook(RightScale::Cookbook):: cookbook to scan
-    def end(cookbook)
-      cookbook.manifest = @manifest
-    end
+      # Complete a scan for the given cookbook.
+      #
+      # === Parameters ===
+      # cookbook(RightScale::Cookbook):: cookbook to scan
+      def end(cookbook)
+        cookbook.manifest = @manifest
+      end
 
-    # Notice a file during scanning.
-    #
-    # === Block ===
-    # Return the data for this file.  We use a block because it may
-    # not always be necessary to read the data.
-    #
-    # === Parameters ===
-    # relative_position(String):: relative pathname for file from root of cookbook
-    def notice(relative_position)
-      @manifest[relative_position] = Digest::SHA1.hexdigest(yield)
+      # Notice a file during scanning.
+      #
+      # === Block ===
+      # Return the data for this file.  We use a block because it may
+      # not always be necessary to read the data.
+      #
+      # === Parameters ===
+      # relative_position(String):: relative pathname for file from root of cookbook
+      def notice(relative_position)
+        @manifest[relative_position] = Digest::SHA1.hexdigest(yield)
+      end
     end
   end
 end
