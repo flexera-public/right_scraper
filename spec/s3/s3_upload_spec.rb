@@ -27,6 +27,17 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'r
 require 'tmpdir'
 require 'digest/sha1'
 
+# Massive hack to prevent "warning: peer certificate won't ..." blah
+# blah blah being spewed all over everything.
+class Net::HTTP
+  alias_method :old_initialize, :initialize
+  def initialize(*args)
+    old_initialize(*args)
+    @ssl_context = OpenSSL::SSL::SSLContext.new
+    @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
+end
+
 describe RightScale::Scanners::S3Upload do
 
   include RightScale::SpecHelpers
@@ -49,7 +60,7 @@ describe RightScale::Scanners::S3Upload do
 
   # Cleanup after ourselves
   def delete_download_repo
-    FileUtils.remove_entry_secure @tmpdir
+    FileUtils.remove_entry_secure @tmpdir unless @tmpdir.nil?
   end
 
   before(:all) do
@@ -57,7 +68,6 @@ describe RightScale::Scanners::S3Upload do
   end
 
   context 'given a download repository with the S3UploadScanner' do
-
     before(:all) do
       setup_download_repo
     end
@@ -66,17 +76,21 @@ describe RightScale::Scanners::S3Upload do
       @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      @bucket = 'com.rightscale.test.20100823'
+      bucket_name = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(@repo,
                                    :scanners => [RightScale::Scanners::Metadata,
                                                  RightScale::Scanners::Manifest,
                                                  RightScale::Scanners::S3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
-                                   :s3_bucket => @bucket,
+                                   :s3_bucket => bucket_name,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
-      FileUtils.rm_rf(RightScale::ScraperBase.repo_dir(@repo_path, @repo))
+      s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
+                            aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
+                            :logger => RightScale::Logger.new)
+      @bucket = s3.bucket(bucket_name, create=true)
+      FileUtils.rm_rf(RightScale::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
     end
 
     after(:all) do
@@ -90,9 +104,9 @@ describe RightScale::Scanners::S3Upload do
       end
 
       it 'the cookbook should exist' do
-        s3cookbook = AWS::S3::S3Object.find(File.join('Cooks', @cookbook.cookbook_hash), @bucket)
+        s3cookbook = @bucket.get(File.join('Cooks', @cookbook.cookbook_hash))
         s3cookbook.should_not be_nil
-        hash = JSON.parse(s3cookbook.value)
+        hash = JSON.parse(s3cookbook)
         hash["url"].should == @cookbook.to_url
         hash["metadata"].should == @cookbook.metadata
         hash["manifest"].should == @cookbook.manifest
@@ -100,9 +114,9 @@ describe RightScale::Scanners::S3Upload do
 
       it 'every file in the manifest should exist' do
         @cookbook.manifest.each do |key, value|
-          file = AWS::S3::S3Object.find(File.join('Files', value), @bucket)
+          file = @bucket.get(File.join('Files', value))
           file.should_not be_nil
-          Digest::SHA1.hexdigest(file.value).should == value
+          Digest::SHA1.hexdigest(file).should == value
         end
       end
     end

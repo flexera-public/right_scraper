@@ -22,7 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require 'aws/s3'
+require 'right_aws'
 require 'json'
 
 module RightScale
@@ -44,10 +44,10 @@ module RightScale
         super
         s3_key = options.fetch(:s3_key)
         s3_secret = options.fetch(:s3_secret)
-        AWS::S3::Base.establish_connection!(:access_key_id => s3_key,
-                                            :secret_access_key => s3_secret)
-        @bucket = options.fetch(:s3_bucket)
-        AWS::S3::Bucket.find(@bucket) # will throw an error if the bucket doesn't exist
+        s3 = RightAws::S3.new(aws_access_key_id=s3_key,
+                              aws_secret_access_key=s3_secret,
+                              :logger => Logger.new)
+        @bucket = s3.bucket(options.fetch(:s3_bucket))
       end
 
       # Complete a scan for the given cookbook.
@@ -55,12 +55,12 @@ module RightScale
       # === Parameters ===
       # cookbook(RightScale::Cookbook):: cookbook to scan
       def end(cookbook)
-        AWS::S3::S3Object.store(File.join('Cooks', cookbook.cookbook_hash),
-                                {
-                                  :url => cookbook.to_url,
-                                  :metadata => cookbook.metadata,
-                                  :manifest => cookbook.manifest,
-                                }.to_json, @bucket)
+        @bucket.put(File.join('Cooks', cookbook.cookbook_hash),
+                    {
+                      :url => cookbook.to_url,
+                      :metadata => cookbook.metadata,
+                      :manifest => cookbook.manifest,
+                    }.to_json)
       end
 
       # Notice a file during scanning.
@@ -75,8 +75,8 @@ module RightScale
         contents = yield
         name = Digest::SHA1.hexdigest(contents)
         path = File.join('Files', name)
-        unless AWS::S3::S3Object.exists? path, @bucket
-          AWS::S3::S3Object.store(path, contents, @bucket)
+        unless @bucket.key(path).exists?
+          @bucket.put(path, contents)
         end
       end
     end
