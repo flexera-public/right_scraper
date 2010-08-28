@@ -42,15 +42,15 @@ module RightScale
       def operation(type, explanation="")
         oldlevel = @level
         begin
-          puts "#{level_str} begin #{type}#{maybe_explain(explanation)}"
+          debug("#{level_str} begin #{type}#{maybe_explain(explanation)}")
           @level += 1
           result = super
           @level = oldlevel
-          puts "#{level_str} close #{type}#{maybe_explain(explanation)}"
+          debug("#{level_str} close #{type}#{maybe_explain(explanation)}")
           return result
         rescue
           @level = oldlevel
-          puts "#{level_str} abort #{type}#{maybe_explain(explanation)}"
+          debug("#{level_str} abort #{type}#{maybe_explain(explanation)}")
           raise
         end
       end
@@ -58,13 +58,6 @@ module RightScale
       private
       def level_str
         '>' * @level
-      end
-      def maybe_explain(explanation)
-        if explanation
-          ": #{explanation}"
-        else
-          ""
-        end
       end
     end
   end

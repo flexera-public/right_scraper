@@ -21,9 +21,20 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'logger'
+
 module RightScale
   # Very simplistic logger for scraper operations.
-  class Logger
+  class Logger < ::Logger
+    def initialize(*args)
+      if args.empty?
+        super('/dev/null')
+        self.level = ::Logger::ERROR
+      else
+        super
+      end
+    end
+
     # (RightScale::Repository) Repository currently being examined.
     attr_writer :repository
 
@@ -50,6 +61,16 @@ module RightScale
     # type(Symbol):: operation type identifier
     # explanation(String):: optional explanation
     def note_error(exception, type, explanation="")
+      error("Saw #{exception} during #{type}#{maybe_explain(explanation)}")
+    end
+
+    protected
+    def maybe_explain(explanation)
+      if explanation
+        ": #{explanation}"
+      else
+        ""
+      end
     end
   end
 end
