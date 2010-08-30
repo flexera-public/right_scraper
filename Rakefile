@@ -79,5 +79,5 @@ end
 # This requires exuberant ctags.
 desc "Rebuild TAGS file"
 task :tags do
-  sh "ctags -a -e -f TAGS --tag-relative -R lib"
+  sh "ctags-exuberant -a -e -f TAGS --tag-relative -R lib"
 end
