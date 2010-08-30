@@ -51,6 +51,7 @@ module RightScale
       pr, pw = IO::pipe
       @pid = fork do
         pr.close
+        STDIN.reopen(File.open('/dev/null', 'r'))
         STDOUT.reopen(pw)
         STDERR.reopen(pw)
         exec(cmd, *args)
