@@ -50,8 +50,11 @@ module RightScale
     # === Return
     # pid(Integer):: Spawned process pid
     def spawn(cmd, *args)
+      args = args.map { |a| a.to_s }
+      cmd = ([cmd] + args).join(' ')
+
       # Run external process and monitor it in a new thread
-      @io = IO.popen( ([cmd] + args).join(' ') )
+      @io = IO.popen(cmd)
       @handle = OpenProcess(PROCESS_ALL_ACCESS, 0, @io.pid)
       case @handle
       when INVALID_HANDLE_VALUE
