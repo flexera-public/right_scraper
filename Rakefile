@@ -25,6 +25,7 @@ require 'rubygems'
 require 'fileutils'
 require 'rake'
 require 'spec/rake/spectask'
+require 'rake/rdoctask'
 
 task :default => 'spec'
 
@@ -51,6 +52,21 @@ desc "Print Specdoc for unit tests"
 Spec::Rake::SpecTask.new(:doc) do |t|
    t.spec_opts = ["--format", "specdoc", "--dry-run"]
    t.spec_files = Dir['**/*_spec.rb']
+end
+
+# == Documentation == #
+
+desc "Generate API documentation to doc/rdocs/index.html"
+Rake::RDocTask.new do |rd|
+  rd.rdoc_dir = 'doc/rdocs'
+  rd.main = 'README.rdoc'
+  rd.rdoc_files.include 'README.rdoc', "lib/**/*\.rb"
+
+  rd.options << '--inline-source'
+  rd.options << '--line-numbers'
+  rd.options << '--all'
+  rd.options << '--fileboxes'
+  rd.options << '--diagram'
 end
 
 # == Gem Management == #
