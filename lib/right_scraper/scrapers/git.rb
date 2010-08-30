@@ -21,12 +21,30 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), 'checkout'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'processes', 'ssh'))
 require 'git'
 
 module RightScale
   module Scrapers
     # Scraper for cookbooks stored in a git repository.
     class Git < CheckoutBasedScraper
+      # In addition to normal scraper initialization, if the
+      # underlying repository has a credential we need to initialize a
+      # fresh SSHAgent and add the credential to it.
+      def setup_dir
+        unless @repository.first_credential.nil?
+          @agent = RightScale::Processes::SSHAgent.new
+          @agent.open
+          @agent.add_key(@repository.first_credential)
+        end
+        super
+      end
+
+      # Close the ssh agent if one has been opened.
+      def close
+        @agent.close unless @agent.nil?
+      end
+
       # Return true if a checkout exists.  Currently tests for .git in
       # the checkout.
       #

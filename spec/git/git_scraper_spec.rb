@@ -198,4 +198,28 @@ describe RightScale::Scrapers::Git do
       end
     end
   end
+
+  context 'given a remote git repository requiring a credential' do
+    before(:each) do
+      pending "Don't annoy GitHub unless ANNOY_GITHUB is set" unless ENV['ANNOY_GITHUB']
+      @helper = RightScale::GitScraperSpecHelper.new
+      credential_file = File.expand_path(File.join(File.dirname(__FILE__), '..', 'demokey'))
+      credential = File.open(credential_file) { |f| f.read }
+      @repo = RightScale::Repository.from_hash(:display_name     => 'test repo',
+                                               :repo_type        => :git,
+                                               :url              => 'git@github.com:rightscale-test-account/cookbooks.git',
+                                               :first_credential => credential)
+    end
+
+    after(:each) do
+      @helper.close unless @helper.nil?
+      @helper = nil
+    end
+
+    it_should_behave_like "From-scratch scraping"
+
+    it 'should see a cookbook' do
+      @scraper.next.should_not be_nil
+    end
+  end
 end
