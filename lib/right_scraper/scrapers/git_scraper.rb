@@ -37,7 +37,7 @@ module RightScale
       # msysgit or else a native Windows implementation such as Git#
       return false if (is_windows? || !File.directory?(@current_repo_dir))
       Dir.chdir(@current_repo_dir) do
-        remote_url = `git config --get remote.origin.url`.chomp
+        remote_url = run('git', 'config', '--get', 'remote.origin.url').chomp
         $?.success? && remote_url == @repo.url
       end
     end
@@ -67,7 +67,7 @@ module RightScale
               if is_tag && is_branch
                 @errors << 'Repository tag ambiguous: could be git tag or git branch'
               elsif !is_tag && !is_branch
-                current_sha = `git rev-parse HEAD`.chomp
+                current_sha = run('git', 'rev-parse', 'HEAD').chomp
                 if current_sha == @repo.tag
                   @callback.call("Nothing to update: already using #{@repo.tag}", is_step=false) if @callback
                   return true
@@ -111,8 +111,8 @@ module RightScale
                 @errors << 'Repository tag ambiguous: could be git tag or git branch'
               elsif is_branch 
                 if !on_branch
-                  output = `git branch #{@repo.tag} origin/#{@repo.tag} 2>&1`
-                  @errors << output if $? != 0
+                  output = run('git', 'branch', @repo.tag, "origin/#{repo.tag}")
+                  @errors << output unless $?.success?
                 end
               elsif !is_tag # Not a branch nor a tag, SHA ref? fetch everything so we have all SHAs
                 git_fetch(:depth => 2**31 -1)
@@ -203,7 +203,7 @@ module RightScale
         # "-o StrictHostKeyChecking=no" in the GIT_SSH executable, but it is
         # still a mystery why this doesn't work properly in windows.
         # so make a ssh call which creates the proper "known_hosts" file.
-        out = `ssh -o StrictHostKeyChecking=no #{repo.url.split(':').first} exit 2>&1`
+        run('ssh', '-o', 'StrictHostKeyChecking=no', repo.url.split(':').first)
       end
       return ''
     end
@@ -242,8 +242,8 @@ module RightScale
     # === Return
     # output(String):: Output of git command
     def git_checkout(tag)
-      output = `git checkout #{tag} 2>&1`
-      @errors << output if $? != 0
+      output = run('git', 'checkout', tag)
+      @errors << output unless $?.success?
       output
     end
 
@@ -260,9 +260,9 @@ module RightScale
     def analyze_repo_tag
       is_tag = is_branch = on_branch = nil
       begin
-        is_tag = `git tag`.split("\n").include?(@repo.tag)
-        is_branch = `git branch -r`.split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
-        on_branch = is_branch && !!`git branch`.split("\n").include?("* #{@repo.tag}")
+        is_tag = run('git', 'tag').split("\n").include?(@repo.tag)
+        is_branch = run('git', 'branch', '-r').split("\n").map { |t| t.strip }.include?("origin/#{@repo.tag}")
+        on_branch = is_branch && !!run('git', 'branch').split("\n").include?("* #{@repo.tag}")
       rescue Exception => e
         @errors << "Analysis of repository tag failed with: #{e.message}"
       end

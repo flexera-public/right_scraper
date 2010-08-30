@@ -54,9 +54,8 @@ module RightScale
           else ''
         end
         Dir.chdir(@current_repo_dir) do
-          cmd = "tar x#{unzip_opt}f #{filename} 2>&1"
-          res = `#{cmd}`
-          @errors << res if $? != 0
+          res = run('tar', "x#{unzip_opt}f", filename)
+          @errors << res unless $?.success?
           File.delete(filename)
         end
       end

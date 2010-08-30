@@ -140,5 +140,36 @@ module RightScale
       true
     end
 
+    # Spawn given process, wait for it to complete, and return its output The exit status
+    # of the process is available in the $? global. Functions similarly to the backtick
+    # operator, only it avoids invoking the command interpreter under operating systems
+    # that support fork-and-exec.
+    #
+    # This method accepts a variable number of parameters; the first param is always the
+    # command to run; successive parameters are command-line arguments for the process.
+    #
+    # === Parameters
+    # cmd(String):: Name of the command to run
+    # arg1(String):: Optional, first command-line argumument
+    # arg2(String):: Optional, first command-line argumument
+    # ...
+    # argN(String):: Optional, Nth command-line argumument
+    #
+    # === Return
+    # output(String):: The process' output
+    def run(cmd, *args)
+      pm = ProcessMonitor.new
+      output = StringIO.new
+
+      pm.spawn(cmd, *args) do |options|
+        output << options[:output] if options[:output]
+      end
+
+      pm.cleanup
+      output.close
+      output = output.string
+      return output
+    end
+
   end
 end

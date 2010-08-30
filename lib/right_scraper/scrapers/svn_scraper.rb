@@ -38,13 +38,13 @@ module RightScale
       cookbooks_path = [ cookbooks_path ] unless cookbooks_path.is_a?(Array)
       if cookbooks_path.empty?
         Dir.chdir(@current_repo_dir) do
-          info = `svn info`
+          info = run('svn', 'info')
           inc = $?.success? && info =~ (/^URL: (.*)$/) && $1 == @repo.url
         end
       else
         cookbooks_path.each do |path|
           Dir.chdir(File.join(@current_repo_dir, path)) do
-            info = `svn info`
+            info = run('svn', 'info')
             inc = $?.success? && info =~ (/^URL: (.*)$/) && $1 == File.join(@repo.url, path)
             break unless inc
           end
