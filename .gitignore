@@ -4,3 +4,4 @@ tags
 .emacs-project
 config/environment.rb
 TAGS
+doc

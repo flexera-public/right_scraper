@@ -30,7 +30,7 @@ module RightScale
       # Return true if a checkout exists.  Currently tests for .svn in
       # the checkout.
       #
-      # === Returns ===
+      # === Returns
       # Boolean:: true if the checkout already exists (and thus
       #           incremental updating can occur).
       def exists?

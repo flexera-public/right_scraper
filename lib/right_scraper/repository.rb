@@ -25,6 +25,24 @@ require 'digest/sha1'
 
 module RightScale
   # Description of remote repository that needs to be scraped.
+  #
+  # Repository definitions inherit from this base class and are placed
+  # in <tt>lib/right_scraper/repositories</tt>.  A repository must
+  # register its #repo_type in @@types so that they can be used with
+  # Repository::from_hash, as follows:
+  #  class ARepository < Repository
+  #    ...
+  #
+  #    # Add this repository to the list of available types.
+  #    @@types[:arepository] = ARepository
+  #  end
+  #
+  # Subclasses should override #repo_type, #scraper, and #to_url; when
+  # sensible, #revision should also be overridden.  The most important
+  # methods are #to_url, which will return a +URI+ that completely
+  # characterizes the RightScale::Repository, and #scraper which
+  # returns the appropriate RightScale::Scrapers::ScraperBase to scan
+  # that repository.
   class Repository
     # (String) Human readable repository name used for progress reports
     attr_accessor :display_name
@@ -36,7 +54,7 @@ module RightScale
       raise NotImplementedError
     end
 
-    # (ScraperBase class) Appropriate class for scraping this sort of
+    # (RightScale::Scrapers::ScraperBase class) Appropriate class for scraping this sort of
     # repository.  Needs to be overridden appropriately by subclasses.
     def scraper
       raise NotImplementedError

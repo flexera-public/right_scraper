@@ -28,8 +28,25 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scanners', 'un
 
 module RightScale
   module Scrapers
-    # Base class for all scrapers.  Actual scraper implementation should
-    # override #next, #seek, #pos, and #rewind.
+    # Base class for all scrapers.
+    #
+    # Scrapers scan a repository and return a number of
+    # RightScale::Cookbook instances.  Scrapers live in
+    # <tt>lib/right_scraper/scrapers</tt>.  Scrapers should never be
+    # instantiated directly, only through
+    # RightScale::Repository#scrape.  Scrapers implement a stream-type
+    # interface, with #next, #seek, #rewind and #tell just like +IO+
+    # streams and +Dir+ instances.  #next returns Cookbooks, or +nil+
+    # if the end of the repository has been reached.
+    #
+    # Hooks can be defined that scan the result of the scrape; these
+    # are used for building metadata and manifest files, for example,
+    # and for uploading the contents to S3.  The basic scraper
+    # supports only scanners, which should be subclasses of
+    # RightScale::Scanners::Scanner.
+    #
+    # Scraper implementations should override #next, #seek, #pos, and
+    # #rewind.
     #
     # It is important to call #close when you are done with the scraper
     # so that various open file descriptors and temporary files and the
@@ -41,6 +58,11 @@ module RightScale
     #   ensure
     #     scraper.close
     #   end
+    #
+    # Before inheriting directly from ScraperBase, consider
+    # FilesystemBasedScraper and CheckoutBasedScraper, which do much
+    # of the grunt work for filesystem based scraping and version
+    # control scraping respectively.
     class ScraperBase
       # Integer:: optional maximum size permitted for repositories
       attr_accessor :max_bytes
@@ -56,14 +78,15 @@ module RightScale
       # recognizes several options, and subclasses may recognize
       # additional options.  Options may never be required.
       #
-      # === Options ===
-      # _:max_bytes_:: Maximum number of bytes to read
-      # _:max_seconds_:: Maximum number of seconds to spend reading
-      # _:logger_:: Logger to use
-      # _:scanners_:: List of Scanner classes to use, defaulting to
-      #               ManifestScanner and MetadataScanner
+      # === Options
+      # <tt>:max_bytes</tt>:: Maximum number of bytes to read
+      # <tt>:max_seconds</tt>:: Maximum number of seconds to spend reading
+      # <tt>:logger</tt>:: Logger to use
+      # <tt>:scanners</tt>:: List of Scanner classes to use, defaulting
+      #                      to RightScale::Scanners::Manifest and
+      #                      RightScale::Scanners::Metadata
       #
-      # === Parameters ===
+      # === Parameters
       # repository(RightScale::Repository):: repository to scrape
       # options(Hash):: scraper options
       def initialize(repository,options={})
@@ -118,12 +141,12 @@ module RightScale
       # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
       #
       # === Return
-      # repo_dir(String):: Path to local directory that corresponds to given repository
+      # String:: Path to local directory that corresponds to given repository
       def self.repo_dir(root_dir, repo)
         repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
         dir_name  = repo.repository_hash
         dir_path  = File.join(root_dir, dir_name)
-        repo_dir = "#{dir_path}/repo"
+        "#{dir_path}/repo"
       end
     end
   end

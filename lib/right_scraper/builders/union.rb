@@ -28,7 +28,7 @@ module RightScale
     class Union
       # Create a new union builder.  Recognizes no new options.
       #
-      # === Parameters ===
+      # === Parameters
       # classes(List):: List of Builder classes to run
       # options(Hash):: options to initialize each Builder with
       def initialize(classes, options={})
@@ -37,7 +37,7 @@ module RightScale
 
       # Run each builder for this cookbook.
       #
-      # === Parameters ===
+      # === Parameters
       # dir(String):: directory cookbook exists at
       # cookbook(RightScale::Cookbook):: cookbook instance being built
       def go(dir, cookbook)

@@ -30,7 +30,7 @@ module RightScale
     class Metadata < Scanner
       # Begin a scan for the given cookbook.
       #
-      # === Parameters ===
+      # === Parameters
       # cookbook(RightScale::Cookbook):: cookbook to scan
       def begin(cookbook)
         @cookbook = cookbook
@@ -38,12 +38,12 @@ module RightScale
 
       # Notice a file during scanning.
       #
-      # === Block ===
+      # === Block
       # Return the data for this file.  We use a block because it may
       # not always be necessary to read the data.
       #
-      # === Parameters ===
-      # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+      # === Parameters
+      # relative_position(String):: relative pathname for the file from root of cookbook
       def notice(relative_position)
         if relative_position == "metadata.json"
           @logger.operation(:metadata_parsing, "in #{@cookbook}") do
@@ -55,12 +55,12 @@ module RightScale
       # Notice a directory during scanning.  Since metadata.json is by
       # definition only in the root directory we don't need to recurse,
       # but we do need to go into the first directory (identified by
-      # _relative_position_ being _nil_).
+      # +relative_position+ being +nil+).
       #
-      # === Parameters ===
+      # === Parameters
       # relative_position(String):: relative pathname for the directory from root of cookbook
       #
-      # === Returns ===
+      # === Returns
       # Boolean:: should the scanning recurse into the directory
       def notice_dir(relative_position)
         relative_position == nil

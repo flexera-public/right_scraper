@@ -30,7 +30,7 @@ module RightScale
   module Scrapers
     # Base class for generic filesystem based scrapers.  Subclasses
     # should override #ignorable_paths, and add some setup code to
-    # #initialize so that the scraper has something to scrape.
+    # #new so that the scraper has something to scrape.
     #
     # It is important to call #close when you are done with the scraper
     # so that various open file descriptors and temporary files and the
@@ -44,13 +44,13 @@ module RightScale
     #   end
     class FilesystemBasedScraper < ScraperBase
       # Create a new scraper.  In addition to the options recognized by
-      # ScraperBase#initialize, this class recognizes _:directory_ and
-      # _:builders_.
+      # ScraperBase#new, this class recognizes <tt>:directory</tt> and
+      # <tt>:builders</tt>.
       #
       # === Options ===
-      # _:directory_:: Directory to perform scraper work in
-      # _:builders_:: List of Builder classes to use, defaulting to
-      #               FilesystemBuilder
+      # <tt>:directory</tt>:: Directory to perform scraper work in
+      # <tt>:builders</tt>:: List of Builder classes to use, defaulting to
+      #                      FilesystemBuilder
       #
       # === Parameters ===
       # repository(RightScale::Repository):: repository to scrape
@@ -178,6 +178,10 @@ module RightScale
         ignorable_paths.include?(entry)
       end
 
+      # Find the next cookbook, starting in dir.
+      #
+      # === Parameters
+      # dir(Dir):: directory to begin search in
       def find_next(dir)
         @logger.operation(:finding_next_cookbook, "examining #{dir.path}") do
           if File.exists?(File.join(dir.path, 'metadata.json'))
@@ -189,6 +193,10 @@ module RightScale
         end
       end
 
+      # Read a cookbook from the given path.
+      #
+      # === Parameters
+      # dir(Dir):: directory to read cookbook from
       def read_cookbook(dir)
         @logger.operation(:reading_cookbook, "reading cookbook from #{dir.path}") do
           cookbook = RightScale::Cookbook.new(@repository, nil, strip_basedir(dir.path))
@@ -197,6 +205,7 @@ module RightScale
         end
       end
 
+      # Search the directory stack looking for the next cookbook.
       def search_dirs
         @logger.operation(:searching, "looking for next cookbook") do
           until @stack.empty?
@@ -221,6 +230,7 @@ module RightScale
           result
         end
       end
+      private :search_dirs
 
       def seek_to_named(dir, name)
         @logger.operation(:seeking, "seeking to #{name} in #{dir.path}") do
@@ -239,7 +249,7 @@ module RightScale
       private :seek_to_named
 
       # Return the next cookbook in the filesystem, or nil if none.  As
-      # a part of building the cookbooks, calls @builder.go
+      # a part of building the cookbooks, invokes the builders.
       #
       # === Returns
       # Cookbook:: next cookbook in filesystem, or nil if none.

@@ -26,6 +26,8 @@ require 'logger'
 module RightScale
   # Very simplistic logger for scraper operations.
   class Logger < ::Logger
+    # If no arguments, create a Logger that logs to nothing.
+    # Otherwise pass the arguments on to ::Logger.
     def initialize(*args)
       if args.empty?
         super('/dev/null')

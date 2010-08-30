@@ -28,7 +28,7 @@ module RightScale
     class Union
       # Create a new union scanner.  Recognizes no new options.
       #
-      # === Parameters ===
+      # === Parameters
       # classes(List):: List of Scanner classes to run
       # options(Hash):: scanner options
       def initialize(classes, options={})
@@ -37,7 +37,7 @@ module RightScale
 
       # Begin a scan for the given cookbook.
       #
-      # === Parameters ===
+      # === Parameters
       # cookbook(RightScale::Cookbook):: cookbook to scan
       def begin(cookbook)
         @subscanners.each {|scanner| scanner.begin(cookbook)}
@@ -45,20 +45,20 @@ module RightScale
 
       # Finish a scan for the given cookbook.
       #
-      # === Parameters ===
-      # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
+      # === Parameters
+      # cookbook(RightScale::Cookbook):: cookbook that just finished scanning
       def end(cookbook)
         @subscanners.each {|scanner| scanner.end(cookbook)}
       end
 
       # Notice a file during scanning.
       #
-      # === Block ===
+      # === Block
       # Return the data for this file.  We use a block because it may
       # not always be necessary to read the data.
       #
-      # === Parameters ===
-      # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+      # === Parameters
+      # relative_position(String):: relative pathname for the file from the root of cookbook
       def notice(relative_position)
         data = nil
         @subscanners.each {|scanner| scanner.notice(relative_position) {
@@ -71,10 +71,10 @@ module RightScale
       # Notice a directory during scanning.  Returns true if any of the
       # subscanners report that they should recurse into the directory.
       #
-      # === Parameters ===
+      # === Parameters
       # relative_position(String):: relative pathname for directory from root of cookbook
       #
-      # === Returns ===
+      # === Returns
       # Boolean:: should the scanning recurse into the directory
       def notice_dir(relative_position)
         @subscanners.any? {|scanner| scanner.notice_dir(relative_position)}

@@ -27,18 +27,19 @@ require 'json'
 
 module RightScale
   module Scanners
-    # Upload files to an S3 bucket.
+    # Upload scanned files to an S3 bucket.
     class S3Upload < Scanner
       # Create a new S3Upload.  In addition to the options recognized
-      # by Scanner, this class recognizes _:s3_key_, _:s3_secret_, and
-      # _:s3_bucket_ and requires all of those.
+      # by Scanner, this class recognizes <tt>:s3_key</tt>,
+      # <tt>:s3_secret</tt>, and <tt>:s3_bucket</tt> and requires all
+      # of those.
       #
-      # === Options ===
-      # _:s3_key_:: Required.  S3 access key.
-      # _:s3_secret_:: Required.  S3 secret key.
-      # _:s3_bucket_:: Required.  Bucket to upload cookbooks to.
+      # === Options
+      # <tt>:s3_key</tt>:: Required.  S3 access key.
+      # <tt>:s3_secret</tt>:: Required.  S3 secret key.
+      # <tt>:s3_bucket</tt>:: Required.  Bucket to upload cookbooks to.
       #
-      # === Parameters ===
+      # === Parameters
       # options(Hash):: scanner options
       def initialize(options={})
         super
@@ -50,9 +51,10 @@ module RightScale
         @bucket = s3.bucket(options.fetch(:s3_bucket))
       end
 
-      # Complete a scan for the given cookbook.
+      # Upon ending a scan for a cookbook, upload the cookbook
+      # contents to S3.
       #
-      # === Parameters ===
+      # === Parameters
       # cookbook(RightScale::Cookbook):: cookbook to scan
       def end(cookbook)
         @bucket.put(File.join('Cooks', cookbook.cookbook_hash),
@@ -63,13 +65,13 @@ module RightScale
                     }.to_json)
       end
 
-      # Notice a file during scanning.
+      # Upload a file during scanning.
       #
-      # === Block ===
+      # === Block
       # Return the data for this file.  We use a block because it may
       # not always be necessary to read the data.
       #
-      # === Parameters ===
+      # === Parameters
       # relative_position(String):: relative pathname for file from root of cookbook
       def notice(relative_position)
         contents = yield

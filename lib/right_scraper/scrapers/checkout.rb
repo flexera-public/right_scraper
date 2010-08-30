@@ -31,13 +31,8 @@ module RightScale
     # operation need to implement #exists? and #do_update, in addition
     # to FilesystemBasedScraper#ignorable_paths.
     class CheckoutBasedScraper < FilesystemBasedScraper
-      # Create a new scraper.  This class does not recognize any new
-      # options, so see FilesystemBasedScraper#initialize for option
-      # handling.
-      #
-      # === Parameters ===
-      # repository(RightScale::Repository):: repository to scrape
-      # options(Hash):: scraper options
+      # Check out repository into the directory.  Occurs between
+      # variable initialization and beginning scraping.
       def setup_dir
         if exists?
           begin
@@ -60,7 +55,7 @@ module RightScale
 
       # Return true if a checkout exists.
       #
-      # === Returns ===
+      # === Returns
       # Boolean:: true if the checkout already exists (and thus
       #           incremental updating can occur).
       def exists?
@@ -79,7 +74,7 @@ module RightScale
         FileUtils.mkdir_p(basedir)
       end
 
-      # Path to check repository to.  Currently @basedir/repository hash.
+      # Path to check repository to.  Should be within @basedir.
       def basedir
         File.join(@basedir, @repository.repository_hash)
       end

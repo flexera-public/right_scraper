@@ -32,9 +32,9 @@ module RightScale
         super
         @level = 1
       end
-      # Begin an operation that merits logging.  Will write to stdout
-      # the details, including a visual indicator of how many nested
-      # operations are currently pending.
+      # Begin an operation that merits logging.  Will write the
+      # details to the log, including a visual indicator of how many
+      # nested operations are currently pending.
       #
       # === Parameters
       # type(Symbol):: operation type identifier

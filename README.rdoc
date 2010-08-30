@@ -55,6 +55,46 @@ The build can be tested using the RSpec gem.
 
  rake spec
 
+== CODE OVERVIEW
+
+The main interface to right_scraper is RightScale::Scraper.  If
+you're interested in digging in deeper, there are several major moving
+parts to be aware of.
+
+=== Repositories, Scrapers and Cookbooks
+
+A RightScale::Repository completely defines how to access a specific
+repository (including revision information as appropriate).
+Repository definitions are in <tt>lib/right_scraper/repositories</tt> and
+should inherit from RightScale::Repository.
+
+Scrapers are subclasses of RightScale::Scrapers::ScraperBase, and can
+scan a repository and return a number of RightScale::Cookbook
+instances.  Scrapers live in <tt>lib/right_scraper/scrapers</tt>.
+Scrapers should never be instantiated directly, only through
+repositories.  Scrapers implement a stream-type interface like +IO+
+streams and +Dir+ instances.
+
+Cookbooks, gotten from scrapers, are instances of
+RightScale::Cookbook.  Cookbooks can be converted to and from URL-type
+syntaxes with RightScale::Cookbook#to_url and
+RightScale::Cookbook::from_url, with the caveat that it is not at
+present possible to perfectly reconstruct the repository a cookbook
+uses from the cookbook URL.
+
+=== Scraper Hooks
+
+There are two interesting classes of scraper hooks; builders, which
+scan a tree on the filesystem, and scanners, which handle
+filesystem-like structures in memory.  Both these are needed because a
+scraper is allowed to operate in a streaming fashion (and indeed
+RightScale::Scrapers::Download does), meaning that there is never an
+actual filesysteme tree.  Builders can be specified in the
+<tt>:builders</tt> argument to
+RightScale::Scrapers::FilesystemBasedScraper#new and
+scanners can be specified in the <tt>:scanners</tt> argument to
+RightScale::Scrapers::ScraperBase#new.
+
 == LICENSE
 
 <b>RightScraper</b>

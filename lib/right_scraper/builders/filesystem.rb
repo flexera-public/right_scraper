@@ -28,14 +28,14 @@ module RightScale
     # Build metadata by scanning the filesystem.
     class Filesystem < Builder
       # Create a new filesystem scanner.  In addition to the options
-      # recognized by Builder, this class recognizes _:scraper_ and
-      # _:scanner:_.
+      # recognized by Builder, this class recognizes <tt>:scraper</tt> and
+      # <tt>:scanner</tt>.
       #
-      # === Options ===
-      # _:scraper_:: Required.  FilesystemBasedScraper currently being used
-      # _:scanner_:: Required.  Scanner currently being used
+      # === Options
+      # <tt>:scraper</tt>:: Required.  FilesystemBasedScraper currently being used
+      # <tt>:scanner</tt>:: Required.  Scanner currently being used
       #
-      # === Parameters ===
+      # === Parameters
       # options(Hash):: scraper options
       def initialize(options={})
         super
@@ -45,7 +45,7 @@ module RightScale
 
       # Run builder for this cookbook.
       #
-      # === Parameters ===
+      # === Parameters
       # dir(String):: directory cookbook exists at
       # cookbook(RightScale::Cookbook):: cookbook instance being built
       def go(dir, cookbook)
@@ -64,7 +64,7 @@ module RightScale
 
       # Scan the contents of directory.
       #
-      # === Parameters ===
+      # === Parameters
       # directory(Dir):: directory to scan
       # position(String):: relative pathname for _directory_ from root of cookbook
       def scan(directory, position)

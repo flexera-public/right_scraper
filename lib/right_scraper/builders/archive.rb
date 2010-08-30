@@ -32,13 +32,13 @@ module RightScale
       include ProcessWatcher
 
       # Create a new ArchiveBuilder.  In addition to the options
-      # recognized by Builder#initialize, recognizes _:scraper_,
-      # _:max_bytes_, and _:max_seconds_.
+      # recognized by Builder, recognizes :scraper,
+      # :max_bytes, and :max_seconds.
       #
-      # === Options ===
-      # _:scraper_:: Required.  FilesystemBasedScraper currently being used
-      # _:max_bytes:: Optional.  Maximum size of archive to attempt to create.
-      # _:max_seconds:: Optional.  Maximum amount of time to attempt to create the archive.
+      # === Options
+      # <tt>:scraper</tt>:: Required.  FilesystemBasedScraper currently being used
+      # <tt>:max_bytes</tt>:: Optional.  Maximum size of archive to attempt to create.
+      # <tt>:max_seconds</tt>:: Optional.  Maximum amount of time to attempt to create the archive.
       def initialize(options={})
         super
         @scraper = options.fetch(:scraper)
@@ -48,7 +48,7 @@ module RightScale
 
       # Build archive.
       #
-      # === Parameters ===
+      # === Parameters
       # dir(String):: directory where cookbook exists
       # cookbook(RightScale::Cookbook):: cookbook being built
       def go(dir, cookbook)

@@ -31,12 +31,12 @@ module RightScale
     # somewhere.
     class Download < ScraperBase
       # Create a new download scraper.  In addition to the options recognized by
-      # ScraperBase#initialize, this class recognizes _:directory_.
+      # ScraperBase#new, this class recognizes <tt>:directory</tt>.
       #
-      # === Options ===
-      # _:directory_:: Directory to perform scraper work in
+      # === Options
+      # <tt>:directory</tt>:: Directory to perform scraper work in
       #
-      # === Parameters ===
+      # === Parameters
       # repository(RightScale::Repository):: repository to scrape
       # options(Hash):: scraper options
       def initialize(repository, options={})
@@ -44,6 +44,7 @@ module RightScale
         @basedir = options[:directory]
         @done = false
       end
+
       # Return the position of the scraper.  This always returns true,
       # because we only support one cookbook per tarball and so it is
       # always at the same position.

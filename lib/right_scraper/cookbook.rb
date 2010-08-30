@@ -27,6 +27,15 @@ module RightScale
   # Localized representation of a cookbook.  Contains the repository
   # it was fetched from, the cookbook contents, and the metadata as a
   # hash.
+  #
+  # Cookbooks can be converted to and from URL-type syntaxes with
+  # RightScale::Cookbook#to_url and RightScale::Cookbook::from_url,
+  # with the caveat that it is not at present possible to perfectly
+  # reconstruct the repository a cookbook uses from the cookbook URL.
+  # The JSON metadata for the Cookbook is in #metadata, and the
+  # manifest is in #manifest.  The last interesting method is
+  # #cookbook_hash, which returns a unique identifier for that
+  # cookbook.
   class Cookbook
     # (RightScale::Repository) Repository the cookbook was fetched from.
     attr_accessor :repository
@@ -155,12 +164,15 @@ module RightScale
     end
 
     # Split a Cookbook URL into its component parts.  The bulk is in
-    # _hash_, which has the following keys:
-    # _:repo_type_:: Required.  Repository type, which should be a value suitable for Repository#from_hash.
-    # _:url_:: Required.  Remaining URL after Cookbook specific parts have been parsed out.
-    # _:first_credential_:: Optional.  First credential required for access (usually username).
-    # _:second_credential_:: Optional.  Second credential required for access (usually password).
-    # _:tag_:: Optional.  Tag of the checkout in question.
+    # +hash+, which has the following keys: <tt>:repo_type</tt>::
+    # Required.  Repository type, which should be a value suitable for
+    # Repository#from_hash.  <tt>:url</tt>:: Required.  Remaining URL
+    # after Cookbook specific parts have been parsed out.
+    # <tt>:first_credential</tt>:: Optional.  First credential
+    # required for access (usually username).
+    # <tt>:second_credential</tt>:: Optional.  Second credential
+    # required for access (usually password).  <tt>:tag</tt>::
+    # Optional.  Tag of the checkout in question.
     #
     # === Parameters
     # url(String):: Cookbook URL to parse.

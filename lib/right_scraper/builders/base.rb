@@ -25,17 +25,18 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
 module RightScale
   module Builders
-    # Base class for building additional metadata from filesystem based
-    # checkouts.  Subclasses should override #go.
+    # Base class for building additional metadata from filesystem
+    # based checkouts.  Subclasses should override #go, and possibly
+    # #new if they require additional arguments.
     class Builder
       # Create a new Builder.  Recognizes options as given.  Some
       # options may be required, others optional.  This class recognizes
-      # only _:logger_.
+      # only :logger.
       #
-      # === Options ===
-      # _:logger_:: Optional.  Logger currently being used
+      # === Options
+      # <tt>:logger</tt>:: Optional.  Logger currently being used
       #
-      # === Parameters ===
+      # === Parameters
       # options(Hash):: builder options
       def initialize(options={})
         @logger = options.fetch(:logger, Logger.new)
@@ -43,7 +44,7 @@ module RightScale
 
       # Run builder for this cookbook.
       #
-      # === Parameters ===
+      # === Parameters
       # dir(String):: directory cookbook exists at
       # cookbook(RightScale::Cookbook):: cookbook instance being built
       def go(dir, cookbook)

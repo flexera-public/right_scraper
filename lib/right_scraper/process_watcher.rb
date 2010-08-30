@@ -34,7 +34,7 @@ module RightScale
     # max_bytes(Integer):: maximum number of bytes to permit
     # max_seconds(Integer):: maximum number of seconds to permit to run
     #
-    # === Returns ===
+    # === Returns
     # String:: output of command
     def watch(command, args, max_bytes, max_seconds)
       watcher = RightScale::Processes::Watcher.new(max_bytes, max_seconds)
