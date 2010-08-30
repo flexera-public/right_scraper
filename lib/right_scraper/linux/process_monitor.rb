@@ -25,11 +25,16 @@ module RightScale
 
   # *nix specific watcher implementation
   class ProcessMonitor
-
-    # Spawn given process and callback given block with output and exit code
+    # Spawn given process and callback given block with output and exit code. This method
+    # accepts a variable number of parameters; the first param is always the command to
+    # run; successive parameters are command-line arguments for the process.
     #
     # === Parameters
-    # cmd(String):: Process command line (including arguments)
+    # cmd(String):: Name of the command to run
+    # arg1(String):: Optional, first command-line argumument
+    # arg2(String):: Optional, first command-line argumument
+    # ...
+    # argN(String):: Optional, Nth command-line argumument
     #
     # === Block
     # Given block should take one argument which is a hash which may contain
@@ -39,19 +44,30 @@ module RightScale
     #
     # === Return
     # pid(Integer):: Spawned process pid
-    def spawn(cmd)
-      # Run external process and monitor it in a new thread
-      @io = IO.popen(cmd)
+    def spawn(cmd, *args)
+      args = args.map { |a| a.to_s } #exec only likes string arguments
+      
+      #Run subprocess; capture its output using a pipe
+      pr, pw = IO::pipe
+      @pid = fork do
+        pr.close
+        STDOUT.reopen(pw)
+        STDERR.reopen(pw)
+        exec(cmd, *args)
+      end
+
+      #Monitor subprocess output and status in a dedicated thread
+      pw.close
+      @io = pr
       @reader = Thread.new do
-        o = @io.read
-        until o == ''
-          yield(:output => o)
-          o = @io.read
+        until @io.eof?
+          yield(:output => @io.read)
         end
-        Process.wait(@io.pid)
+        Process.wait(@pid)
         yield(:exit_code => $?.exitstatus)
       end
-      @io.pid
+
+      return @pid
     end
 
     # Close io and join reader thread

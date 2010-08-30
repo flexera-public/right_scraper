@@ -37,7 +37,8 @@ describe RightScale::Watcher do
 
   it 'should launch and watch well-behaved processes' do
     watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=5)
-    status = watcher.launch_and_watch('ruby -e "puts 42; exit 42"', @dest_dir)
+    ruby = "trap('INT', 'IGNORE'); puts 42; exit 42"
+    status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :success
     status.exit_code.should == 42
     status.output.should == "42\n"
@@ -45,7 +46,8 @@ describe RightScale::Watcher do
 
   it 'should report timeouts' do
     watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=2)
-    status = watcher.launch_and_watch('ruby -e "STDOUT.sync = true; puts 42; sleep 5" 2>&1', @dest_dir)
+    ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; sleep 5"
+    status = watcher.launch_and_watch('ruby',  ['-e', ruby], @dest_dir)
     status.status.should == :timeout
     status.exit_code.should == -1
     status.output.should == "42\n"
@@ -53,7 +55,8 @@ describe RightScale::Watcher do
 
   it 'should report size exceeded' do
     watcher = RightScale::Watcher.new(max_bytes=1, max_seconds=5)
-    status = watcher.launch_and_watch("ruby -e 'STDOUT.sync = true; puts 42; File.open(File.join(\"#{@dest_dir}\", \"test\"), \"w\") { |f| f.puts \"MORE THAN 2 CHARS\" }'; sleep 5", @dest_dir)
+    ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; File.open(File.join('#{@dest_dir}', 'test'), 'w') { |f| f.puts 'MORE THAN 2 CHARS' }; sleep 5 rescue nil"
+    status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :size_exceeded
     status.exit_code.should == -1
     status.output.should == "42\n"
@@ -61,7 +64,8 @@ describe RightScale::Watcher do
 
   it 'should allow infinite size and timeout' do
     watcher = RightScale::Watcher.new(max_bytes=-1, max_seconds=-1)
-    status = watcher.launch_and_watch("ruby -e 'STDOUT.sync = true; puts 42; File.open(File.join(\"#{@dest_dir}\", \"test\"), \"w\") { |f| f.puts \"MORE THAN 2 CHARS\" };sleep 2'", @dest_dir)
+    ruby = "trap('INT', 'IGNORE'); STDOUT.sync = true; puts 42; File.open(File.join('#{@dest_dir}', 'test'), 'w') { |f| f.puts 'MORE THAN 2 CHARS' }; sleep 2 rescue nil"
+    status = watcher.launch_and_watch('ruby', ['-e', ruby], @dest_dir)
     status.status.should == :success
     status.exit_code.should == 0
     status.output.should == "42\n"

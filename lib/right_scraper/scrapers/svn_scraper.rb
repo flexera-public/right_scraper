@@ -64,14 +64,14 @@ module RightScale
       cookbooks_path = repo.cookbooks_path || []
       cookbooks_path = [ cookbooks_path ] unless cookbooks_path.is_a?(Array)
       if @incremental
-        svn_cmd = "svn update --no-auth-cache --non-interactive --quiet" +
-        (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
-        (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
-        (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
-        ' 2>&1'
+        args = ['update', '--no-auth-cache', '--non-interactive', '--quiet']        
+        args += ['--revision', @repo.tag] if (!@repo.tag.nil? && !@repo.tag.empty?)
+        args += ['--username', @repo.first_credential] if @repo.first_credential
+        args += ['--password', @repo.second_credential] if @repo.second_credential
+        
         if cookbooks_path.empty?
           Dir.chdir(@current_repo_dir) do
-            res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+            res = @watcher.launch_and_watch('svn', args, @current_repo_dir)
             handle_watcher_result(res, 'SVN update')
           end
         else
@@ -79,7 +79,7 @@ module RightScale
             break unless succeeded?
             full_path = File.join(@current_repo_dir, path)
             Dir.chdir(full_path) do
-              res = @watcher.launch_and_watch(svn_cmd, @current_repo_dir)
+              res = @watcher.launch_and_watch('svn', args, @current_repo_dir)
               handle_watcher_result(res, 'SVN update')
             end
           end
@@ -87,12 +87,12 @@ module RightScale
       end
       if !@incremental && succeeded?
         if cookbooks_path.empty?
-          res = @watcher.launch_and_watch(svn_checkout_cmd, @current_repo_dir)
+          res = @watcher.launch_and_watch('svn', svn_checkout_args, @current_repo_dir)
           handle_watcher_result(res, 'SVN checkout')
         else
           cookbooks_path.each do |path|
             break unless succeeded?
-            res = @watcher.launch_and_watch(svn_checkout_cmd(path), @current_repo_dir)
+            res = @watcher.launch_and_watch('svn', svn_checkout_args(path), @current_repo_dir)
             handle_watcher_result(res, 'SVN checkout')
           end
         end
@@ -107,12 +107,13 @@ module RightScale
     #
     # === Return
     # svn_cmd(String):: Corresponding SVN command line
-    def svn_checkout_cmd(path='')
-      svn_cmd = "svn checkout \"#{File.join(@repo.url, path)}\" \"#{File.join(@current_repo_dir, path)}\" --no-auth-cache --non-interactive --quiet" +
-      (!@repo.tag.nil? && !@repo.tag.empty? ? " --revision #{@repo.tag}" : '') +
-      (@repo.first_credential ? " --username #{@repo.first_credential}" : '') +
-      (@repo.second_credential ? " --password #{@repo.second_credential}" : '') +
-      ' 2>&1'
+    def svn_checkout_args(path='')
+      args = ['checkout', File.join(@repo.url, path), File.join(@current_repo_dir, path),
+              '--no-auth-cache', '--non-interactive', '--quiet']
+      args += ['--revision', @repo.tag] if !@repo.tag.nil? && !@repo.tag.empty?
+      args += ['--username', @repo.first_credential] if @repo.first_credential
+      args += ['--password', @repo.second_credential] if @repo.second_credential
+      return args
     end
   end
 end

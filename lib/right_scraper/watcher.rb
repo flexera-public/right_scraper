@@ -75,13 +75,13 @@ module RightScale
     #
     # === Return
     # res(RightScale::WatchStatus):: Outcome of watch, see RightScale::WatchStatus
-    def launch_and_watch(cmd, dest_dir)
+    def launch_and_watch(cmd, args, dest_dir)
       exit_code = nil
       output    = ''
       monitor   = ProcessMonitor.new
 
       # Run external process and monitor it in a new thread, platform specific
-      pid = monitor.spawn(cmd) do |data|
+      pid = monitor.spawn(cmd, *args) do |data|
         output << data[:output] if data[:output]
         exit_code = data[:exit_code] if data.include?(:exit_code)
       end

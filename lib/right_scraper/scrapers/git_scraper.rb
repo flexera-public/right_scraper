@@ -93,8 +93,10 @@ module RightScale
       end
 
       if !@incremental && succeeded?
-        git_cmd = "#{@ssh_cmd} git clone --quiet --depth 1 \"#{@repo.url}\" \"#{@current_repo_dir}\" 2>&1"
-        res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)
+        args = ['clone', '--quiet', '--depth', '1', @repo.url, @current_repo_dir] 
+        ENV['GIT_SSH'] = @ssh_cmd
+        res = @watcher.launch_and_watch('git', args, @current_repo_dir)
+        ENV['GIT_SSH'] = nil
         handle_watcher_result(res, 'git clone')
         if has_tag && succeeded?
           Dir.chdir(@current_repo_dir) do
@@ -167,7 +169,8 @@ module RightScale
       ssh = File.join(ssh_dir, 'ssh')
       File.open(ssh, 'w') { |f| f.puts("ssh -F #{ssh_config} $*") }
       File.chmod(0755, ssh)
-      "GIT_SSH=#{ssh}"
+
+      return ssh
     end
 
     # Prepare SSH for git on Windows
@@ -222,8 +225,10 @@ module RightScale
       remote  = opts[:remote_tag] 
       remote  = 'master' if remote.nil? || remote.rstrip.empty?
       action  = (opts[:merge] ? 'pull' : 'fetch')
-      git_cmd = "#{@ssh_cmd} git #{action} --tags --depth #{depth} origin #{remote} 2>&1"
-      res = @watcher.launch_and_watch(git_cmd, @current_repo_dir)
+      args = [action, '--tags', '--depth', depth, 'origin', remote]
+      ENV['GIT_SSH'] = @ssh_cmd
+      res = @watcher.launch_and_watch('git', args, @current_repo_dir)
+      ENV['GIT_SSH'] = nil
       handle_watcher_result(res, "git #{action}")
     end
 

@@ -35,7 +35,11 @@ module RightScale
     # Spawn given process and callback given block with output and exit code
     #
     # === Parameters
-    # cmd(String):: Process command line (including arguments)
+    # cmd(String):: Name of the command to run
+    # arg1(String):: Optional, first command-line argumument
+    # arg2(String):: Optional, first command-line argumument
+    # ...
+    # argN(String):: Optional, Nth command-line argumument
     #
     # === Block
     # Given block should take one argument which is a hash which may contain
@@ -45,9 +49,9 @@ module RightScale
     #
     # === Return
     # pid(Integer):: Spawned process pid
-    def spawn(cmd)
+    def spawn(cmd, *args)
       # Run external process and monitor it in a new thread
-      @io = IO.popen(cmd)
+      @io = IO.popen( ([cmd] + args).join(' ') )
       @handle = OpenProcess(PROCESS_ALL_ACCESS, 0, @io.pid)
       case @handle
       when INVALID_HANDLE_VALUE

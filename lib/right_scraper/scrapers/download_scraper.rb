@@ -33,10 +33,19 @@ module RightScale
       msg = "Downloading repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
       filename = @repo.url.split('/').last
-      user_opt = @repo.first_credential && @repo.second_credential ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
-      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
+
+      if @repo.first_credential && @repo.second_credential
+        user_opt = ['--user', "#{@repo.first_credential}:#{@repo.second_credential}"]
+      else
+        user_opt = []
+      end
+
+      args = ['--fail', '--silent', '--show-error', '--insecure', '--location']
+      args += user_opt
+      args += ['--output', "#{@current_repo_dir}/#{filename}", @repo.url]
+
       FileUtils.mkdir_p(@current_repo_dir)
-      res = @watcher.launch_and_watch(cmd, @current_repo_dir)
+      res = @watcher.launch_and_watch('curl', args, @current_repo_dir)
       handle_watcher_result(res, 'Download')
       if succeeded?
         unzip_opt = case @repo.url[/\.(.*)$/]
