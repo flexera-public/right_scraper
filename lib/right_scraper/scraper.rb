@@ -41,6 +41,23 @@ module RightScale
       attr_accessor :errors
       attr_accessor :callback
 
+      def add(severity, message=nil, progname=nil)
+        if severity >= (self.level || Logger::WARN)
+          if message.nil?
+            if block_given?
+              message = yield
+            else
+              message = progname
+              progname = self.progname
+            end
+          end
+          @errors << [nil, :log,
+                      {:severity => severity,
+                        :message => message,
+                        :progname => progname}]
+        end
+      end
+
       def initialize
         @errors = []
       end
@@ -52,7 +69,7 @@ module RightScale
           @callback.call(:commit, type, explanation, nil) unless @callback.nil?
           result
         rescue
-          @callback.call(:abort, type, explanation, nil) unless @callback.nil?
+          @callback.call(:abort, type, explanation, $!) unless @callback.nil?
           raise
         end
       end
