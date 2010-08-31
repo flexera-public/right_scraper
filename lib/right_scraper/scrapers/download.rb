@@ -94,7 +94,7 @@ module RightScale
             curl.on_body do |body_data|
               file.write body_data
               bytecount += body_data.length
-              if bytecount > @max_bytes
+              if !@max_bytes.nil? && bytecount > @max_bytes
                 raise "Command took too much space"
               end
               body_data.length
