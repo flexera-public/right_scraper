@@ -173,7 +173,7 @@ module RightScale
       # === Parameters
       # dir(Dir):: directory to begin search in
       def find_next(dir)
-        @logger.operation(:finding_next_cookbook, "examining #{dir.path}") do
+        @logger.operation(:finding_next_cookbook, "in #{dir.path}") do
           if File.exists?(File.join(dir.path, 'metadata.json'))
             read_cookbook(dir)
           else
@@ -188,7 +188,7 @@ module RightScale
       # === Parameters
       # dir(Dir):: directory to read cookbook from
       def read_cookbook(dir)
-        @logger.operation(:reading_cookbook, "reading cookbook from #{dir.path}") do
+        @logger.operation(:reading_cookbook, "from #{dir.path}") do
           cookbook = RightScale::Cookbook.new(@repository, nil, strip_basedir(dir.path))
           @builder.go(dir.path, cookbook)
           cookbook
@@ -197,7 +197,7 @@ module RightScale
 
       # Search the directory stack looking for the next cookbook.
       def search_dirs
-        @logger.operation(:searching, "looking for next cookbook") do
+        @logger.operation(:searching) do
           until @stack.empty?
             dir = @stack.last
             entry = dir.read
@@ -223,7 +223,7 @@ module RightScale
       private :search_dirs
 
       def seek_to_named(dir, name)
-        @logger.operation(:seeking, "seeking to #{name} in #{dir.path}") do
+        @logger.operation(:seeking, "to #{name} in #{dir.path}") do
           dir.rewind
           loop do
             lastpos = dir.pos
