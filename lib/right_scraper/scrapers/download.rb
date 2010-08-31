@@ -83,7 +83,7 @@ module RightScale
         bytecount = 0
 
         @logger.operation(:downloading) do
-          Curl::Easy.http_get(@repository.url) do |curl|
+          easy = Curl::Easy.http_get(@repository.url) do |curl|
             if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
               curl.http_auth_types = [:any]
               curl.timeout = @max_seconds if @max_seconds
@@ -99,6 +99,15 @@ module RightScale
               end
               body_data.length
             end
+          end
+          # Normally for HTTP traffic anything in the 200s is fine.
+          # Since we're not creating anything, and we want content,
+          # all the 200s except 200 itself (OK) are irrelevant.  The
+          # 300s are redirection and that should be handled by curl.
+          # For file:/// URLs there's no actual response code, so it's
+          # still 0.
+          unless easy.response_code == 200 || easy.response_code == 0
+            raise "failure to download successfully: response code #{easy.response_code}"
           end
         end
 
