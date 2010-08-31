@@ -59,6 +59,8 @@ module RightScale
     end
 
     def close
+      @svnrepo.close unless @svnrepo.nil?
+      @svnrepo = nil
       @repository.close unless @repos.nil?
       @repository = nil
     end
