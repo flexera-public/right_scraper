@@ -20,6 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
 
 module RightScale
   # Library main entry point. Instantiate this class and call the scrape
@@ -29,46 +30,88 @@ module RightScale
     #
     # === Parameters
     # scrape_dir(String):: Scrape destination directory
-    # max_bytes(Integer):: Maximum size allowed for repos, -1 for no limit (default)
-    # max_seconds(Integer):: Maximum number of seconds a single scrape operation should take, -1 for no limit (default)
-    def initialize(scrape_dir, max_bytes = -1, max_seconds = -1)
-      @scrape_dir = scrape_dir
-      @max_bytes = max_bytes
-      @max_seconds = max_seconds
-      @scrapers = {}
+    # options(Hash):: Options for the scraper
+    def initialize(scrape_dir, options={})
+      @options = options.merge({:directory => scrape_dir})
+      @logger = ScraperLogger.new
+      @cookbooks = []
     end
 
-    # Scrape given repository.
-    # Create unique directory inside scrape directory when called for the first time.
-    # Update content of unique directory incrementally when possible with further calls.
+    class ScraperLogger < Logger
+      attr_accessor :errors
+      attr_accessor :callback
+
+      def initialize
+        @errors = []
+      end
+
+      def operation(type, explanation="")
+        begin
+          @callback.call(:begin, type, explanation, nil) unless @callback.nil?
+          result = super
+          @callback.call(:commit, type, explanation, nil) unless @callback.nil?
+          result
+        rescue
+          @callback.call(:abort, type, explanation, nil) unless @callback.nil?
+          raise
+        end
+      end
+
+      def note_error(exception, type, explanation="")
+        @errors << [exception, type, explanation]
+      end
+    end
+
+    # Scrape given repository, depositing files into the scrape
+    # directory.  Update content of unique directory incrementally
+    # when possible with further calls.
     #
     # === Parameters
     # repo(Hash|RightScale::Repository):: Repository to be scraped
-    # Note: repo can either be a Hash or a RightScale::Repo instance.
-    # See the RightScale::Repo class for valid Hash keys.
-    # incremental(FalseClass|TrueClass):: Whether scrape should be incremental if possible (true by default)
+    #                                     Note: repo can either be a Hash or a RightScale::Repository instance.
+    #                                     See the RightScale::Repository class for valid Hash keys.
     #
     # === Block
     # If a block is given, it will be called back with progress information
-    # the block should take two arguments:
-    # - first argument is the string containing the info
-    # - second argument is a boolean indicating whether to increment progress
-    # The block is called exactly once with the increment flag set to true
+    # the block should take four arguments:
+    # - first argument is one of <tt>:begin</tt>, <tt>:commit</tt>,
+    #   <tt>:abort</tt> which signifies what
+    #   the scraper is trying to do and where it is when it does it
+    # - second argument is a symbol describing the operation being performed
+    #   in an easy-to-match way
+    # - third argument is optional further explanation
+    # - fourth argument is the exception pending (only relevant for <tt>:abort</tt>)
+    #
+    # The old increment functionality can be gotten by listening for
+    # <tt>:commit</tt> or <tt>:abort</tt> and <tt>:scraping</tt>,
+    # which will only be called once per scraper and at the end of its
+    # run.
     #
     # === Return
     # true:: If scrape was successful
-    # false:: If scrape failed, call error_message for information on failure
+    # false:: If scrape failed, call errors for information on failure
     #
     # === Raise
     # 'Invalid repository type':: If repository type is not known
     def scrape(repo, incremental=true, &callback)
+      errorlen = errors.size
       repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
-      scraper_class = repo.scraper
-      @scraper = @scrapers[scraper_class] ||=
-        scraper_class.new(@scrape_dir, @max_bytes, @max_seconds)
-      @scraper.scrape(repo, incremental, &callback)
-      @last_repo_dir = @scraper.current_repo_dir
-      @scraper.succeeded?
+      @logger.callback = callback
+      begin
+        @logger.operation(:scraping, "from #{repo}") do
+          scraper = repo.scraper.new(repo, @options.merge({:logger => @logger}))
+          cookbook = scraper.next
+          until cookbook.nil?
+            @cookbooks << cookbook
+            cookbook = scraper.next
+          end
+        end
+      rescue
+        # logger handles communication with the end user and appending
+        # to our error list, we just need to keep going.
+      end
+      @logger.callback = nil
+      errors.size == errorlen
     end
 
     # Path to directory where given repo should be or was downloaded
@@ -82,21 +125,21 @@ module RightScale
       RightScale::Scrapers::ScraperBase.repo_dir(scrape_dir, repo)
     end
 
-    # Error messages in case of failure
-    #
-    # === Return
-    # errors(Array):: Error messages or empty array if no error
+    # (Array):: Error messages in case of failure
     def errors
-      errors = @scraper && @scraper.errors || []
+      @logger.errors
     end
 
+    # (Array):: Cookbooks scraped
+    attr_reader :cookbooks
+
     # Was scraping successful?
-    # Call error_message to get error messages if false
+    # Call errors to get error messages if false
     #
     # === Return
-    # succeeded(Boolean):: true if scrape finished with no error, false otherwise.
+    # Boolean:: true if scrape finished with no error, false otherwise.
     def succeeded?
-      succeeded = errors.size == 0
+      errors.empty?
     end
   end
 end
