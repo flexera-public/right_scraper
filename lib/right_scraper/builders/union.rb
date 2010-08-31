@@ -26,6 +26,9 @@ module RightScale
     # Union builder, to permit running multiple builders in sequence
     # with the same interface as running one.
     class Union
+      # (Array) subcomponents of this union
+      attr_reader :subbuilders
+
       # Create a new union builder.  Recognizes no new options.
       #
       # === Parameters

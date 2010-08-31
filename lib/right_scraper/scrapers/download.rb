@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'builders', 'archive'))
 require 'curb'
 require 'libarchive_ruby'
 require 'tempfile'
@@ -115,9 +116,13 @@ module RightScale
 
         cookbook = RightScale::Cookbook.new(@repository, nil, pos)
 
-        file.open
-        cookbook.data[:archive] = file.read
-        file.close
+        # This is hacky, but I don't have a better way to determine if
+        # the user actually wants the archive built.
+        if @builder.subbuilders.include?(RightScale::Builders::Archive)
+          file.open
+          cookbook.data[:archive] = file.read
+          file.close
+        end
 
         @scanner.begin(cookbook)
         @logger.operation(:reading_metadata) do
