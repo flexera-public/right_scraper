@@ -85,6 +85,8 @@ module RightScale
       # <tt>:scanners</tt>:: List of Scanner classes to use, defaulting
       #                      to RightScale::Scanners::Manifest and
       #                      RightScale::Scanners::Metadata
+      # <tt>:builders</tt>:: List of Builder classes to use, defaulting to
+      #                      FilesystemBuilder
       #
       # === Parameters
       # repository(RightScale::Repository):: repository to scrape
@@ -98,6 +100,13 @@ module RightScale
         scanners = options[:scanners] || [RightScale::Scanners::Metadata,
                                           RightScale::Scanners::Manifest]
         @scanner = RightScale::Scanners::Union.new(scanners, options)
+        builders = options[:builders] || [RightScale::Builders::Filesystem]
+        @builder = RightScale::Builders::Union.new(builders,
+                                                   :scraper => self,
+                                                   :scanner => @scanner,
+                                                   :logger => @logger,
+                                                   :max_bytes => @max_bytes,
+                                                   :max_seconds => @max_seconds)
       end
 
       # Return next cookbook from the stream, or nil if none.

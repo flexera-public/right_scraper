@@ -90,10 +90,8 @@ filesystem-like structures in memory.  Both these are needed because a
 scraper is allowed to operate in a streaming fashion (and indeed
 RightScale::Scrapers::Download does), meaning that there is never an
 actual filesysteme tree.  Builders can be specified in the
-<tt>:builders</tt> argument to
-RightScale::Scrapers::FilesystemBasedScraper#new and
-scanners can be specified in the <tt>:scanners</tt> argument to
-RightScale::Scrapers::ScraperBase#new.
+<tt>:builders</tt> argument and scanners can be specified in the
+<tt>:scanners</tt> argument to RightScale::Scrapers::ScraperBase#new.
 
 == LICENSE
 

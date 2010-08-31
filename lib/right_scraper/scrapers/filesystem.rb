@@ -44,13 +44,10 @@ module RightScale
     #   end
     class FilesystemBasedScraper < ScraperBase
       # Create a new scraper.  In addition to the options recognized by
-      # ScraperBase#new, this class recognizes <tt>:directory</tt> and
-      # <tt>:builders</tt>.
+      # ScraperBase#new, this class recognizes <tt>:directory</tt>.
       #
       # === Options ===
       # <tt>:directory</tt>:: Directory to perform scraper work in
-      # <tt>:builders</tt>:: List of Builder classes to use, defaulting to
-      #                      FilesystemBuilder
       #
       # === Parameters ===
       # repository(RightScale::Repository):: repository to scrape
@@ -59,13 +56,6 @@ module RightScale
         super
         @temporary = !options.has_key?(:directory)
         @basedir = options[:directory] || Dir.mktmpdir
-        builders = options[:builders] || [RightScale::Builders::Filesystem]
-        @builder = RightScale::Builders::Union.new(builders,
-                                                   :scraper => self,
-                                                   :scanner => @scanner,
-                                                   :logger => @logger,
-                                                   :max_bytes => max_bytes,
-                                                   :max_seconds => max_seconds)
         setup_dir
         @logger.operation(:initialize, "setting up in #{basedir}") do
           FileUtils.mkdir_p(basedir)
