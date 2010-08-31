@@ -37,6 +37,12 @@ module RightScale
       commit_content(repo_path)
     end
 
+    def repo
+      RightScale::Repository.from_hash(:display_name => "test git repo",
+                                       :repo_type => :git,
+                                       :url => repo_path)
+    end
+
     def scraper_path
       File.join(@tmpdir, "scraper")
     end

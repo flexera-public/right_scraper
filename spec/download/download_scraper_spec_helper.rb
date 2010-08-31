@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_spec_h
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper'))
 
 module RightScale
-  class DownloadScraperHelper < ScraperSpecHelperBase
+  class DownloadScraperSpecHelper < ScraperSpecHelperBase
     def download_repo_path
       File.join(@tmpdir, "download")
     end

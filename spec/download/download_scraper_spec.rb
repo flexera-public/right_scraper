@@ -32,7 +32,7 @@ describe RightScale::Scrapers::Download do
   include RightScale::SpecHelpers
 
   before(:each) do
-    @helper = RightScale::DownloadScraperHelper.new
+    @helper = RightScale::DownloadScraperSpecHelper.new
     @repo = @helper.repo
   end
 
