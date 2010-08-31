@@ -33,6 +33,36 @@ incrementally upon request.
  scraper = RightScale::Scraper.new('/tmp')
  scraper.scrape(:type => :git, :url => 'git://github.com/rightscale/right_scraper.git')
 
+=== More complex example
+
+ require 'rubygems'
+ require 'right_scraper'
+
+ url = 'git://github.com/rightscale/right_scraper.git'
+ scraper = RightScale::Scraper.new('/tmp')
+ scraper.scrape(:type => :git, :url => url) do |phase, op, info, exception|
+   ...
+ end
+
+Here the block will be called several times during the scraping
+process.  The arguments are as follows:
+
++phase+:: One of <tt>:begin</tt>, <tt>:commit</tt> or <tt>:abort</tt>.
+          <tt>:begin</tt> means that the operation is beginning,
+          <tt>:commit</tt> means that the operation has completed
+          successfully, and <tt>:abort</tt> means that the operation
+          has triggered an error and is being aborted.
++op+:: Symbol representing the operation being performed.  The only
+       operation guaranteed to be signalled is <tt>:scraping</tt>,
+       which is begun at the start of the +scrape+ call and completed
+       at the end, but version control systems typically trigger
+       operations like <tt>:checkout</tt> or <tt>:cloning</tt>.
++info+:: Optional English language information, typically clarifying
+         the repository being cloned or other data +op+ is presumed to
+         be operating on.
++exception+:: Non-nil only in an abort phase, this is the exception
+              that triggered the abort.
+
 == INSTALLATION
 
 RightScraper can be installed by entering the following at the command prompt:
