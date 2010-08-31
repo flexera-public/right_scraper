@@ -35,6 +35,7 @@ module RightScale
       else
         super
       end
+      @exceptional = false
     end
 
     # (RightScale::Repository) Repository currently being examined.
@@ -47,10 +48,14 @@ module RightScale
     # type(Symbol):: operation type identifier
     # explanation(String):: optional explanation
     def operation(type, explanation="")
+      @exceptional = false
       begin
         yield
       rescue
-        note_error($!, type, explanation)
+        unless @exceptional
+          note_error($!, type, explanation)
+          @exceptional = true
+        end
         raise
       end
     end
@@ -68,10 +73,10 @@ module RightScale
 
     protected
     def maybe_explain(explanation)
-      if explanation
-        ": #{explanation}"
-      else
+      if explanation.nil? || explanation.empty?
         ""
+      else
+        ": #{explanation}"
       end
     end
   end

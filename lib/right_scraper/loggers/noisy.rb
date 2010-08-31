@@ -30,7 +30,7 @@ module RightScale
       # Initialize the logger, setting the current operation depth to 1.
       def initialize(*args)
         super
-        @level = 1
+        @pending = []
       end
       # Begin an operation that merits logging.  Will write the
       # details to the log, including a visual indicator of how many
@@ -40,24 +40,47 @@ module RightScale
       # type(Symbol):: operation type identifier
       # explanation(String):: optional explanation
       def operation(type, explanation="")
-        oldlevel = @level
         begin
-          debug("#{level_str} begin #{type}#{maybe_explain(explanation)}")
-          @level += 1
+          @pending.push [type, explanation]
+          debug("#{depth_str} begin #{immediate_context}")
           result = super
-          @level = oldlevel
-          debug("#{level_str} close #{type}#{maybe_explain(explanation)}")
+          debug("#{depth_str} close #{immediate_context}")
+          @pending.pop
           return result
         rescue
-          @level = oldlevel
-          debug("#{level_str} abort #{type}#{maybe_explain(explanation)}")
+          debug("#{depth_str} abort #{immediate_context}")
+          @pending.pop
           raise
         end
       end
 
+      def note_error(exception, type, explanation="")
+        recordedtype, recordedexplanation = @pending[-1]
+        if recordedtype != type || recordedexplanation != explanation
+          @pending.push [type, explanation]
+        end
+        error("Saw #{exception} during #{context}")
+        if recordedtype != type || recordedexplanation != explanation
+          @pending.pop
+        end
+      end
+
       private
-      def level_str
-        '>' * @level
+      def depth_str
+        '>' * @pending.size
+      end
+
+      def context
+        @pending.reverse.map {|pair| contextify(pair)}.join(" in ")
+      end
+
+      def immediate_context
+        contextify(@pending[-1])
+      end
+
+      def contextify(pair)
+        type, explanation = pair
+        "#{type}#{maybe_explain(explanation)}"
       end
     end
   end
