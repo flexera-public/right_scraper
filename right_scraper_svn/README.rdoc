@@ -36,7 +36,14 @@ install-swig-rb+.  For +rude+ users is important to have LDFLAGS set to
 
 On Ubuntu, install libsvn-ruby.
 
-On Mac OS X, we are working to include Ruby support in Homebrew's formula for Subversion.
+On Mac OS X, as of September Homebrew supports Ruby in Subversion; the Ruby bindings can
+be installed as follows:
+
+ brew install subversion --ruby
+
+For +rude+ users,
+
+ LDFLAGS=-L/opt/rude/sandbox/lib brew install subversion --ruby
 
 == TESTING
 
