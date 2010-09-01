@@ -91,18 +91,36 @@ task :reinstall do
    sh "rake install"
 end
 
+desc "Build staging directory for right_scraper_all gem"
+task :make_intermediate_dir do
+  intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
+  FileUtils.remove_entry_secure(intermediate_dir)
+  FileUtils.mkdir_p(intermediate_dir)
+end
+
+desc "Build basic require"
+task :build_require => [:make_intermediate_dir] do
+  intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
+  source_all = File.join(File.dirname(__FILE__), 'lib', 'right_scraper.rb')
+  dest_all = File.join(intermediate_dir, "right_scraper_all.rb")
+
+  # need to translate absolute gem requires to relative requires, so I use sed.
+  sh %Q{sed "s/require '\\([a-z0-9_]*\\)'/\
+require File.expand_path(File.join(File.dirname(__FILE__), '\\1'))/"\
+ < '#{source_all}' > '#{dest_all}'}
+end
+
+desc "Populate staging directory"
+task :populate_staging => [:make_intermediate_dir, :build_require] do
+  intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
+  Dir.glob('right_scraper_*') do |file|
+    next unless File.directory?(file)
+    FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
+  end
+end
+
 desc "Build right_scraper_all gem"
-task :all_gem do
-   intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
-   FileUtils.remove_entry_secure(intermediate_dir)
-   FileUtils.mkdir_p(intermediate_dir)
-   source_all = File.join(File.dirname(__FILE__), 'lib', 'right_scraper.rb')
-   dest_all = File.join(intermediate_dir, "right_scraper_all.rb")
-   sh "sed \"s/require '\\([a-z0-9_]*\\)'/require File.expand_path(File.join(File.dirname(__FILE__), '\\1'))/\" < #{source_all} > #{dest_all}"
-   Dir.glob('right_scraper_*') do |file|
-     next unless File.directory?(file)
-     FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
-   end
+task :all_gem => [:populate_staging] do
    ruby 'right_scraper_all.gemspec'
    pkg_dir = File.join(File.dirname(__FILE__), 'pkg')
    FileUtils.mkdir_p(pkg_dir)
