@@ -21,5 +21,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_svn', 'svn_client'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_svn', 'repositories', 'svn'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_svn', 'scrapers', 'svn'))

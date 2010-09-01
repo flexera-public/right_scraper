@@ -26,8 +26,7 @@ require 'digest/sha1'
 module RightScale
   # Description of remote repository that needs to be scraped.
   #
-  # Repository definitions inherit from this base class and are placed
-  # in <tt>lib/right_scraper_base/repositories</tt>.  A repository must
+  # Repository definitions inherit from this base class.  A repository must
   # register its #repo_type in @@types so that they can be used with
   # Repository::from_hash, as follows:
   #  class ARepository < Repository

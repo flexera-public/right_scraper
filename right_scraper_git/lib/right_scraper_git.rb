@@ -23,5 +23,6 @@
 
 # Explicitly list required files to make IDEs happy
 require 'fileutils'
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_git', 'processes', 'ssh'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_git', 'repositories', 'git'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_git', 'scrapers', 'git'))

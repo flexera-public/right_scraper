@@ -23,6 +23,7 @@
 
 require 'rubygems'
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base'))
 
 require 'flexmock'
 require 'spec'

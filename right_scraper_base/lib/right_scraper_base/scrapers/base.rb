@@ -31,8 +31,7 @@ module RightScale
     # Base class for all scrapers.
     #
     # Scrapers scan a repository and return a number of
-    # RightScale::Cookbook instances.  Scrapers live in
-    # <tt>lib/right_scraper_base/scrapers</tt>.  Scrapers should never be
+    # RightScale::Cookbook instances.  Scrapers should never be
     # instantiated directly, only through
     # RightScale::Repository#scrape.  Scrapers implement a stream-type
     # interface, with #next, #seek, #rewind and #tell just like +IO+

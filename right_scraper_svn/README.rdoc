@@ -16,6 +16,7 @@ update SVN repositories.
 === Simple Example
 
  require 'rubygems'
+ require 'right_scraper_base'
  require 'right_scraper_svn'
 
  scraper = RightScale::Scraper.new('/tmp')

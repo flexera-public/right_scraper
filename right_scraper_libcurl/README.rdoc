@@ -16,6 +16,7 @@ process for cookbooks.
 === Simple Example
 
  require 'rubygems'
+ require 'right_scraper_base'
  require 'right_scraper_libcurl'
 
  scraper = RightScale::Scraper.new('/tmp')

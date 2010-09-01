@@ -16,6 +16,7 @@ cookbooks to S3 buckets.
 === Simple Example
 
  require 'rubygems'
+ require 'right_scraper_base'
  require 'right_scraper_s3'
 
  scraper = RightScale::Scraper.new('/tmp')

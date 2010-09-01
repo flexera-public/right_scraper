@@ -21,8 +21,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'right_scraper_base/repository'
-
 module RightScale
   module Repositories
     # A repository that is stored in a Subversion server.

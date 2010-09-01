@@ -20,8 +20,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'right_scraper_base/scrapers/base'
-require 'right_scraper_base/builders/archive'
 require 'curb'
 require 'libarchive_ruby'
 require 'tempfile'

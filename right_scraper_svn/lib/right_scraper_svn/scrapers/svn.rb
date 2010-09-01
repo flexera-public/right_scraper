@@ -20,8 +20,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-
-require 'right_scraper_base/scrapers/checkout'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'svn_client'))
 
 module RightScale

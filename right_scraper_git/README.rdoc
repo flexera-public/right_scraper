@@ -16,6 +16,7 @@ update Git repositories.
 === Simple Example
 
  require 'rubygems'
+ require 'right_scraper_base'
  require 'right_scraper_git'
 
  scraper = RightScale::Scraper.new('/tmp')
