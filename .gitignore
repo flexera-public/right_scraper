@@ -3,5 +3,6 @@ pkg
 tags
 .emacs-project
 config/environment.rb
+fulllib
 TAGS
 doc

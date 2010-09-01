@@ -76,12 +76,12 @@ task :gem do
    ruby 'right_scraper.gemspec'
    pkg_dir = File.join(File.dirname(__FILE__), 'pkg')
    FileUtils.mkdir_p(pkg_dir)
-   FileUtils.mv(Dir.glob(File.join(File.dirname(__FILE__), '*.gem')), pkg_dir)
+   FileUtils.mv(Dir.glob(File.join(File.dirname(__FILE__), 'right_scraper-*.gem')), pkg_dir)
 end
 
 desc 'Install the right_scraper library as a gem'
 task :install => [:gem] do
-   file = Dir["pkg/*.gem"].last
+   file = Dir["pkg/right_scraper-*.gem"].last
    sh "gem install #{file}"
 end
 
@@ -89,6 +89,24 @@ desc 'Uninstalls and reinstalls the right_scraper library as a gem'
 task :reinstall do
    sh "gem uninstall right_scraper"
    sh "rake install"
+end
+
+desc "Build right_scraper_all gem"
+task :all_gem do
+   intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
+   FileUtils.remove_entry_secure(intermediate_dir)
+   FileUtils.mkdir_p(intermediate_dir)
+   source_all = File.join(File.dirname(__FILE__), 'lib', 'right_scraper.rb')
+   dest_all = File.join(intermediate_dir, "right_scraper_all.rb")
+   sh "sed \"s/require '\\([a-z0-9_]*\\)'/require File.expand_path(File.join(File.dirname(__FILE__), '\\1'))/\" < #{source_all} > #{dest_all}"
+   Dir.glob('right_scraper_*') do |file|
+     next unless File.directory?(file)
+     FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
+   end
+   ruby 'right_scraper_all.gemspec'
+   pkg_dir = File.join(File.dirname(__FILE__), 'pkg')
+   FileUtils.mkdir_p(pkg_dir)
+   FileUtils.mv(Dir.glob(File.join(File.dirname(__FILE__), 'right_scraper_all-*.gem')), pkg_dir)
 end
 
 # == Emacs integration == #
