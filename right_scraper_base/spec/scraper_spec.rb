@@ -93,7 +93,7 @@ describe RightScale::Scraper do
 
     it 'should log correctly as it scrapes' do
       callback = flexmock("callback")
-      callback.should_receive(:call).with(:begin, :scraping, "from download #{@repo.url}", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:begin, :scraping, "from #{@repo}", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :downloading, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :running_command, String, nil).at_least.twice.at_most.twice
       callback.should_receive(:call).with(:commit, :running_command, String, nil).at_least.twice.at_most.twice
@@ -118,7 +118,7 @@ describe RightScale::Scraper do
       callback.should_receive(:call).with(:commit, :next, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :close, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :close, "", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:commit, :scraping, "from download #{@repo.url}", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:commit, :scraping, "from #{@repo}", nil).at_least.once.at_most.once
       @scraper.scrape(@repo) do |phase, operation, explanation, exception|
         callback.call(phase, operation, explanation, exception)
       end
