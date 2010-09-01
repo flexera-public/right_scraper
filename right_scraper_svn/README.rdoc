@@ -7,25 +7,36 @@
 RightScraper provides a simple interface to download and keep repositories up-to-date
 using various protocols.  It has been decomposed into various modules so that you
 may specify only the functionality (and required libraries and gems) you require.
-This gem depends on all available RightScraper modules, enabling full support at the
-cost of requiring some systems administration work external to Ruby.
+
+This module adds *SVN* support to RightScraper, enabling RightScraper to checkout and
+update SVN repositories.
 
 == USAGE
 
 === Simple Example
 
  require 'rubygems'
- require 'right_scraper'
+ require 'right_scraper_svn'
 
  scraper = RightScale::Scraper.new('/tmp')
- scraper.scrape(:type => :git, :url => 'git://github.com/rightscale/right_scraper.git')
+ scraper.scrape(:type => :svn, :url => 'http://github.com/rightscale/right_scraper.git')
 
 == INSTALLATION
 
 This module for RightScraper can be installed by entering the following at the command
 prompt:
 
- gem install right_scraper
+ gem install right_scraper_svn
+
+This module uses the Subversion client library bindings for Ruby, which are not compiled
+by default.  Building them is simply a matter of specifying <tt>--with-ruby-sitedir</tt>
+to +configure+, and then after +make install+, running +make swig-rb+ and then +make
+install-swig-rb+.  For +rude+ users is important to have LDFLAGS set to
+<tt>-L/opt/rude/sandbox/lib</tt> to ensure that the correct Ruby is used to build.
+
+On Ubuntu, install libsvn-ruby.
+
+On Mac OS X, we are working to include Ruby support in Homebrew's formula for Subversion.
 
 == TESTING
 
@@ -35,6 +46,11 @@ Install the following RubyGems required for testing:
 The build can be tested using the RSpec gem.
 
  rake spec
+
+== CODE OVERVIEW
+
+This module inserts a new repository type <tt>:svn</tt> and then associates a scraper
+with that repository.
 
 == LICENSE
 

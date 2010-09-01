@@ -21,8 +21,5 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'right_scraper_base'
-require 'right_scraper_git'
-require 'right_scraper_libcurl'
-require 'right_scraper_s3'
-require 'right_scraper_svn'
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_libcurl', 'repositories', 'download'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_libcurl', 'scrapers', 'download'))

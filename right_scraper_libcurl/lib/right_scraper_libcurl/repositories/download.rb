@@ -20,9 +20,23 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+require 'right_scraper_base/repositories/download'
 
-require 'right_scraper_base'
-require 'right_scraper_git'
-require 'right_scraper_libcurl'
-require 'right_scraper_s3'
-require 'right_scraper_svn'
+module RightScale
+  module Repositories
+    # A "cookbook repository" that is just an archive file hanging off a
+    # web server somewhere.
+    class LibCurlDownload < Download
+      # (ScraperBase class) Appropriate class for scraping this sort of
+      # repository.
+      def scraper
+        RightScale::Scrapers::LibCurlDownload
+      end
+
+      # Add this repository to the list of available types.
+      @@types[:download] = RightScale::Repositories::LibCurlDownload
+      # Add a way to get this class, specifically.
+      @@types[:download_libcurl] = RightScale::Repositories::LibCurlDownload
+    end
+  end
+end

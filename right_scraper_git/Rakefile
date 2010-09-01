@@ -33,25 +33,25 @@ task :default => 'spec'
 
 desc "Run unit tests"
 Spec::Rake::SpecTask.new do |t|
-  t.spec_files = Dir['*/spec/**/*_spec.rb']
+  t.spec_files = Dir['**/*_spec.rb']
   t.spec_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
   end
 end
 
 desc "Run unit tests with RCov"
 Spec::Rake::SpecTask.new(:rcov) do |t|
-  t.spec_files = Dir['*/spec/**/*_spec.rb']
+  t.spec_files = Dir['**/*_spec.rb']
   t.rcov = true
   t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
   end
 end
 
 desc "Print Specdoc for unit tests"
 Spec::Rake::SpecTask.new(:doc) do |t|
    t.spec_opts = ["--format", "specdoc", "--dry-run"]
-   t.spec_files = Dir['*/spec/**/*_spec.rb']
+   t.spec_files = Dir['**/*_spec.rb']
 end
 
 # == Documentation == #
@@ -60,7 +60,7 @@ desc "Generate API documentation to doc/rdocs/index.html"
 Rake::RDocTask.new do |rd|
   rd.rdoc_dir = 'doc/rdocs'
   rd.main = 'README.rdoc'
-  rd.rdoc_files.include 'README.rdoc', '*/README.rdoc', "*/lib/**/*.rb"
+  rd.rdoc_files.include 'README.rdoc', "lib/**/*.rb"
 
   rd.options << '--inline-source'
   rd.options << '--line-numbers'
@@ -71,29 +71,22 @@ end
 
 # == Gem Management == #
 
-desc "Build right_scraper gem"
+desc "Build right_scraper_git gem"
 task :gem do
-   ruby 'right_scraper.gemspec'
+   ruby 'right_scraper_git.gemspec'
    pkg_dir = File.join(File.dirname(__FILE__), 'pkg')
    FileUtils.mkdir_p(pkg_dir)
    FileUtils.mv(Dir.glob(File.join(File.dirname(__FILE__), '*.gem')), pkg_dir)
 end
 
-desc 'Install the right_scraper library as a gem'
+desc 'Install the right_scraper_git library as a gem'
 task :install => [:gem] do
    file = Dir["pkg/*.gem"].last
    sh "gem install #{file}"
 end
 
-desc 'Uninstalls and reinstalls the right_scraper library as a gem'
+desc 'Uninstalls and reinstalls the right_scraper_git library as a gem'
 task :reinstall do
-   sh "gem uninstall right_scraper"
+   sh "gem uninstall right_scraper_git"
    sh "rake install"
-end
-
-# == Emacs integration == #
-# This requires exuberant ctags.
-desc "Rebuild TAGS file"
-task :tags do
-  sh "ctags-exuberant -a -e -f TAGS --tag-relative -R */lib"
 end

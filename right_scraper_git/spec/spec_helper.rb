@@ -21,8 +21,13 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'right_scraper_base'
-require 'right_scraper_git'
-require 'right_scraper_libcurl'
-require 'right_scraper_s3'
-require 'right_scraper_svn'
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_git'))
+
+module RightScale
+  module SpecHelpers
+    #Code here
+  end
+end

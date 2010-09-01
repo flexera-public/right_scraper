@@ -1,46 +1,4 @@
-= RightScraper
-
-== DESCRIPTION
-
-=== Synopsis
-
-RightScraper provides a simple interface to download and keep repositories up-to-date
-using various protocols.  It has been decomposed into various modules so that you
-may specify only the functionality (and required libraries and gems) you require.
-This gem depends on all available RightScraper modules, enabling full support at the
-cost of requiring some systems administration work external to Ruby.
-
-== USAGE
-
-=== Simple Example
-
- require 'rubygems'
- require 'right_scraper'
-
- scraper = RightScale::Scraper.new('/tmp')
- scraper.scrape(:type => :git, :url => 'git://github.com/rightscale/right_scraper.git')
-
-== INSTALLATION
-
-This module for RightScraper can be installed by entering the following at the command
-prompt:
-
- gem install right_scraper
-
-== TESTING
-
-Install the following RubyGems required for testing:
-- rspec
-
-The build can be tested using the RSpec gem.
-
- rake spec
-
-== LICENSE
-
-<b>RightScraper</b>
-
-Copyright:: Copyright (c) 2010 RightScale, Inc.
+Copyright (c) 2010 RightScale, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

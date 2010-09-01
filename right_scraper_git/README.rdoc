@@ -7,15 +7,16 @@
 RightScraper provides a simple interface to download and keep repositories up-to-date
 using various protocols.  It has been decomposed into various modules so that you
 may specify only the functionality (and required libraries and gems) you require.
-This gem depends on all available RightScraper modules, enabling full support at the
-cost of requiring some systems administration work external to Ruby.
+
+This module adds *git* support to RightScraper, enabling RightScraper to download and
+update Git repositories.
 
 == USAGE
 
 === Simple Example
 
  require 'rubygems'
- require 'right_scraper'
+ require 'right_scraper_git'
 
  scraper = RightScale::Scraper.new('/tmp')
  scraper.scrape(:type => :git, :url => 'git://github.com/rightscale/right_scraper.git')
@@ -25,7 +26,10 @@ cost of requiring some systems administration work external to Ruby.
 This module for RightScraper can be installed by entering the following at the command
 prompt:
 
- gem install right_scraper
+ gem install right_scraper_git
+
+This module requires that a relatively recent +git+ be installed; any 1.6 series +git+
+is known to work.
 
 == TESTING
 
@@ -35,6 +39,11 @@ Install the following RubyGems required for testing:
 The build can be tested using the RSpec gem.
 
  rake spec
+
+== CODE OVERVIEW
+
+This module overrides the base definition for <tt>:download</tt> repositories and substitutes
+a new one along with a new scraper.
 
 == LICENSE
 

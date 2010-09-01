@@ -22,13 +22,13 @@
 require 'rubygems'
 
 spec = Gem::Specification.new do |spec|
-  spec.name      = 'right_scraper'
+  spec.name      = 'right_scraper_svn'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
   spec.platform  = Gem::Platform::RUBY
-  spec.summary   = 'Download and update remote repositories'
+  spec.summary   = 'Libcurl based repository downloading for right_scraper'
   spec.has_rdoc = true
   spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
   spec.extra_rdoc_files = ["README.rdoc"]
@@ -37,10 +37,7 @@ spec = Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_dependency('right_scraper_base', '>= 2.0.0')
-  spec.add_dependency('right_scraper_git', '>= 2.0.0')
-  spec.add_dependency('right_scraper_libcurl', '>= 2.0.0')
-  spec.add_dependency('right_scraper_s3', '>= 2.0.0')
-  spec.add_dependency('right_scraper_svn', '>= 2.0.0')
+  spec.requirements << 'Subversion Ruby client bindings'
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
@@ -51,11 +48,11 @@ spec = Gem::Specification.new do |spec|
     * git: RightScraper will clone then pull repos from git
     * SVN: RightScraper will checkout then update SVN repositories
     * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  This component includes all available right_scraper components.
+  This component enables downloading and updating of SVN repositories.
 EOF
 
   candidates = Dir.glob("{lib,spec}/**/*") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper.gemspec"]
+               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_svn.gemspec"]
   spec.files = candidates.sort
 end
 

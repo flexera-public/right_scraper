@@ -21,8 +21,19 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'spec_helper'))
 require 'right_scraper_base'
-require 'right_scraper_git'
-require 'right_scraper_libcurl'
-require 'right_scraper_s3'
-require 'right_scraper_svn'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_s3'))
+
+# Massive hack to prevent "warning: peer certificate won't ..." blah
+# blah blah being spewed all over everything.
+class Net::HTTP
+  alias_method :old_initialize, :initialize
+  def initialize(*args)
+    old_initialize(*args)
+    @ssl_context = OpenSSL::SSL::SSLContext.new
+    @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
+end
