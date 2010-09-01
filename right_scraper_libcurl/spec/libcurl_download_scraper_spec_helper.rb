@@ -55,6 +55,12 @@ module RightScale
       end
     end
 
+    # Clean up resources.  Something about libcurl won't clean up file
+    # descriptors right, so we trigger a GC.
+    def close
+      GC.start
+    end
+
     def check_cookbook(cookbook, tarball, repository)
       cookbook.should_not == nil
       if cookbook.data.key?(:archive)

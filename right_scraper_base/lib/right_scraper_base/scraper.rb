@@ -126,6 +126,7 @@ module RightScale
           ensure
             scraper.close
           end
+          scraper.close
         end
       rescue
         # logger handles communication with the end user and appending

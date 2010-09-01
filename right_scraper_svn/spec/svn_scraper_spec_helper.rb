@@ -65,6 +65,7 @@ module RightScale
       @svnrepo = nil
       @repository.close unless @repos.nil?
       @repository = nil
+      super
     end
 
     def delete(location, log="")
