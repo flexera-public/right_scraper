@@ -36,6 +36,7 @@ describe RightScale::Scrapers::Svn do
 
   context 'given a remote SVN repository' do
     before(:each) do
+      pending "Not run unless REMOTE_USER and REMOTE_PASSWORD set" unless ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
       url = 'https://wush.net/svn/rightscale/cookbooks_test/'
       @repo = RightScale::Repository.from_hash(:display_name => 'wush',
                                                :repo_type    => :svn,
@@ -76,7 +77,7 @@ describe RightScale::Scrapers::Svn do
                                    "cookbooks/rs_utils",
                                    "cookbooks/web_apache"])
     end
-  end if ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
+  end
 
   context 'given a SVN repository' do
     before(:each) do

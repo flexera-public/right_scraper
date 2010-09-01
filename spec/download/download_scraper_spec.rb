@@ -47,6 +47,7 @@ describe RightScale::Scrapers::Download do
 
   context 'given a password protected repository' do
     before(:each) do
+      pending "Not run unless REMOTE_USER and REMOTE_PASSWORD set" unless ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
       url = 'https://wush.net/svn/rightscale/cookbooks_test/cookbooks/app_rails.tar.gz'
       @repo.url = url
       @repo.display_name = 'wush'
@@ -61,7 +62,7 @@ describe RightScale::Scrapers::Download do
       cookbook.metadata.should_not == nil
       cookbook.metadata["name"].should == "app_rails"
     end
-  end if ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
+  end
 
   context 'given a download repository' do
     before(:each) do
