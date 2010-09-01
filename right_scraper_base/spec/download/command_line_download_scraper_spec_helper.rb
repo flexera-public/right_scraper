@@ -35,7 +35,7 @@ module RightScale
     def repo
       RightScale::Repository.from_hash(:display_name => 'test repo',
                                        :repo_type    => :download_command_line,
-                                       :url          => "file:///#{@download_file}",
+                                       :url          => "file://#{@download_file}",
                                        :first_credential => ENV['REMOTE_USER'],
                                        :second_credential => ENV['REMOTE_PASSWORD'])
     end

@@ -67,17 +67,6 @@ module RightScale
       @pos = pos
     end
 
-    # Load a cookbook from a repository and a position in the repository.
-    #
-    # === Parameters
-    # repo(RightScale::Repository):: repository to load cookbook from
-    # position:: position in the repository
-    def self.fetch(repo, pos)
-      scraper = repo.scraper
-      scraper.seek(pos)
-      scraper.next
-    end
-
     # Convert this Cookbook to a Cookbook URL that completely
     # describes where and how to fetch the cookbook.  It should always
     # be the case that

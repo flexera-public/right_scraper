@@ -36,7 +36,7 @@ module RightScale
     def repo
       RightScale::Repository.from_hash(:display_name => 'test repo',
                                        :repo_type    => :download_libcurl,
-                                       :url          => "file:///#{@download_file}",
+                                       :url          => "file://#{@download_file}",
                                        :first_credential => ENV['REMOTE_USER'],
                                        :second_credential => ENV['REMOTE_PASSWORD'])
     end
@@ -46,7 +46,6 @@ module RightScale
     # Delete any previously created repo
     def initialize
       super
-      @download_repo_path = File.join(@tmpdir, "download")
       create_cookbook(download_repo_path, repo_content)
       @download_file = File.join(@tmpdir, "file.tar")
       Dir.chdir(download_repo_path) do
