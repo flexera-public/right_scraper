@@ -70,7 +70,7 @@ module RightScale
         loop do
           wait_result = Process.waitpid2(@pid, Process::WNOHANG)
           break unless wait_result.nil?
-          array = select([@io], nil, nil, 0.1)
+          array = select([@io], nil, [@io], 0.1)
           array[0].each do |fdes|
             unless fdes.eof?
               # HACK HACK HACK 4096 is a magic number I pulled out of my
@@ -79,6 +79,9 @@ module RightScale
               result = fdes.readpartial(4096)
               yield(:output => result)
             end
+          end unless array.nil?
+          array[2].each do |fdes|
+            # Do something with erroneous condition.
           end unless array.nil?
         end
         dontcare, status = wait_result
