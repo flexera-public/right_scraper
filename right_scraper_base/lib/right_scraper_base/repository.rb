@@ -126,6 +126,38 @@ module RightScale
       repository_hash
     end
 
+    # Return true if this repository and +other+ represent the same
+    # repository including the same checkout tag.
+    #
+    # === Parameters
+    # other(Repository):: repository to compare with
+    #
+    # === Returns
+    # Boolean:: true iff this repository and +other+ are the same
+    def ==(other)
+      if other.is_a?(RightScale::Repository)
+        checkout_hash == other.checkout_hash
+      else
+        false
+      end
+    end
+
+    # Return true if this repository and +other+ represent the same
+    # repository, excluding the checkout tag.
+    #
+    # === Parameters
+    # other(Repository):: repository to compare with
+    #
+    # === Returns
+    # Boolean:: true iff this repository and +other+ are the same
+    def equal_repo?(other)
+      if other.is_a?(RightScale::Repository)
+        repository_hash == other.repository_hash
+      else
+        false
+      end
+    end
+
     protected
     # Compute a unique identifier for the given string.  Currently uses SHA1.
     #

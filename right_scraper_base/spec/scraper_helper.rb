@@ -52,7 +52,7 @@ module RightScale
     def check_cookbook(cookbook, params={})
       position = params[:position] || "."
       cookbook.should_not == nil
-      cookbook.repository.should == @repo
+      cookbook.repository.should be_an_equal_repo @repo
       cookbook.pos.should == position
       cookbook.metadata.should == (params[:metadata] || @helper.repo_content)
       if cookbook.data.key?(:archive)
