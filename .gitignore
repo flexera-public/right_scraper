@@ -6,3 +6,4 @@ config/environment.rb
 fulllib
 TAGS
 doc
+.rvmrc
