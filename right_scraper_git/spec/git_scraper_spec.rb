@@ -63,6 +63,12 @@ describe RightScale::Scrapers::Git do
         @scraper.next.should_not == nil
         @scraper.next.should == nil
       end
+
+      it 'should record the head SHA' do
+        tag = @scraper.next.repository.tag
+        tag.should_not == "master"
+        tag.should =~ /^[A-Fa-f0-9]+$/
+      end
     end
 
     context 'with a subcookbook' do

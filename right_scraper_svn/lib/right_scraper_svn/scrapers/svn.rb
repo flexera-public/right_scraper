@@ -47,6 +47,14 @@ module RightScale
           @logger.operation(:update) do
             ctx.update(basedir, @repository.tag || nil)
           end
+          do_update_tag ctx
+        end
+      end
+
+      def do_update_tag(ctx)
+        @repository = @repository.clone
+        ctx.info(basedir) do |path, info|
+          @repository.tag = info.rev.to_s
         end
       end
 
@@ -59,6 +67,7 @@ module RightScale
           @logger.operation(:checkout_revision) do
             ctx.checkout(@repository.url, basedir, @repository.tag || nil)
           end
+          do_update_tag ctx
         end
       end
 

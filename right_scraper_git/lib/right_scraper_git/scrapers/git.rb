@@ -60,6 +60,7 @@ module RightScale
       #   * find that branch's remote
       #   * fetch it
       #   * merge changes
+      #   * update @repository#tag
       # Note that if #tag is a SHA revision or a tag that exists in the
       # current repository, no fetching is done.
       def do_update
@@ -81,11 +82,18 @@ module RightScale
             remote.merge
           end
         end
+        do_update_tag git
+      end
+
+      def do_update_tag(git)
+        @repository = @repository.clone
+        @repository.tag = git.gtree("HEAD").sha
       end
 
       # Clone the remote repository.  The operations are as follows:
       # * clone repository to #basedir
       # * checkout #tag
+      # * update @repository#tag
       def do_checkout
         super
         git = @logger.operation(:cloning, "to #{basedir}") do
@@ -94,6 +102,7 @@ module RightScale
         @logger.operation(:checkout_revision) do
           git.checkout(@repository.tag)
         end if @repository.tag
+        do_update_tag git
       end
 
       # Ignore .git directories.
