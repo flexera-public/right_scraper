@@ -27,6 +27,8 @@ require 'tmpdir'
 require 'digest/sha1'
 
 describe RightScale::Scanners::S3Upload do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::SpecHelpers
 
   # Create download repository following given layout

@@ -27,6 +27,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_sc
 require 'set'
 
 describe RightScale::Scrapers::Svn do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::ScraperHelper
 
   before(:all) do

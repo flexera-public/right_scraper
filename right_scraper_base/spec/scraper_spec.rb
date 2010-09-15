@@ -30,6 +30,8 @@ require 'tmpdir'
 require 'flexmock'
 
 describe RightScale::Scraper do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::FullScraperHelpers
 
   before(:each) do

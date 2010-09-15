@@ -27,6 +27,8 @@ require 'set'
 require 'libarchive_ruby'
 
 describe RightScale::Scrapers::Git do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::ScraperHelper
 
   def secondary_cookbook(where)

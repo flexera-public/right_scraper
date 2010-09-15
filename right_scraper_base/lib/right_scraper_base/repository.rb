@@ -22,6 +22,8 @@
 #++
 require 'uri'
 require 'digest/sha1'
+require 'set'
+require 'socket'
 
 module RightScale
   # Description of remote repository that needs to be scraped.
@@ -67,6 +69,9 @@ module RightScale
     # represents that repository.
     @@types = {} unless class_variable_defined?(:@@types)
 
+    # (Set) list of acceptable URI schemes.  Initially just http and ftp.
+    @@okay_schemes = Set.new(["http", "ftp"])
+
     # Initialize repository from given hash
     # Hash keys should correspond to attributes of this class
     #
@@ -77,6 +82,9 @@ module RightScale
     # repo(RightScale::Repository):: Resulting repository instance
     def self.from_hash(opts)
       repo = @@types[opts[:repo_type]].new
+      unless ENV['DEVELOPMENT']
+        raise "Invalid URI #{opts[:url]}" unless validate_uri opts[:url]
+      end
       opts.each do |k, v|
         repo.__send__("#{k.to_s}=".to_sym, v) unless k == :repo_type
       end
@@ -189,6 +197,33 @@ module RightScale
         uri.userinfo = userinfo
       end
       uri
+    end
+
+    def self.validate_uri(uri)
+      uri = URI.parse(uri) if uri.instance_of?(String)
+      return false unless @@okay_schemes.include?(uri.scheme)
+      begin
+        possibles = Socket.getaddrinfo(uri.host, uri.port, Socket::AF_INET, Socket::SOCK_STREAM, Socket::IPPROTO_TCP)
+        return false if possibles.empty?
+        possibles.each do |possible|
+          family, port, hostname, address, protocol_family, socket_type, protocol = possible
+
+          # Our EC2 gateway is not permitted.
+          return false if address == "169.254.169.254"
+          # Loopbacks are not permitted.
+          return false if address =~ /^127\.[0-9]+\.[0-9]+\.[0-9]+$/
+
+          # Private networks are not permitted
+          return false if address =~ /^10\.[0-9]+\.[0-9]+\.[0-9]+$/
+          return false if address =~ /^172\.(1[6-9]|[23][0-9])\.[0-9]+\.[0-9]+$/
+          return false if address =~ /^192\.168\.[0-9]+\.[0-9]+$/
+
+        end
+        true
+      rescue SocketError
+        # means the host doesn't exist
+        false
+      end
     end
   end
 end

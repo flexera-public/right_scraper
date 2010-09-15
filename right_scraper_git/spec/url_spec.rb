@@ -22,34 +22,28 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_libcurl'))
 
-describe RightScale::Repositories::Download do
-  it_should_behave_like "Development mode environment"
-
-  before(:each) do
+describe RightScale::Repository do
+  def make_repo(url)
     @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
-                                             :repo_type => :download,
-                                             :url => "http://foo.bar.baz.quux/%20CBLAH",
-                                             :first_credential => "foo:b/ar",
-                                             :second_credential => "foo@bar")
+                                             :repo_type => :git,
+                                             :url => url,
+                                             :first_credential => "foo:b/ar")
   end
+  it_should_behave_like "Production mode environment"
 
-  it 'should have the same repository hash with or without credentials' do
-    initial_hash = @repo.repository_hash
-    @repo.first_credential = nil
-    @repo.second_credential = nil
-    @repo.repository_hash.should == initial_hash
-  end
-
-  it 'should have the same checkout hash with or without credentials' do
-    initial_hash = @repo.checkout_hash
-    @repo.first_credential = nil
-    @repo.second_credential = nil
-    @repo.checkout_hash.should == initial_hash
-  end
-
-  it 'should tell us to use the libcurl downloader' do
-    @repo.scraper.should == RightScale::Scrapers::LibCurlDownload
+  it 'should not throw an error when creating a repository for Git URIs' do
+    lambda do
+      make_repo "http://rightscale.com/%20CBLAH"
+    end.should_not raise_exception
+    lambda do
+      make_repo "git://rightscale.com/%20CBLAH"
+    end.should_not raise_exception
+    lambda do
+      make_repo "git+ssh://rightscale.com/%20CBLAH"
+    end.should_not raise_exception
+    lambda do
+      make_repo "ssh://rightscale.com/%20CBLAH"
+    end.should_not raise_exception
   end
 end

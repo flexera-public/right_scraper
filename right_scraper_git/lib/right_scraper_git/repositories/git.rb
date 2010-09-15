@@ -71,6 +71,11 @@ module RightScale
 
       # Add this repository to the list of available types.
       @@types[:git] = RightScale::Repositories::Git
+
+      # Add git URL schemas to the list of okay schemas.
+      @@okay_schemes << "git"
+      @@okay_schemes << "git+ssh"
+      @@okay_schemes << "ssh"
     end
   end
 end

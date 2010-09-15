@@ -76,6 +76,10 @@ module RightScale
 
       # Add this repository to the list of available types.
       @@types[:svn] = RightScale::Repositories::Svn
+
+      # Add git URL schemas to the list of okay schemas.
+      @@okay_schemes << "svn"
+      @@okay_schemes << "svn+ssh"
     end
   end
 end

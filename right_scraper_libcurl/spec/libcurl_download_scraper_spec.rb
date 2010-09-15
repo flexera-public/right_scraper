@@ -29,6 +29,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 require File.expand_path(File.join(File.dirname(__FILE__), 'libcurl_download_scraper_spec_helper'))
 
 describe RightScale::Scrapers::LibCurlDownload do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::ScraperHelper
   include RightScale::SpecHelpers
 

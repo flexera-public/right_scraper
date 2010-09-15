@@ -36,6 +36,32 @@ Spec::Runner.configuration.mock_with :flexmock
 module RightScale
 
   module SpecHelpers
+    shared_examples_for "Development mode environment" do
+      before(:each) do
+        @oldtest = ENV['DEVELOPMENT']
+        ENV['DEVELOPMENT'] = "yes"
+      end
+      after(:each) do
+        if @oldtest.nil?
+          ENV.delete('DEVELOPMENT')
+        else
+          ENV['DEVELOPMENT'] = @oldtest
+        end
+      end
+    end
+    shared_examples_for "Production mode environment" do
+      before(:each) do
+        @oldtest = ENV['DEVELOPMENT']
+        ENV.delete('DEVELOPMENT')
+      end
+      after(:each) do
+        if @oldtest.nil?
+          ENV.delete('DEVELOPMENT')
+        else
+          ENV['DEVELOPMENT'] = @oldtest
+        end
+      end
+    end
 
     # Set the 'verbose' environment variable for debugging a failing spec
     VERBOSE='verbose'

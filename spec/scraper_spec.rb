@@ -31,6 +31,8 @@ require 'tmpdir'
 require 'flexmock'
 
 describe RightScale::Scraper do
+  it_should_behave_like "Development mode environment"
+
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir

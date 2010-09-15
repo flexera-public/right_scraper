@@ -25,6 +25,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'cookbooks', 'cookbook_helper'))
 
 describe RightScale::Cookbook do
+  it_should_behave_like "Development mode environment"
+
   include RightScale::CookbookHelper
 
   shared_examples_for 'svn repositories' do
