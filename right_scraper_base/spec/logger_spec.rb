@@ -39,12 +39,12 @@ describe RightScale::Logger do
 
   def match_log_entry(entry, type, message)
     shortform, longform = case type
-                          when Logger::DEBUG: ["D", "DEBUG"]
-                          when Logger::INFO: ["I", "INFO"]
-                          when Logger::WARN: ["W", "WARN"]
-                          when Logger::ERROR: ["E", "ERROR"]
-                          when Logger::FATAL: ["F", "FATAL"]
-                          when Logger::FATAL: ["U", "UNKNOWN"]
+                          when Logger::DEBUG then ["D", "DEBUG"]
+                          when Logger::INFO then ["I", "INFO"]
+                          when Logger::WARN then ["W", "WARN"]
+                          when Logger::ERROR then ["E", "ERROR"]
+                          when Logger::FATAL then ["F", "FATAL"]
+                          when Logger::FATAL then ["U", "UNKNOWN"]
                           end
     datestamp = /[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}/
     timestamp = /[[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2}.[[:digit:]]+/
@@ -64,13 +64,13 @@ describe RightScale::Logger do
   end
 
   it 'should note errors properly' do
-    @logger.note_error({:foo => "bar"}, :baz)
-    match_log_entry(@stream.string, Logger::ERROR, "Saw foobar during baz")
+    @logger.note_error(Exception.new("foo!"), :baz)
+    match_log_entry(@stream.string, Logger::ERROR, "Saw foo! during baz")
   end
 
   it 'should note errors with an explanation properly' do
-    @logger.note_error({:foo => "bar"}, :baz, "an explanation")
-    match_log_entry(@stream.string, Logger::ERROR, "Saw foobar during baz: an explanation")
+    @logger.note_error(Exception.new("foo!"), :baz, "an explanation")
+    match_log_entry(@stream.string, Logger::ERROR, "Saw foo! during baz: an explanation")
   end
 
   it 'should pass values through the block' do
@@ -91,12 +91,12 @@ describe RightScale::Loggers::NoisyLogger do
 
   def match_log_entry(entry, type, message)
     shortform, longform = case type
-                          when Logger::DEBUG: ["D", "DEBUG"]
-                          when Logger::INFO: ["I", "INFO"]
-                          when Logger::WARN: ["W", "WARN"]
-                          when Logger::ERROR: ["E", "ERROR"]
-                          when Logger::FATAL: ["F", "FATAL"]
-                          when Logger::FATAL: ["U", "UNKNOWN"]
+                          when Logger::DEBUG then ["D", "DEBUG"]
+                          when Logger::INFO then ["I", "INFO"]
+                          when Logger::WARN then ["W", "WARN"]
+                          when Logger::ERROR then ["E", "ERROR"]
+                          when Logger::FATAL then ["F", "FATAL"]
+                          when Logger::FATAL then ["U", "UNKNOWN"]
                           end
     datestamp = /[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}/
     timestamp = /[[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2}.[[:digit:]]+/
