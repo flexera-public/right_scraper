@@ -31,6 +31,8 @@ task :default => 'spec'
 
 # == Unit Tests == #
 
+task :specs => :spec
+
 desc "Run unit tests"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = Dir['*/spec/**/*_spec.rb']
