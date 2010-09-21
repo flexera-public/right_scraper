@@ -162,5 +162,6 @@ module RightScale
     def succeeded?
       errors.empty?
     end
+    alias_method :successful?, :succeeded?
   end
 end
