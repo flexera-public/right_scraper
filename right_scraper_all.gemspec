@@ -1,3 +1,4 @@
+# -*-ruby-*-
 # Copyright: Copyright (c) 2010 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -21,7 +22,7 @@
 
 require 'rubygems'
 
-spec = Gem::Specification.new do |spec|
+Gem::Specification.new do |spec|
   spec.name      = 'right_scraper_all'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
@@ -62,9 +63,4 @@ EOF
                Dir.glob("{right_scraper_*/README.rdoc") +
                ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_all.gemspec"]
   spec.files = candidates.sort
-end
-
-if $PROGRAM_NAME == __FILE__
-   Gem.manage_gems if Gem::RubyGemsVersion.to_f < 1.0
-   Gem::Builder.new(spec).build
 end

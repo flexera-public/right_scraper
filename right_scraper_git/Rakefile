@@ -1,4 +1,4 @@
-#--
+#--  -*-ruby-*-
 # Copyright: Copyright (c) 2010 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -22,71 +22,60 @@
 #++
 
 require 'rubygems'
-require 'fileutils'
 require 'rake'
 require 'spec/rake/spectask'
 require 'rake/rdoctask'
+require 'rake/gempackagetask'
+require 'rake/clean'
 
 task :default => 'spec'
 
+Rake::GemPackageTask.new(Gem::Specification.load('right_scraper_git.gemspec')) do |package|
+  package.need_zip = true
+  package.need_tar = true
+end
+
+CLEAN.include('pkg')
+
 # == Unit Tests == #
 
-desc "Run unit tests"
+desc 'Run unit tests'
 Spec::Rake::SpecTask.new do |t|
-  t.spec_files = Dir['**/*_spec.rb']
+  t.spec_files = Dir['spec/**/*_spec.rb']
   t.spec_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'spec.opts')).map {|l| l.chomp.split }.flatten
   end
 end
 
-desc "Run unit tests with RCov"
+desc 'Run unit tests with RCov'
 Spec::Rake::SpecTask.new(:rcov) do |t|
-  t.spec_files = Dir['**/*_spec.rb']
+  t.spec_files = Dir['spec/**/*_spec.rb']
   t.rcov = true
   t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), '..', 'spec', 'rcov.opts')).map {|l| l.chomp.split }.flatten
   end
 end
 
-desc "Print Specdoc for unit tests"
+desc 'Print Specdoc for unit tests'
 Spec::Rake::SpecTask.new(:doc) do |t|
-   t.spec_opts = ["--format", "specdoc", "--dry-run"]
-   t.spec_files = Dir['**/*_spec.rb']
+  t.spec_opts = ['--format', 'specdoc', '--dry-run']
+  t.spec_files = Dir['spec/**/*_spec.rb']
 end
 
 # == Documentation == #
 
-desc "Generate API documentation to doc/rdocs/index.html"
+desc 'Generate API documentation to doc/rdocs/index.html'
 Rake::RDocTask.new do |rd|
   rd.rdoc_dir = 'doc/rdocs'
   rd.main = 'README.rdoc'
-  rd.rdoc_files.include 'README.rdoc', "lib/**/*.rb"
-
-  rd.options << '--inline-source'
-  rd.options << '--line-numbers'
-  rd.options << '--all'
-  rd.options << '--fileboxes'
-  rd.options << '--diagram'
+  rd.rdoc_files.include 'README.rdoc', 'lib/**/*.rb'
 end
+CLEAN.include('doc/rdocs')
 
-# == Gem Management == #
+# == Emacs integration ==
 
-desc "Build right_scraper_git gem"
-task :gem do
-   ruby 'right_scraper_git.gemspec'
-   pkg_dir = File.join(File.dirname(__FILE__), 'pkg')
-   FileUtils.mkdir_p(pkg_dir)
-   FileUtils.mv(Dir.glob(File.join(File.dirname(__FILE__), '*.gem')), pkg_dir)
-end
-
-desc 'Install the right_scraper_git library as a gem'
-task :install => [:gem] do
-   file = Dir["pkg/*.gem"].last
-   sh "gem install #{file}"
-end
-
-desc 'Uninstalls and reinstalls the right_scraper_git library as a gem'
-task :reinstall do
-   sh "gem uninstall right_scraper_git"
-   sh "rake install"
+# This requires exuberant ctags.
+desc 'Rebuild TAGS file'
+task :tags do
+  sh 'ctags-exuberant -a -e -f TAGS --tag-relative -R lib'
 end
