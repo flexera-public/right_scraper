@@ -33,37 +33,15 @@ task :default => 'spec'
 
 # == Gem packaging == #
 
-Dir['right_scraper*.gemspec'].each do |file|
-  Rake::GemPackageTask.new(Gem::Specification.load(file)) do |package|
-    package.need_zip = true
-    package.need_tar = true
+task :package => :gem
+directory 'pkg'
+task :gem => 'pkg' do
+  Dir['right_scraper*'].each do |file|
+    Dir.chdir(file) { sh "env PACKAGE_DIR=../pkg rake gem" }
   end
 end
-
-file "right_scraper_all.gemspec" => :populate_staging
 
 CLEAN.include('pkg')
-
-directory "fulllib"
-CLEAN.include('fulllib')
-
-task "fulllib/right_scraper_all.rb" => ["fulllib", "lib/right_scraper.rb"] do
-  # need to translate absolute gem requires to relative requires, so I use sed.
-  sh %Q{sed "s/require '\\([a-z0-9_]*\\)'/\
-require File.expand_path(File.join(File.dirname(__FILE__), '\\1'))/"\
- < 'lib/right_scraper.rb' > 'fulllib/right_scraper_all.rb'}
-end
-
-desc "Populate staging directory"
-task :populate_staging => ["fulllib/right_scraper_all.rb"] do
-  intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
-  when_writing("Copying right_scraper gems to fulllib") do
-    Dir.glob('right_scraper_*') do |file|
-      next unless File.directory?(file)
-      FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
-    end
-  end
-end
 
 # == Unit Tests == #
 
@@ -73,7 +51,7 @@ desc "Run unit tests"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = Dir['*/spec/**/*_spec.rb']
   t.spec_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), 'right_scraper', 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
   end
 end
 
@@ -82,7 +60,7 @@ Spec::Rake::SpecTask.new(:rcov) do |t|
   t.spec_files = Dir['*/spec/**/*_spec.rb']
   t.rcov = true
   t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
+    IO.readlines(File.join(File.dirname(__FILE__), 'right_scraper', 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
   end
 end
 

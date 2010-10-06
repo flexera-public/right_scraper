@@ -28,11 +28,9 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/clean'
 
-task :default => 'spec'
+task :default => 'gem'
 
-# == Gem == #
-
-gemtask = Rake::GemPackageTask.new(Gem::Specification.load("right_scraper_svn.gemspec")) do |package|
+gemtask = Rake::GemPackageTask.new(Gem::Specification.load("right_scraper_all.gemspec")) do |package|
   package.package_dir = ENV['PACKAGE_DIR'] || 'pkg'
   package.need_zip = true
   package.need_tar = true
@@ -40,47 +38,29 @@ end
 
 directory gemtask.package_dir
 
+file "right_scraper_all.gemspec" => :populate_staging
+directory "lib"
+
+CLEAN.include('lib')
 CLEAN.include(gemtask.package_dir)
 
-# == Unit Tests == #
+task "lib/right_scraper_all.rb" => ["lib", "../right_scraper/lib/right_scraper.rb"] do
+  # need to translate absolute gem requires to relative requires, so I use sed.
+  sh %Q{sed "s/require '\\([a-z0-9_]*\\)'/\
+require File.expand_path(File.join(File.dirname(__FILE__), '\\1'))/"\
+ < '../right_scraper/lib/right_scraper.rb' > 'lib/right_scraper_all.rb'}
+end
 
-desc 'Run unit tests'
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = Dir['spec/**/*_spec.rb']
-  t.spec_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper', 'spec', 'spec.opts')).map {|l| l.chomp.split }.flatten
+desc "Populate staging directory"
+task :populate_staging => ["lib/right_scraper_all.rb"] do
+  intermediate_dir = File.join(File.dirname(__FILE__), 'lib')
+  when_writing("Copying right_scraper gems to lib") do
+    Dir.glob('../right_scraper_*') do |file|
+      next unless File.directory?(file)
+      next if file == "../right_scraper_all"
+      verbose(true) do
+        cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
+      end
+    end
   end
-end
-
-desc 'Run unit tests with RCov'
-Spec::Rake::SpecTask.new(:rcov) do |t|
-  t.spec_files = Dir['spec/**/*_spec.rb']
-  t.rcov = true
-  t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper', 'spec', 'rcov.opts')).map {|l| l.chomp.split }.flatten
-  end
-end
-
-desc 'Print Specdoc for unit tests'
-Spec::Rake::SpecTask.new(:doc) do |t|
-  t.spec_opts = ['--format', 'specdoc', '--dry-run']
-  t.spec_files = Dir['spec/**/*_spec.rb']
-end
-
-# == Documentation == #
-
-desc 'Generate API documentation to doc/rdocs/index.html'
-Rake::RDocTask.new do |rd|
-  rd.rdoc_dir = 'doc/rdocs'
-  rd.main = 'README.rdoc'
-  rd.rdoc_files.include 'README.rdoc', 'lib/**/*.rb'
-end
-CLEAN.include('doc/rdocs')
-
-# == Emacs integration ==
-
-# This requires exuberant ctags.
-desc 'Rebuild TAGS file'
-task :tags do
-  sh 'ctags-exuberant -a -e -f TAGS --tag-relative -R lib'
 end

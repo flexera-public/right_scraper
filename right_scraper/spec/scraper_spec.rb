@@ -21,12 +21,12 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 require 'stringio'
-require 'right_scraper'
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'right_scraper_base', 'spec', 'download', 'command_line_download_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'right_scraper_git', 'spec', 'git_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'right_scraper_libcurl', 'spec', 'libcurl_download_scraper_spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'right_scraper_svn', 'spec', 'svn_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'download', 'command_line_download_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_git', 'spec', 'git_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_libcurl', 'spec', 'libcurl_download_scraper_spec_helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_svn', 'spec', 'svn_scraper_spec_helper'))
 require 'tmpdir'
 require 'flexmock'
 

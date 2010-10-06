@@ -22,7 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'processes', 'watcher'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'lib', 'right_scraper_base', 'processes', 'watcher'))
 
 describe RightScale::Processes::Watcher do
 

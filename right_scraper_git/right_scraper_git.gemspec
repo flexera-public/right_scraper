@@ -1,3 +1,4 @@
+# -*-ruby-*-
 # Copyright: Copyright (c) 2010 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -22,22 +23,22 @@
 require 'rubygems'
 
 Gem::Specification.new do |spec|
-  spec.name      = 'right_scraper_svn'
+  spec.name      = 'right_scraper_git'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
   spec.platform  = Gem::Platform::RUBY
-  spec.summary   = 'Libcurl based repository downloading for right_scraper'
+  spec.summary   = 'Git repository downloading for right_scraper'
   spec.has_rdoc = true
-  spec.rdoc_options = ["--main", "right_scraper_svn/README.rdoc", "--title", "RightScraper"]
-  spec.extra_rdoc_files = ["right_scraper_svn/README.rdoc"]
+  spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
+  spec.extra_rdoc_files = ["README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'right_scraper_svn/lib'
+  spec.require_path = 'lib'
 
+  spec.add_dependency('git', '>= 1.2.5')
   spec.add_dependency('right_scraper_base', '>= 2.0.0')
-  spec.requirements << 'Subversion Ruby client bindings'
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
@@ -48,11 +49,11 @@ Gem::Specification.new do |spec|
     * git: RightScraper will clone then pull repos from git
     * SVN: RightScraper will checkout then update SVN repositories
     * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  This component enables downloading and updating of SVN repositories.
+  This is the git component, enabling downloading of git repositories.
 EOF
 
-  candidates = Dir.glob("right_scraper_svn/{lib,spec}/**/*") +
-    ["right_scraper_svn/LICENSE", "right_scraper_svn/README.rdoc",
-     "right_scraper_svn/Rakefile", "right_scraper_svn.gemspec"]
+  candidates = Dir.glob("{lib,spec}/**/*") +
+    ["LICENSE", "README.rdoc",
+     "Rakefile", "right_scraper_git.gemspec"]
   spec.files = candidates.sort
 end

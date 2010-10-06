@@ -31,11 +31,11 @@ Gem::Specification.new do |spec|
   spec.platform  = Gem::Platform::RUBY
   spec.summary   = 'Libcurl based repository downloading for right_scraper'
   spec.has_rdoc = true
-  spec.rdoc_options = ["--main", "right_scraper_libcurl/README.rdoc", "--title", "RightScraper"]
-  spec.extra_rdoc_files = ["right_scraper_libcurl/README.rdoc"]
+  spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
+  spec.extra_rdoc_files = ["README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'right_scraper_libcurl/lib'
+  spec.require_path = 'lib'
 
   spec.add_dependency('libarchive', '>= 0.1.1')
   spec.add_dependency('curb', '>= 0.7.7.1')
@@ -54,8 +54,8 @@ Gem::Specification.new do |spec|
   This component uses libcurl to download archives, permitting more efficient usage.
 EOF
 
-  candidates = Dir.glob("right_scraper_libcurl/{lib,spec}/**/*") +
-    ["right_scraper_libcurl/LICENSE", "right_scraper_libcurl/README.rdoc",
-     "right_scraper_libcurl/Rakefile", "right_scraper_libcurl.gemspec"]
+  candidates = Dir.glob("{lib,spec}/**/*") +
+    ["LICENSE", "README.rdoc",
+     "Rakefile", "right_scraper_libcurl.gemspec"]
   spec.files = candidates.sort
 end

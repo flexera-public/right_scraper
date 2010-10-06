@@ -23,29 +23,22 @@
 require 'rubygems'
 
 Gem::Specification.new do |spec|
-  spec.name      = 'right_scraper_all'
+  spec.name      = 'right_scraper_s3'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
   spec.platform  = Gem::Platform::RUBY
-  spec.summary   = 'Download and update remote repositories -- full version'
+  spec.summary   = 'Libcurl based repository downloading for right_scraper'
   spec.has_rdoc = true
   spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
   spec.extra_rdoc_files = ["README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'fulllib'
+  spec.require_path = 'lib'
 
-  spec.add_dependency('json', '>= 1.4.5')
-  spec.add_dependency('git', '>= 1.2.5')
-  spec.add_dependency('libarchive', '>= 0.1.1')
-  spec.add_dependency('curb', '>= 0.7.7.1')
   spec.add_dependency('right_aws', '>= 2.0')
-
-  spec.requirements << 'libarchive, 2.8.4'
-  spec.requirements << 'curl command line client'
-  spec.requirements << 'Subversion Ruby client bindings'
+  spec.add_dependency('right_scraper_base', '>= 2.0.0')
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
@@ -56,11 +49,11 @@ Gem::Specification.new do |spec|
     * git: RightScraper will clone then pull repos from git
     * SVN: RightScraper will checkout then update SVN repositories
     * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  This component bundles all available right_scraper components into one gem.
+  This component enables uploading the contents of a cookbook to S3 using the Repose format.
 EOF
 
-  candidates = Dir.glob("fulllib/**/*") +
-               Dir.glob("right_scraper_*/README.rdoc") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_all.gemspec"]
+  candidates = Dir.glob("{lib,spec}/**/*") +
+    ["LICENSE", "README.rdoc",
+     "Rakefile", "right_scraper_s3.gemspec"]
   spec.files = candidates.sort
 end
