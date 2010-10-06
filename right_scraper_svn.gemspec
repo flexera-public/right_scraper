@@ -1,4 +1,3 @@
-# -*-ruby-*-
 # Copyright: Copyright (c) 2010 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -23,7 +22,7 @@
 require 'rubygems'
 
 Gem::Specification.new do |spec|
-  spec.name      = 'right_scraper_libcurl'
+  spec.name      = 'right_scraper_svn'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
@@ -31,16 +30,14 @@ Gem::Specification.new do |spec|
   spec.platform  = Gem::Platform::RUBY
   spec.summary   = 'Libcurl based repository downloading for right_scraper'
   spec.has_rdoc = true
-  spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
-  spec.extra_rdoc_files = ["README.rdoc"]
+  spec.rdoc_options = ["--main", "right_scraper_svn/README.rdoc", "--title", "RightScraper"]
+  spec.extra_rdoc_files = ["right_scraper_svn/README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'lib'
+  spec.require_path = 'right_scraper_svn/lib'
 
-  spec.add_dependency('libarchive', '>= 0.1.1')
-  spec.add_dependency('curb', '>= 0.7.7.1')
   spec.add_dependency('right_scraper_base', '>= 2.0.0')
-  spec.requirements << 'libarchive, 2.8.4'
+  spec.requirements << 'Subversion Ruby client bindings'
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
@@ -51,10 +48,11 @@ Gem::Specification.new do |spec|
     * git: RightScraper will clone then pull repos from git
     * SVN: RightScraper will checkout then update SVN repositories
     * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  This component uses libcurl to download archives, permitting more efficient usage.
+  This component enables downloading and updating of SVN repositories.
 EOF
 
-  candidates = Dir.glob("{lib,spec}/**/*") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_libcurl.gemspec"]
+  candidates = Dir.glob("right_scraper_svn/{lib,spec}/**/*") +
+    ["right_scraper_svn/LICENSE", "right_scraper_svn/README.rdoc",
+     "right_scraper_svn/Rakefile", "right_scraper_svn.gemspec"]
   spec.files = candidates.sort
 end

@@ -25,17 +25,8 @@ require 'rubygems'
 require 'rake'
 require 'spec/rake/spectask'
 require 'rake/rdoctask'
-require 'rake/gempackagetask'
-require 'rake/clean'
 
 task :default => 'spec'
-
-Rake::GemPackageTask.new(Gem::Specification.load('right_scraper_base.gemspec')) do |package|
-  package.need_zip = true
-  package.need_tar = true
-end
-
-CLEAN.include('pkg')
 
 # == Unit Tests == #
 

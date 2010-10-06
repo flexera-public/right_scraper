@@ -23,21 +23,21 @@
 require 'rubygems'
 
 Gem::Specification.new do |spec|
-  spec.name      = 'right_scraper_git'
+  spec.name      = 'right_scraper_s3'
   spec.version   = '2.0.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
   spec.platform  = Gem::Platform::RUBY
-  spec.summary   = 'Git repository downloading for right_scraper'
+  spec.summary   = 'Libcurl based repository downloading for right_scraper'
   spec.has_rdoc = true
-  spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
-  spec.extra_rdoc_files = ["README.rdoc"]
+  spec.rdoc_options = ["--main", "right_scraper_s3/README.rdoc", "--title", "RightScraper"]
+  spec.extra_rdoc_files = ["right_scraper_s3/README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'lib'
+  spec.require_path = 'right_scraper_s3/lib'
 
-  spec.add_dependency('git', '>= 1.2.5')
+  spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('right_scraper_base', '>= 2.0.0')
 
   spec.add_development_dependency('rspec')
@@ -49,10 +49,11 @@ Gem::Specification.new do |spec|
     * git: RightScraper will clone then pull repos from git
     * SVN: RightScraper will checkout then update SVN repositories
     * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  This is the git component, enabling downloading of git repositories.
+  This component enables uploading the contents of a cookbook to S3 using the Repose format.
 EOF
 
-  candidates = Dir.glob("{lib,spec}/**/*") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_git.gemspec"]
+  candidates = Dir.glob("right_scraper_s3/{lib,spec}/**/*") +
+    ["right_scraper_s3/LICENSE", "right_scraper_s3/README.rdoc",
+     "right_scraper_s3/Rakefile", "right_scraper_s3.gemspec"]
   spec.files = candidates.sort
 end

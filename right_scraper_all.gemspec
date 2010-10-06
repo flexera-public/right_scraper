@@ -60,7 +60,7 @@ Gem::Specification.new do |spec|
 EOF
 
   candidates = Dir.glob("fulllib/**/*") +
-               Dir.glob("{right_scraper_*/README.rdoc") +
+               Dir.glob("right_scraper_*/README.rdoc") +
                ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_all.gemspec"]
   spec.files = candidates.sort
 end

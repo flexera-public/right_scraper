@@ -40,7 +40,7 @@ Dir['right_scraper*.gemspec'].each do |file|
   end
 end
 
-task :gem => :populate_staging
+file "right_scraper_all.gemspec" => :populate_staging
 
 CLEAN.include('pkg')
 
@@ -57,9 +57,11 @@ end
 desc "Populate staging directory"
 task :populate_staging => ["fulllib/right_scraper_all.rb"] do
   intermediate_dir = File.join(File.dirname(__FILE__), 'fulllib')
-  Dir.glob('right_scraper_*') do |file|
-    next unless File.directory?(file)
-    FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
+  when_writing("Copying right_scraper gems to fulllib") do
+    Dir.glob('right_scraper_*') do |file|
+      next unless File.directory?(file)
+      FileUtils.cp_r(Dir.glob("#{file}/lib/*"), intermediate_dir)
+    end
   end
 end
 

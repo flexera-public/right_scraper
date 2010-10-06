@@ -31,11 +31,11 @@ Gem::Specification.new do |spec|
   spec.platform  = Gem::Platform::RUBY
   spec.summary   = 'Minimal base for downloading and updating remote repositories'
   spec.has_rdoc = true
-  spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
-  spec.extra_rdoc_files = ["README.rdoc"]
+  spec.rdoc_options = ["--main", "right_scraper_base/README.rdoc", "--title", "RightScraper"]
+  spec.extra_rdoc_files = ["right_scraper_base/README.rdoc"]
   spec.required_ruby_version = '>= 1.8.7'
   spec.rubyforge_project = %q{right_scraper}
-  spec.require_path = 'lib'
+  spec.require_path = 'right_scraper_base/lib'
 
   spec.add_dependency('json', '>= 1.4.5')
   spec.requirements << 'curl command line client'
@@ -53,7 +53,8 @@ Gem::Specification.new do |spec|
   the appropriate secondary gem, or right_scraper to get them all.
 EOF
 
-  candidates = Dir.glob("{lib,spec}/**/*") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper_base.gemspec"]
+  candidates = Dir.glob("right_scraper_base/{lib,spec}/**/*") +
+    ["right_scraper_base/LICENSE", "right_scraper_base/README.rdoc",
+     "right_scraper_base/Rakefile", "right_scraper_base.gemspec"]
   spec.files = candidates.sort
 end
