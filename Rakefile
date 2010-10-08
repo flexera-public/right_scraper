@@ -86,8 +86,7 @@ Rake::RDocTask.new do |rd|
 end
 
 # == Emacs integration == #
-# This requires exuberant ctags.
 desc "Rebuild TAGS file"
 task :tags do
-  sh "ctags-exuberant -a -e -f TAGS --tag-relative -R */lib"
+  sh "rtags -R */{lib,spec}"
 end
