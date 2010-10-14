@@ -159,8 +159,8 @@ describe RightScale::Loggers::NoisyLogger do
       @stream.rewind
       match_log_entry(@stream.readline, Logger::DEBUG, "> begin foo")
       match_log_entry(@stream.readline, Logger::DEBUG, ">> begin bar: blah")
-      match_log_entry(@stream.readline, Logger::DEBUG, ">> close bar: blah")
-      match_log_entry(@stream.readline, Logger::DEBUG, "> close foo")
+      match_log_entry(@stream.readline, Logger::DEBUG, ">> commit bar: blah")
+      match_log_entry(@stream.readline, Logger::DEBUG, "> commit foo")
       @stream.eof?.should be_true
     end
 

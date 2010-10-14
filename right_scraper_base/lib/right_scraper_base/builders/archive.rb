@@ -22,15 +22,13 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'process_watcher'))
+require 'process_watcher'
 require 'digest/sha1'
 
 module RightScale
   module Builders
     # Class for building tarballs from filesystem based checkouts.
     class Archive < Builder
-      include ProcessWatcher
-
       # Create a new ArchiveBuilder.  In addition to the options
       # recognized by Builder, recognizes :scraper,
       # :max_bytes, and :max_seconds.
@@ -55,8 +53,13 @@ module RightScale
         @logger.operation(:creating_archive) do
           exclude_declarations =
             @scraper.ignorable_paths.map {|path| ["--exclude", path]}
+          # because this writes to stdout, it should be impossible for
+          # it to violate space requirements.
           cookbook.data[:archive] =
-            watch("tar", ["-C", dir, "-c", exclude_declarations, "."].flatten, @max_bytes, @max_seconds)
+            ProcessWatcher.watch("tar", ["-C", dir, "-c", exclude_declarations, "."].flatten, nil,
+                                 -1, @max_seconds) do |phase, command, exception|
+            @logger.note_phase(phase, :running_command, command, exception)
+          end
         end
       end
     end

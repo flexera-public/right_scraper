@@ -62,16 +62,9 @@ module RightScale
         @errors = []
       end
 
-      def operation(type, explanation="")
-        begin
-          @callback.call(:begin, type, explanation, nil) unless @callback.nil?
-          result = super
-          @callback.call(:commit, type, explanation, nil) unless @callback.nil?
-          result
-        rescue
-          @callback.call(:abort, type, explanation, $!) unless @callback.nil?
-          raise
-        end
+      def note_phase(phase, type, explanation, exception=nil)
+        @callback.call(phase, type, explanation, exception) unless @callback.nil?
+        super
       end
 
       def note_error(exception, type, explanation="")

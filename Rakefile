@@ -42,6 +42,7 @@ task :gem => 'pkg' do
 end
 
 CLEAN.include('pkg')
+CLEAN.include('right_scraper_all/lib')
 
 # == Unit Tests == #
 

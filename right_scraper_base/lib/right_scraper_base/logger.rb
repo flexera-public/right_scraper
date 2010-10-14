@@ -48,15 +48,34 @@ module RightScale
     # type(Symbol):: operation type identifier
     # explanation(String):: optional explanation
     def operation(type, explanation="")
-      @exceptional = false
       begin
-        yield
+        note_phase(:begin, type, explanation)
+        result = yield
+        note_phase(:commit, type, explanation)
+        result
       rescue
+        note_phase(:abort, type, explanation, $!)
+        raise
+      end
+    end
+
+    # Note an event to the log.  In this base class this calls
+    # note_error when an error occurs, but subclasses will presumably
+    # want to override it.
+    #
+    # === Parameters
+    # phase(Symbol):: phase of operation; one of :begin, :commit, :abort
+    # type(Symbol):: operation type identifier
+    # explanation(String):: explanation of operation
+    # exception(Exception):: optional exception (only if +phase+ is :abort)
+    def note_phase(phase, type, explanation, exception=nil)
+      case phase
+      when :begin then @exceptional = false
+      when :abort then
         unless @exceptional
-          note_error($!, type, explanation)
+          note_error(exception, type, explanation)
           @exceptional = true
         end
-        raise
       end
     end
 

@@ -21,13 +21,12 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require 'tempfile'
+require 'process_watcher'
 
 module RightScale
   module Processes
     # Manage a dedicated SSH agent.
     class SSHAgent
-      include ProcessWatcher
-
       def initialize
         @display = ENV['DISPLAY']
         @askpass = ENV['SSH_ASKPASS']
@@ -38,7 +37,7 @@ module RightScale
       # Open a connection to the SSH agent and set +ENV+
       # appropriately.
       def open
-        output = watch('ssh-agent', ['-s'], -1, 10)
+        output = ProcessWatcher.watch('ssh-agent', ['-s'], nil, -1, 10)
         output.split(/\n/).each do |line|
           if line =~ /^(SSH_\w+)=(.*?); export \1;$/
             ENV[$1] = $2
@@ -49,7 +48,7 @@ module RightScale
       # Close the connection to the SSH agent, and restore +ENV+.
       def close
         begin
-          watch('ssh-agent', ['-k'], -1, 10)
+          ProcessWatcher.watch('ssh-agent', ['-k'], nil, -1, 10)
         ensure
           ENV['SSH_AGENT_PID'] = @agentpid unless @agentpid.nil?
           ENV['DISPLAY'] = @display unless @display.nil?
@@ -79,7 +78,7 @@ module RightScale
       # === Parameters
       # file(String):: file containing key data
       def add_keyfile(file)
-        watch("ssh-add", [file], -1, 10)
+        ProcessWatcher.watch("ssh-add", [file], nil, -1, 10)
       end
 
       # Execute the block in a new ssh agent.

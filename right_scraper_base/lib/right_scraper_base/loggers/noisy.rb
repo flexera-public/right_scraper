@@ -32,25 +32,23 @@ module RightScale
         super
         @pending = []
       end
-      # Begin an operation that merits logging.  Will write the
-      # details to the log, including a visual indicator of how many
-      # nested operations are currently pending.
+
+      # Note an event to the log, including a visual indicator of how
+      # many nested operations are currently pending.
       #
       # === Parameters
+      # phase(Symbol):: phase of operation; one of :begin, :commit, :abort
       # type(Symbol):: operation type identifier
-      # explanation(String):: optional explanation
-      def operation(type, explanation="")
-        begin
+      # explanation(String):: explanation of operation
+      # exception(Exception):: optional exception (only if +phase+ is :abort)
+      def note_phase(phase, type, explanation, exception=nil)
+        if phase == :begin
           @pending.push [type, explanation]
-          debug("#{depth_str} begin #{immediate_context}")
-          result = super
-          debug("#{depth_str} close #{immediate_context}")
+        end
+        super
+        debug("#{depth_str} #{phase} #{immediate_context}")
+        unless phase == :begin
           @pending.pop
-          return result
-        rescue
-          debug("#{depth_str} abort #{immediate_context}")
-          @pending.pop
-          raise
         end
       end
 

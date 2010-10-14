@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), 'filesystem'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'process_watcher'))
+require 'process_watcher'
 require 'tempfile'
 
 module RightScale
@@ -29,8 +29,6 @@ module RightScale
     # A scraper for cookbooks stored in archives on a web server
     # somewhere.  Uses command line curl and command line tar.
     class CommandLineDownload < FilesystemBasedScraper
-      include RightScale::ProcessWatcher
-
       def workdir
         File.join(@basedir, @repository.repository_hash)
       end
@@ -51,8 +49,11 @@ module RightScale
           else
             []
           end
-          watch("curl", ["--silent", "--fail", "--location-trusted", "-o", file, credential_command,
-                 @repository.url].flatten, @max_bytes || -1, @max_seconds || -1)
+          ProcessWatcher.watch("curl", ["--silent", "--fail", "--location-trusted", "-o",
+                                        file, credential_command, @repository.url].flatten,
+                               workdir, @max_bytes || -1, @max_seconds || -1) do |phase, command, exception|
+            @logger.note_phase(phase, :running_command, command, exception)
+          end
         end
 
         @logger.operation(:unpacking) do
@@ -65,7 +66,10 @@ module RightScale
             extraction = "xf"
           end
           Dir.chdir(basedir) do
-            watch("tar", [extraction, file], @max_bytes || -1, @max_seconds || -1)
+            ProcessWatcher.watch("tar", [extraction, file], basedir,
+                                 @max_bytes || -1, @max_seconds || -1) do |phase, command, exception|
+              @logger.note_phase(phase, :running_command, command, exception)
+            end
           end
         end
       end

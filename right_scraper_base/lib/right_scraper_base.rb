@@ -29,8 +29,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base',
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'builders', 'union'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'cookbook'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'logger'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'processes', 'watcher'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'process_watcher'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'repository'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'repositories', 'download'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'right_scraper_base', 'scanners', 'base'))
