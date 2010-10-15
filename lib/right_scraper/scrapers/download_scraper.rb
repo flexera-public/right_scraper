@@ -34,7 +34,8 @@ module RightScale
       @callback.call(msg, is_step=true) if @callback
       filename = @repo.url.split('/').last
 
-      if @repo.first_credential && @repo.second_credential
+      if @repo.first_credential && @repo.second_credential && 
+          !@repo.first_credential.empty? && !@repo.second_credential.empty?
         user_opt = ['--user', "#{@repo.first_credential}:#{@repo.second_credential}"]
       else
         user_opt = []
