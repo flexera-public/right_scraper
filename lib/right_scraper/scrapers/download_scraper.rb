@@ -35,7 +35,7 @@ module RightScale
       filename = @repo.url.split('/').last
 
       if @repo.first_credential && @repo.second_credential && 
-          !@repo.first_credential.empty? && !@repo.second_credential.empty?
+          !@repo.first_credential.strip.empty? && !@repo.second_credential.strip.empty?
         user_opt = ['--user', "#{@repo.first_credential}:#{@repo.second_credential}"]
       else
         user_opt = []
