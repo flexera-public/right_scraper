@@ -33,8 +33,14 @@ module RightScale
       msg = "Downloading repository '#{@repo.display_name}'"
       @callback.call(msg, is_step=true) if @callback
       filename = @repo.url.split('/').last
-      user_opt = @repo.first_credential && @repo.second_credential ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
-      cmd = "curl --fail --silent --show-error --insecure --location #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
+      user_opt = @repo.first_credential && @repo.second_credential &&
+        !@repo.first_credential.strip.empty? && !@repo.second_credential.strip.empty? ? "--user #{@repo.first_credential}:#{@repo.second_credential}" : ''
+      curl_options = "--fail --silent --show-error --insecure --location"
+      if is_windows?
+        cmd = "curl #{curl_options} #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" \"#{@repo.url}\" 2>&1"
+      else
+        cmd = "curl #{curl_options} #{user_opt} --output \"#{@current_repo_dir}/#{filename}\" '#{@repo.url}' 2>&1"
+      end
       FileUtils.mkdir_p(@current_repo_dir)
       res = @watcher.launch_and_watch(cmd, @current_repo_dir)
       handle_watcher_result(res, 'Download')
@@ -52,6 +58,16 @@ module RightScale
         end
       end
       true
+    end
+
+    private
+
+    # Check for windows.
+    #
+    # === Return
+    #
+    def is_windows?
+      return !!(RUBY_PLATFORM =~ /mswin/)
     end
 
   end
