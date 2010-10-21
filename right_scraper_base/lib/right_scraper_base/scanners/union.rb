@@ -35,6 +35,11 @@ module RightScale
         @subscanners = classes.map {|klass| klass.new(options)}
       end
 
+      # Notify subscanners that all scans have completed.
+      def finish
+        @subscanners.each {|scanner| scanner.finish}
+      end
+
       # Begin a scan for the given cookbook.
       #
       # === Parameters

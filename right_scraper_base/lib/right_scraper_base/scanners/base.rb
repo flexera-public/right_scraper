@@ -64,6 +64,11 @@ module RightScale
         @logger = options.fetch(:logger, Logger.new)
       end
 
+      # Notification that all scans for this repository have
+      # completed.
+      def finish
+      end
+
       # Begin a scan for the given cookbook.
       #
       # === Parameters ===

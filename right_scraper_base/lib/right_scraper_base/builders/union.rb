@@ -46,6 +46,12 @@ module RightScale
       def go(dir, cookbook)
         @subbuilders.each {|builder| builder.go(dir, cookbook)}
       end
+
+      # Notify subbuilders that all scans for this repository have
+      # completed.
+      def finish
+        @subbuilders.each {|builder| builder.finish}
+      end
     end
   end
 end

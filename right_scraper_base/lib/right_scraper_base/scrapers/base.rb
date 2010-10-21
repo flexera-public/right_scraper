@@ -140,6 +140,7 @@ module RightScale
 
       # Close the scraper, removing any temporary files.
       def close
+        @builder.finish
       end
 
       # Path to directory where given repo should be or was downloaded

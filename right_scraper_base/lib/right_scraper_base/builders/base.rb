@@ -28,6 +28,11 @@ module RightScale
     # Base class for building additional metadata from filesystem
     # based checkouts.  Subclasses should override #go, and possibly
     # #new if they require additional arguments.
+    #
+    # The lifecycle for a builder is as follows:
+    # - builder = Builder.new (once)
+    # - builder.go(dir, cookbook) (many times)
+    # - builder.finish (once)
     class Builder
       # Create a new Builder.  Recognizes options as given.  Some
       # options may be required, others optional.  This class recognizes
@@ -48,6 +53,11 @@ module RightScale
       # dir(String):: directory cookbook exists at
       # cookbook(RightScale::Cookbook):: cookbook instance being built
       def go(dir, cookbook)
+      end
+
+      # Notification that all scans for this repository have
+      # completed.
+      def finish
       end
     end
   end

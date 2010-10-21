@@ -43,6 +43,12 @@ module RightScale
         @scanner = options.fetch(:scanner)
       end
 
+      # Tell the scanner we're done.
+      def finish
+        super
+        @scanner.finish
+      end
+
       # Run builder for this cookbook.
       #
       # === Parameters
