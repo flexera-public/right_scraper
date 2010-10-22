@@ -45,9 +45,9 @@ module RightScale
       res = @watcher.launch_and_watch(cmd, @current_repo_dir)
       handle_watcher_result(res, 'Download')
       if succeeded?
-        unzip_opt = case @repo.url[/\.(.*)$/]
-          when 'bzip', 'bzip2', 'bz2' then 'j'
-          when 'tgz', 'gzip', 'gz' then 'z'
+        unzip_opt = case @repo.url[/\.([^.]*)$/]
+          when '.bzip', '.bzip2', '.bz2' then 'j'
+          when '.tgz', '.gzip', '.gz' then 'z'
           else ''
         end
         Dir.chdir(@current_repo_dir) do
