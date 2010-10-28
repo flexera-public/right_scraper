@@ -72,8 +72,8 @@ module RightScale
     # represents that repository.
     @@types = {} unless class_variable_defined?(:@@types)
 
-    # (Set) list of acceptable URI schemes.  Initially just http and ftp.
-    @@okay_schemes = Set.new(["http", "ftp"])
+    # (Set) list of acceptable URI schemes.  Initially just http, https and ftp.
+    @@okay_schemes = Set.new(["http", "https", "ftp"])
 
     # Initialize repository from given hash
     # Hash keys should correspond to attributes of this class
