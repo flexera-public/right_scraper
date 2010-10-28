@@ -205,7 +205,6 @@ module RightScale
     module PATTERN
       include URI::REGEXP::PATTERN
       GIT_URI = Regexp.new("^(#{UNRESERVED}|#{ESCAPED})@(#{HOST}):(#{ABS_PATH})$")
-      p GIT_URI
     end
 
     SSH_PORT = 22
