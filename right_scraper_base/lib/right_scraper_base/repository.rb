@@ -202,9 +202,30 @@ module RightScale
       uri
     end
 
+    module PATTERN
+      include URI::REGEXP::PATTERN
+      GIT_URI = Regexp.new("^(#{UNRESERVED}|#{ESCAPED})@(#{HOST}):(#{ABS_PATH})$")
+      p GIT_URI
+    end
+
+    SSH_PORT = 22
+
     def self.validate_uri(uri)
-      uri = URI.parse(uri) if uri.instance_of?(String)
-      return false unless @@okay_schemes.include?(uri.scheme)
+      begin
+        uri = URI.parse(uri) if uri.instance_of?(String)
+        return false unless @@okay_schemes.include?(uri.scheme)
+        check_host(uri.host, uri,port)
+      rescue URI::InvalidURIError
+        # could be a Git type URI.
+        if uri =~ PATTERN::GIT_URI
+          check_host($1, SSH_PORT)
+        else
+          raise
+        end
+      end
+    end
+
+    def check_host(host, port)
       begin
         possibles = Socket.getaddrinfo(uri.host, uri.port, Socket::AF_INET, Socket::SOCK_STREAM, Socket::IPPROTO_TCP)
         return false if possibles.empty?
