@@ -79,7 +79,8 @@ module RightScale
       # Finish a scan for the given cookbook.
       #
       # === Parameters ===
-      # cookbook(RightScale::Cookbook):: cookbook that just finished scanningi
+      # cookbook(RightScale::Cookbook):: cookbook that just finished
+      #                                  scanning
       def end(cookbook)
       end
 
@@ -90,7 +91,8 @@ module RightScale
       # not always be necessary to read the data.
       #
       # === Parameters ===
-      # relative_position(String):: relative pathname for _pathname_ from root of cookbook
+      # relative_position(String):: relative pathname for _pathname_
+      #                             from root of cookbook
       def notice(relative_position)
       end
 
@@ -98,7 +100,8 @@ module RightScale
       # should recurse into the directory (the default behavior)
       #
       # === Parameters ===
-      # relative_position(String):: relative pathname for the directory from root of cookbook
+      # relative_position(String):: relative pathname for the directory
+      #                             from root of cookbook
       #
       # === Returns ===
       # Boolean:: should the scanning recurse into the directory

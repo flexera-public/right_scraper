@@ -60,7 +60,8 @@ module RightScale
         @logger.operation(:initialize, "setting up in #{basedir}") do
           FileUtils.mkdir_p(basedir)
           @stack = []
-          @next = find_next(Dir.new(basedir))
+          start_dir = repository.cookbooks_path ? File.join(basedir, repository.cookbooks_path) : basedir
+          @next = find_next(Dir.new(start_dir))
         end
       end
 

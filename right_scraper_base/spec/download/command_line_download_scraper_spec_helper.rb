@@ -46,7 +46,7 @@ module RightScale
     def initialize
       super
       @download_repo_path = File.join(@tmpdir, "download")
-      create_cookbook(download_repo_path, repo_content)
+      make_cookbooks
       @download_file = File.join(@tmpdir, "file.tar")
       Dir.chdir(download_repo_path) do
         res, status = exec("tar cf \"#{@download_file}\" *")
@@ -54,14 +54,19 @@ module RightScale
       end
     end
 
-    def check_cookbook(cookbook, tarball, repository)
+    # Cookbook creation method.  Meant to be extended by subclasses.
+    def make_cookbooks
+      create_cookbook(download_repo_path, repo_content)
+    end
+
+    def check_cookbook(cookbook, tarball, repository, position=".")
       cookbook.should_not == nil
       if cookbook.data.key?(:archive)
         example = File.open(tarball, 'r').read
         cookbook.data[:archive].should == example
       end
       cookbook.repository.should == repository
-      cookbook.pos.should == "."
+      cookbook.pos.should == position
       cookbook.metadata.should == repo_content
       cookbook.manifest.should == manifest
     end
