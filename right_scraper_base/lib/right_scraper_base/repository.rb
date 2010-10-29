@@ -61,7 +61,7 @@ module RightScale
       raise NotImplementedError
     end
 
-    # String:: subdirectory in the repository to search for cookbooks
+    # (Array of String):: subdirectories in the repository to search for cookbooks
     attr_accessor :cookbooks_path
 
     # (String) URL to repository (e.g 'git://github.com/rightscale/right_scraper_base.git')

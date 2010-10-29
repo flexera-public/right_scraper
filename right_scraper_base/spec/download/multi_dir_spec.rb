@@ -56,35 +56,47 @@ describe RightScale::Scrapers::CommandLineDownload do
         @download_file = @helper.download_file
       end
 
-      it 'should only return one cookbook' do
-        @scraper.next
+      it 'should return two cookbooks' do
+        @scraper.next.should_not == nil
+        @scraper.next.should_not == nil
         @scraper.next.should == nil
       end
 
       it 'should scrape' do
-        @helper.check_cookbook(@scraper.next, @download_file, @repo, "subdir")
+        @helper.check_cookbook(@scraper.next, @download_file, @repo, "subdir1")
+        @helper.check_cookbook(@scraper.next, @download_file, @repo, "subdir2")
       end
+    end
 
-      it 'should scrape a gzipped tarball' do
-        res, status = exec("gzip -c #{@download_file} > #{@download_file}.gz")
-        raise "Failed to gzip tarball: #{res}" unless status.success?
-        begin
-          @repo.url += ".gz"
-          @helper.check_cookbook(@scraper.next, @download_file + ".gz", @repo, "subdir")
-        ensure
-          File.unlink(@download_file + ".gz")
-        end
+    it 'should scrape a gzipped tarball' do
+      @download_file = @helper.download_file
+      res, status = exec("gzip -c #{@download_file} > #{@download_file}.gz")
+      raise "Failed to gzip tarball: #{res}" unless status.success?
+      begin
+        @repo.url += ".gz"
+        @scraper = @scraperclass.new(@repo,
+                                     :max_bytes => 1024**2,
+                                     :max_seconds => 20)
+        @helper.check_cookbook(@scraper.next, @download_file + ".gz", @repo, "subdir1")
+        @helper.check_cookbook(@scraper.next, @download_file + ".gz", @repo, "subdir2")
+      ensure
+        File.unlink(@download_file + ".gz")
       end
+    end
 
-      it 'should scrape a bzipped tarball' do
-        res, status = exec("bzip2 -c #{@download_file} > #{@download_file}.bz2")
-        raise "Failed to bzip tarball: #{res}" unless status.success?
-        begin
-          @repo.url += ".bz2"
-          @helper.check_cookbook(@scraper.next, @download_file + ".bz2", @repo, "subdir")
-        ensure
-          File.unlink(@download_file + ".bz2")
-        end
+    it 'should scrape a bzipped tarball' do
+      @download_file = @helper.download_file
+      res, status = exec("bzip2 -c #{@download_file} > #{@download_file}.bz2")
+      raise "Failed to bzip tarball: #{res}" unless status.success?
+      begin
+        @repo.url += ".bz2"
+        @scraper = @scraperclass.new(@repo,
+                                     :max_bytes => 1024**2,
+                                     :max_seconds => 20)
+        @helper.check_cookbook(@scraper.next, @download_file + ".bz2", @repo, "subdir1")
+        @helper.check_cookbook(@scraper.next, @download_file + ".bz2", @repo, "subdir2")
+      ensure
+        File.unlink(@download_file + ".bz2")
       end
     end
   end

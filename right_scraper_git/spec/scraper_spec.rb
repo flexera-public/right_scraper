@@ -70,14 +70,14 @@ describe RightScale::Scraper do
       callback.should_receive(:call).with(:commit, :checkout_revision, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :checkout, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :initialize, "setting up in #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:begin, :finding_next_cookbook, "in #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:begin, :reading_cookbook, "from #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:begin, :scanning_filesystem, "rooted at #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:begin, :finding_next_cookbook, "in #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:begin, :reading_cookbook, "from #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:begin, :scanning_filesystem, "rooted at #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :metadata_parsing, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :metadata_parsing, "", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:commit, :scanning_filesystem, "rooted at #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:commit, :reading_cookbook, "from #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:commit, :finding_next_cookbook, "in #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:commit, :scanning_filesystem, "rooted at #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:commit, :reading_cookbook, "from #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:commit, :finding_next_cookbook, "in #{@tmpdir}/#{@repo.repository_hash}/", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :initialize, "setting up in #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :next, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :searching, "", nil).at_least.once.at_most.once

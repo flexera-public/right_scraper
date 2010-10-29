@@ -60,8 +60,8 @@ module RightScale
         @logger.operation(:initialize, "setting up in #{basedir}") do
           FileUtils.mkdir_p(basedir)
           @stack = []
-          start_dir = repository.cookbooks_path ? File.join(basedir, repository.cookbooks_path) : basedir
-          @next = find_next(Dir.new(start_dir))
+          @queue = (repository.cookbooks_path || [""]).reverse
+          pop_queue
         end
       end
 
@@ -185,6 +185,19 @@ module RightScale
         end
       end
 
+      def pop_queue
+        until @queue.empty?
+          nextdir = @queue.pop
+          if File.directory?(File.join(basedir, nextdir))
+            @next = find_next(Dir.new(File.join(basedir, nextdir)))
+            return
+          else
+            @logger.warn("When processing in #{@repository}, no such path #{nextdir}")
+          end
+        end
+        @next = nil
+      end
+
       # Read a cookbook from the given path.
       #
       # === Parameters
@@ -227,15 +240,19 @@ module RightScale
       def seek_to_named(dir, name)
         @logger.operation(:seeking, "to #{name} in #{dir.path}") do
           dir.rewind
+          value = nil
           loop do
             lastpos = dir.pos
             entry = dir.read
             if entry.nil?
-              return nil
+              value = nil
+              break
             elsif entry == name
-              return lastpos
+              value = lastpos
+              break
             end
           end
+          value
         end
       end
       private :seek_to_named
@@ -251,6 +268,9 @@ module RightScale
 
           value = @next
           @next = search_dirs
+          while @next.nil? && !@queue.empty?
+            pop_queue
+          end
           value
         end
       end

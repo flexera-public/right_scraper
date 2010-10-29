@@ -27,12 +27,13 @@ module RightScale
   class MultiDirectorySpecHelper < CommandLineDownloadScraperSpecHelper
     def make_cookbooks
       super
-      create_cookbook(File.join(download_repo_path, 'subdir'), repo_content)
+      create_cookbook(File.join(download_repo_path, 'subdir1'), repo_content)
+      create_cookbook(File.join(download_repo_path, 'subdir2'), repo_content)
     end
 
     def repo
       r = super
-      r.cookbooks_path = 'subdir'
+      r.cookbooks_path = ['subdir1', 'subdir2']
       r
     end
   end

@@ -21,9 +21,20 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+require File.expand_path(File.join(File.dirname(__FILE__), "svn_scraper_spec_helper"))
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'lib',
-                                   'right_scraper_base'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_svn'))
+module RightScale
+  class MultiSvnSpecHelper < SvnScraperSpecHelper
+    def make_cookbooks
+      super
+      create_cookbook(File.join(repo_path, 'subdir1'), repo_content)
+      create_cookbook(File.join(repo_path, 'subdir2'), repo_content)
+    end
+
+    def repo
+      r = super
+      r.cookbooks_path = ['subdir1', 'subdir2']
+      r
+    end
+  end
+end
