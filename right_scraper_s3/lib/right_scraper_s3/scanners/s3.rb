@@ -47,6 +47,7 @@ module RightScale
                               aws_secret_access_key=s3_secret,
                               :logger => Logger.new)
         @bucket = s3.bucket(options.fetch(:s3_bucket))
+        raise "Need an actual, existing S3 bucket!" if @bucket.nil?
       end
 
       # Upon ending a scan for a cookbook, upload the cookbook

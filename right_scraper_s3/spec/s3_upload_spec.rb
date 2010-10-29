@@ -61,6 +61,42 @@ describe RightScale::Scanners::S3Upload do
             ENV['AMAZON_ACCESS_KEY_ID'] && ENV['AMAZON_SECRET_ACCESS_KEY']
   end
 
+  context "given a bucket that doesn't exist" do
+    before(:each) do
+      setup_download_repo
+    end
+
+    after(:each) do
+      delete_download_repo
+    end
+
+    before(:each) do
+      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                               :repo_type    => :download,
+                                               :url          => "file:///#{@download_file}")
+      @s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
+                            aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
+                            :logger => RightScale::Logger.new)
+      FileUtils.rm_rf(RightScale::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
+    end
+
+    it 'should raise an exception immediately' do
+      bucket_name = 'this-bucket-does-not-exist'
+      @s3.bucket(bucket_name).should be_nil
+      lambda {
+      @scraper = @scraperclass.new(@repo,
+                                   :scanners => [RightScale::Scanners::Metadata,
+                                                 RightScale::Scanners::Manifest,
+                                                 RightScale::Scanners::S3Upload],
+                                   :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
+                                   :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
+                                   :s3_bucket => bucket_name,
+                                   :max_bytes => 1024**2,
+                                   :max_seconds => 20)
+        }.should raise_exception(/Need an actual, existing S3 bucket!/)
+    end
+  end
+
   context 'given a download repository with the S3UploadScanner' do
     before(:each) do
       setup_download_repo
