@@ -40,6 +40,9 @@ describe RightScale::Repository do
       make_repo "git://rightscale.com/%20CBLAH"
     end.should_not raise_exception
     lambda do
+      make_repo "git@rightscale.com:/%20CBLAH"
+    end.should_not raise_exception
+    lambda do
       make_repo "git+ssh://rightscale.com/%20CBLAH"
     end.should_not raise_exception
     lambda do

@@ -80,11 +80,10 @@ describe RightScale::Repositories::Git do
                                                :url => "git://foo.bar.baz.quux/%20CBLAH",
                                                :tag => 'foo',
                                                :first_credential => "foo:b/ar")
-      p @repo
     end
 
     it 'should have a checkout hash' do
-      @repo.checkout_hash.should == '9985f68cc380c3f57315fb4055b469b643115382'
+      @repo.checkout_hash.should == '988531b4e8433788fd620d778bea195cde74ebdc'
     end
 
     it_should_behave_like 'git repository'
@@ -97,11 +96,10 @@ describe RightScale::Repositories::Git do
                                                :url => "foo@bar.baz.quux:/%20CBLAH",
                                                :tag => 'foo',
                                                :first_credential => "foo:b/ar")
-      p @repo
     end
 
     it 'should have a checkout hash' do
-      @repo.checkout_hash.should == '9985f68cc380c3f57315fb4055b469b643115382'
+      @repo.checkout_hash.should == '57e583d27b485809957b1893f41af35620956b08'
     end
 
     it_should_behave_like 'git repository'
