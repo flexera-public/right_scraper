@@ -56,12 +56,17 @@ module RightScale
         super
         @temporary = !options.has_key?(:directory)
         @basedir = options[:directory] || Dir.mktmpdir
-        setup_dir
-        @logger.operation(:initialize, "setting up in #{basedir}") do
-          FileUtils.mkdir_p(basedir)
-          @stack = []
-          @queue = (repository.cookbooks_path || [""]).reverse
-          pop_queue
+        begin
+          setup_dir
+          @logger.operation(:initialize, "setting up in #{basedir}") do
+            FileUtils.mkdir_p(basedir)
+            @stack = []
+            @queue = (repository.cookbooks_path || [""]).reverse
+            pop_queue
+          end
+        rescue
+          close
+          raise
         end
       end
 

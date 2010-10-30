@@ -81,6 +81,27 @@ describe RightScale::Cookbook do
       ENV['SSH_AGENT_PID'].should == oldpid
     end
   end
+
+  context 'with an invalid git repository with a real credential' do
+    before(:each) do
+      passwd_key = File.open(File.join(File.dirname(__FILE__), 'demokey')).read
+      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                                     :repo_type => :git,
+                                                     :url => "http://example.example/foo/bar/baz",
+                                                     :first_credential => passwd_key)
+    end
+
+    it_should_behave_like 'git repositories'
+
+    it 'should close the connection to the agent' do
+      oldpid = ENV['SSH_AGENT_PID']
+      lambda {
+        scraper = @repository.scraper.new(@repository)
+      }.should raise_exception(Git::GitExecuteError)
+      ENV['SSH_AGENT_PID'].should == oldpid
+    end
+  end
+
   context 'with a git repository' do
     before(:each) do
       @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
