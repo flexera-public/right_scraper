@@ -44,6 +44,14 @@ describe RightScale::Processes::SSHAgent do
     end
   end
 
+  it 'should set SSH_ASKPASS' do
+    RightScale::Processes::SSHAgent.with do |agent|
+      ENV.should have_key('SSH_ASKPASS')
+      ENV['SSH_ASKPASS'].should_not be_empty
+      ["/bin/false", "/usr/bin/false"].should include ENV['SSH_ASKPASS']
+    end
+  end
+
   it 'should be able to load the demo key' do
     RightScale::Processes::SSHAgent.with do |agent|
       demofile = File.expand_path(File.join(File.dirname(__FILE__), 'demokey'))
@@ -55,6 +63,21 @@ describe RightScale::Processes::SSHAgent do
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAxJsM8sZ6++Nky/ogLEYhKtKivB37sPB9M6Un0z6PkIRgUsGdntMJqP1U6820jH+n1/lOH/MnlUsvzoo8DnOdbe9kGOHBmtWmNcjqacZUn9DbpbjvlI7RUUmZ5OBKn8Pjt2qbSXnnci9Q5j5Rgh6DR8A70S04FIUP8AGpCIO23BhA928CiM18zN5mBvzET7L2DYiNhJJFsFWMbN13CdukTjNVNLETEusNVUU09G1NxX4esKky7tHh1c9APFvu98KjYOHkv1o7dB7T4dO3KaKCNWINCHeeoE+QmAkhAZwI72ijRkPxH+QMisMsHucPFvgOVVObxHWu9hRlNWIOodANHQ== #{demofile}
 FULLOUTPUT
     end
+  end
+
+  it 'should fail on the passworded key' do
+    pid = nil
+    lambda {
+      RightScale::Processes::SSHAgent.with do |agent|
+        pid = ENV['SSH_AGENT_PID'].to_i
+        demofile = File.expand_path(File.join(File.dirname(__FILE__), 'password_key'))
+        File.chmod(0600, demofile)
+        agent.add_keyfile(demofile)
+      end
+    }.should raise_exception(ProcessWatcher::NonzeroExitCode)
+    lambda {
+      Process.kill(0, pid)
+    }.should raise_exception(Errno::ESRCH)
   end
 
   it 'should be able to load the demo key from memory' do

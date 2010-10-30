@@ -43,6 +43,11 @@ module RightScale
             ENV[$1] = $2
           end
         end
+        if File.exists?('/bin/false')
+          ENV['SSH_ASKPASS'] = '/bin/false'
+        else
+          ENV['SSH_ASKPASS'] = '/usr/bin/false'
+        end
       end
 
       # Close the connection to the SSH agent, and restore +ENV+.
