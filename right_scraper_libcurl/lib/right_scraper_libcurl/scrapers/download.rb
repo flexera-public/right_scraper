@@ -136,7 +136,7 @@ module RightScale
         file.close(true)
         @done = true
 
-        raise "No metadata found for {#repository}" unless cookbook.metadata
+        raise "No metadata found for #{repository}" unless cookbook.metadata
         cookbook
       end
     end
