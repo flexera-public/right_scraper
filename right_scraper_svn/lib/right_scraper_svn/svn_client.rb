@@ -67,7 +67,7 @@ module RightScale
       begin
         yield context
       ensure
-        context.destroy
+        context.destroy if context.respond_to?(:destroy)
       end
     end
   end
