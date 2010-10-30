@@ -34,7 +34,12 @@ module RightScale
         unless @repository.first_credential.nil?
           @agent = RightScale::Processes::SSHAgent.new
           @agent.open
-          @agent.add_key(@repository.first_credential)
+          begin
+            @agent.add_key(@repository.first_credential)
+          rescue
+            @agent.close
+            raise
+          end
         end
         super
       end

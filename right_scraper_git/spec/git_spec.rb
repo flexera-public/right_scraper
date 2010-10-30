@@ -61,6 +61,26 @@ describe RightScale::Cookbook do
       }.should raise_exception(Git::GitExecuteError)
     end
   end
+
+  context 'with a git repository with a credential that requires a password' do
+    before(:each) do
+      passwd_key = File.open(File.join(File.dirname(__FILE__), 'password_key')).read
+      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+                                                     :repo_type => :git,
+                                                     :url => "http://a.site/foo/bar/baz",
+                                                     :first_credential => passwd_key)
+    end
+
+    it_should_behave_like 'git repositories'
+
+    it 'should close the connection to the agent' do
+      oldpid = ENV['SSH_AGENT_PID']
+      lambda {
+        scraper = @repository.scraper.new(@repository)
+      }.should raise_exception(ProcessWatcher::NonzeroExitCode)
+      ENV['SSH_AGENT_PID'].should == oldpid
+    end
+  end
   context 'with a git repository' do
     before(:each) do
       @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
