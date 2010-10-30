@@ -25,34 +25,94 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_git', 'processes', 'ssh'))
 
 describe RightScale::Processes::SSHAgent do
-  it 'should set SSH_AUTH_SOCK' do
-    RightScale::Processes::SSHAgent.with do |agent|
-      ENV.should have_key('SSH_AUTH_SOCK')
-      ENV['SSH_AUTH_SOCK'].should_not be_empty
-      File.exists?(ENV['SSH_AUTH_SOCK']).should == true
+  shared_examples_for 'Environment variables' do
+    def setvar(name, value)
+      if value.nil?
+        ENV.delete name
+      else
+        ENV[name] = value
+      end
+    end
+
+    it 'should set SSH_AUTH_SOCK' do
+      oldsock = ENV['SSH_AUTH_SOCK']
+      RightScale::Processes::SSHAgent.with do |agent|
+        ENV.should have_key('SSH_AUTH_SOCK')
+        ENV['SSH_AUTH_SOCK'].should_not be_empty
+        File.exists?(ENV['SSH_AUTH_SOCK']).should == true
+      end
+      ENV['SSH_AUTH_SOCK'].should == oldsock
+    end
+
+    it 'should set SSH_AGENT_PID' do
+      oldpid = ENV['SSH_AUTH_PID']
+      RightScale::Processes::SSHAgent.with do |agent|
+        ENV.should have_key('SSH_AGENT_PID')
+        ENV['SSH_AGENT_PID'].should_not be_empty
+        # This is a Unixism; sending signal 0 to a process tests whether
+        # it exists, but has no effect on the process.  I have no idea
+        # how to express this on Windows.
+        Process.kill(0, ENV['SSH_AGENT_PID'].to_i).should be_true
+      end
+      ENV['SSH_AUTH_PID'].should == oldpid
+    end
+
+    it 'should set SSH_ASKPASS' do
+      oldpass = ENV['SSH_ASKPASS']
+      RightScale::Processes::SSHAgent.with do |agent|
+        ENV.should have_key('SSH_ASKPASS')
+        ENV['SSH_ASKPASS'].should_not be_empty
+
+        script = File.expand_path(File.join(File.dirname(__FILE__), '..',
+                                            'scripts', 'stub_ssh_askpass'))
+        ENV['SSH_ASKPASS'].should == script
+      end
+      ENV['SSH_ASKPASS'].should == oldpass
     end
   end
 
-  it 'should set SSH_AGENT_PID' do
-    RightScale::Processes::SSHAgent.with do |agent|
-      ENV.should have_key('SSH_AGENT_PID')
-      ENV['SSH_AGENT_PID'].should_not be_empty
-      # This is a Unixism; sending signal 0 to a process tests whether
-      # it exists, but has no effect on the process.  I have no idea
-      # how to express this on Windows.
-      Process.kill(0, ENV['SSH_AGENT_PID'].to_i).should be_true
+  context 'with no relevant environment variables' do
+    before(:each) do
+      @display = ENV['DISPLAY']
+      @askpass = ENV['SSH_ASKPASS']
+      @sshauth = ENV['SSH_AUTH_SOCK']
+      @agentpid = ENV['SSH_AGENT_PID']
+      ENV.delete 'DISPLAY'
+      ENV.delete 'SSH_ASKPASS'
+      ENV.delete 'SSH_AUTH_SOCK'
+      ENV.delete 'SSH_AGENT_PID'
     end
+
+    after(:each) do
+      setvar 'DISPLAY', @display
+      setvar 'SSH_ASKPASS', @askpass
+      setvar 'SSH_AUTH_SOCK', @sshauth
+      setvar 'SSH_AGENT_PID', @agentpid
+    end
+
+    it_should_behave_like 'Environment variables'
   end
 
-  it 'should set SSH_ASKPASS' do
-    RightScale::Processes::SSHAgent.with do |agent|
-      ENV.should have_key('SSH_ASKPASS')
-      ENV['SSH_ASKPASS'].should_not be_empty
-
-      script = File.expand_path(File.join(File.dirname(__FILE__), '..',
-                                          'scripts', 'stub_ssh_askpass'))
-      ENV['SSH_ASKPASS'].should == script
+  context 'with relevant environment variables set' do
+    before(:each) do
+      @display = ENV['DISPLAY']
+      @askpass = ENV['SSH_ASKPASS']
+      @sshauth = ENV['SSH_AUTH_SOCK']
+      @agentpid = ENV['SSH_AGENT_PID']
+      ENV['DISPLAY'] = "foo"
+      ENV['SSH_ASKPASS'] = "bar"
+      ENV['SSH_AUTH_SOCK'] = "baz"
+      ENV['SSH_AGENT_PID'] = "quux"
     end
+
+    after(:each) do
+      setvar 'DISPLAY', @display
+      setvar 'SSH_ASKPASS', @askpass
+      setvar 'SSH_AUTH_SOCK', @sshauth
+      setvar 'SSH_AGENT_PID', @agentpid
+    end
+
+    it_should_behave_like 'Environment variables'
   end
 
   it 'should be able to load the demo key' do

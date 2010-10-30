@@ -54,12 +54,31 @@ module RightScale
         begin
           ProcessWatcher.watch('ssh-agent', ['-k'], nil, -1, 10)
         ensure
-          ENV['SSH_AGENT_PID'] = @agentpid unless @agentpid.nil?
-          ENV['DISPLAY'] = @display unless @display.nil?
-          ENV['SSH_ASKPASS'] = @askpass unless @askpass.nil?
-          ENV['SSH_AUTH_SOCK'] = @sshauth unless @sshauth.nil?
+          setvar 'SSH_AGENT_PID', @agentpid
+          setvar 'DISPLAY', @display
+          setvar 'SSH_ASKPASS', @askpass
+          setvar 'SSH_AUTH_SOCK', @sshauth
         end
       end
+
+      # Set an environment variable to a value.  If +value+ is nil,
+      # delete the variable instead.
+      #
+      # === Parameters
+      # key(String):: environment variable name
+      # value(String or nil):: proposed new value
+      #
+      # === Return
+      # true
+      def setvar(key, value)
+        if value.nil?
+          ENV.delete(key)
+        else
+          ENV[key] = value
+        end
+        true
+      end
+      private :setvar
 
       # Add the given key data to the ssh agent.
       #
