@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+STDERR.puts "Attempted to use credentials that require passwords; bailing"
+exit 1

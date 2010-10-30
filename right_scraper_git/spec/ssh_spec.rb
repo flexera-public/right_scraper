@@ -48,7 +48,10 @@ describe RightScale::Processes::SSHAgent do
     RightScale::Processes::SSHAgent.with do |agent|
       ENV.should have_key('SSH_ASKPASS')
       ENV['SSH_ASKPASS'].should_not be_empty
-      ["/bin/false", "/usr/bin/false"].should include ENV['SSH_ASKPASS']
+
+      script = File.expand_path(File.join(File.dirname(__FILE__), '..',
+                                          'scripts', 'stub_ssh_askpass'))
+      ENV['SSH_ASKPASS'].should == script
     end
   end
 
@@ -74,7 +77,7 @@ FULLOUTPUT
         File.chmod(0600, demofile)
         agent.add_keyfile(demofile)
       end
-    }.should raise_exception(ProcessWatcher::NonzeroExitCode)
+    }.should raise_exception(ProcessWatcher::NonzeroExitCode, /Attempted to use credentials that require passwords; bailing/)
     lambda {
       Process.kill(0, pid)
     }.should raise_exception(Errno::ESRCH)

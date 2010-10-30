@@ -43,11 +43,10 @@ module RightScale
             ENV[$1] = $2
           end
         end
-        if File.exists?('/bin/false')
-          ENV['SSH_ASKPASS'] = '/bin/false'
-        else
-          ENV['SSH_ASKPASS'] = '/usr/bin/false'
-        end
+        ENV['SSH_ASKPASS'] = File.expand_path(File.join(File.dirname(__FILE__),
+                                                        '..', '..', '..',
+                                                        'scripts',
+                                                        'stub_ssh_askpass'))
       end
 
       # Close the connection to the SSH agent, and restore +ENV+.
