@@ -109,15 +109,17 @@ module RightScale
       @logger.callback = callback
       begin
         @logger.operation(:scraping, "from #{repo}") do
-          scraper = repo.scraper.new(repo, @options.merge({:logger => @logger}))
+          scraper = nil
           begin
+            scraper = repo.scraper.new(repo,
+                                       @options.merge({:logger => @logger}))
             cookbook = scraper.next
             until cookbook.nil?
               @cookbooks << cookbook
               cookbook = scraper.next
             end
           ensure
-            scraper.close
+            scraper.close unless scraper.nil?
           end
         end
       rescue
