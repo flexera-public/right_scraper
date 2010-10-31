@@ -52,12 +52,56 @@ module RightScale
       # Close the connection to the SSH agent, and restore +ENV+.
       def close
         begin
-          ProcessWatcher.watch('ssh-agent', ['-k'], nil, -1, 10)
+          lay_to_rest(ENV['SSH_AGENT_PID'].to_i)
         ensure
           setvar 'SSH_AGENT_PID', @agentpid
           setvar 'DISPLAY', @display
           setvar 'SSH_ASKPASS', @askpass
           setvar 'SSH_AUTH_SOCK', @sshauth
+        end
+      end
+
+      # Kill +pid+.  Initially use SIGTERM to be kind and a good
+      # citizen.  If it doesn't die after +timeout+ seconds, use
+      # SIGKILL instead.  In any case, the process will die.  The
+      # status information is accessible in $?.
+      #
+      # === Parameters
+      # pid(Fixnum):: pid of process to kill
+      # timeout(Fixnum):: time in seconds to wait before forcing
+      #                   process to die.  Defaults to 10 seconds.
+      def lay_to_rest(pid, timeout=10)
+        Process.kill('TERM', pid)
+        time_waited = 0
+        loop do
+          if time_waited >= timeout
+            Process.kill('KILL', pid)
+            # can't waitpid here, because the ssh-agent isn't our
+            # child.  Still, after SIGKILL it will die and init will
+            # reap it, so continue
+            return
+          end
+          # still can't waitpid here, so we see if it's still alive
+          return unless still_alive?(pid)
+          sleep 1
+          time_waited += 1
+        end
+      end
+
+      # Check to see if the process +pid+ is still alive, by sending
+      # the 0 signal and checking for an exception.
+      #
+      # === Parameters
+      # pid(Fixnum):: pid of process to check on
+      #
+      # === Return
+      # Boolean:: true if process is still alive
+      def still_alive?(pid)
+        begin
+          Process.kill(0, pid)
+          true
+        rescue Errno::ESRCH
+          false
         end
       end
 
