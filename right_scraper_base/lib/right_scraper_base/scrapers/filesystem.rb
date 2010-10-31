@@ -86,8 +86,10 @@ module RightScale
       end
 
       def reset_stack
-        @stack.each {|s| s.close}
-        @stack = []
+        if @stack
+          @stack.each {|s| s.close}
+          @stack = []
+        end
       end
 
       # Close the scraper, cleaning up any temporary data.

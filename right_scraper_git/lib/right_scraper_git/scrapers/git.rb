@@ -31,17 +31,14 @@ module RightScale
       # underlying repository has a credential we need to initialize a
       # fresh SSHAgent and add the credential to it.
       def setup_dir
-        unless @repository.first_credential.nil?
-          @agent = RightScale::Processes::SSHAgent.new
-          @agent.open
-          @agent.add_key(@repository.first_credential)
+        if @repository.first_credential.nil?
+          super
+        else
+          RightScale::Processes::SSHAgent.with do |agent|
+            agent.add_key(@repository.first_credential)
+            super
+          end
         end
-        super
-      end
-
-      # Close the ssh agent if one has been opened.
-      def close
-        @agent.close unless @agent.nil?
       end
 
       # Return true if a checkout exists.  Currently tests for .git in
