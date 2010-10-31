@@ -32,6 +32,7 @@ module RightScale
         @askpass = ENV['SSH_ASKPASS']
         @sshauth = ENV['SSH_AUTH_SOCK']
         @agentpid = ENV['SSH_AGENT_PID']
+        @home = ENV['HOME']
       end
 
       # Open a connection to the SSH agent and set +ENV+
@@ -47,6 +48,7 @@ module RightScale
                                                         '..', '..', '..',
                                                         'scripts',
                                                         'stub_ssh_askpass'))
+        ENV['HOME'] = "/dev/null"
       end
 
       # Close the connection to the SSH agent, and restore +ENV+.
@@ -58,6 +60,7 @@ module RightScale
           setvar 'DISPLAY', @display
           setvar 'SSH_ASKPASS', @askpass
           setvar 'SSH_AUTH_SOCK', @sshauth
+          setvar 'HOME', @home
         end
       end
 

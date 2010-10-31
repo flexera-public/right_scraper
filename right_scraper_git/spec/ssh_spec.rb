@@ -69,6 +69,16 @@ describe RightScale::Processes::SSHAgent do
       end
       ENV['SSH_ASKPASS'].should == oldpass
     end
+
+    it 'should set HOME' do
+      oldhome = ENV['HOME']
+      RightScale::Processes::SSHAgent.with do |agent|
+        ENV.should have_key('HOME')
+        ENV['HOME'].should_not be_empty
+        ENV['HOME'].should == "/dev/null"
+      end
+      ENV['HOME'].should == oldhome
+    end
   end
 
   context 'with no relevant environment variables' do
@@ -77,10 +87,12 @@ describe RightScale::Processes::SSHAgent do
       @askpass = ENV['SSH_ASKPASS']
       @sshauth = ENV['SSH_AUTH_SOCK']
       @agentpid = ENV['SSH_AGENT_PID']
+      @home = ENV['HOME']
       ENV.delete 'DISPLAY'
       ENV.delete 'SSH_ASKPASS'
       ENV.delete 'SSH_AUTH_SOCK'
       ENV.delete 'SSH_AGENT_PID'
+      ENV.delete 'HOME'
     end
 
     after(:each) do
@@ -88,6 +100,7 @@ describe RightScale::Processes::SSHAgent do
       setvar 'SSH_ASKPASS', @askpass
       setvar 'SSH_AUTH_SOCK', @sshauth
       setvar 'SSH_AGENT_PID', @agentpid
+      setvar 'HOME', @home
     end
 
     it_should_behave_like 'Environment variables'
@@ -99,10 +112,12 @@ describe RightScale::Processes::SSHAgent do
       @askpass = ENV['SSH_ASKPASS']
       @sshauth = ENV['SSH_AUTH_SOCK']
       @agentpid = ENV['SSH_AGENT_PID']
+      @home = ENV['HOME']
       ENV['DISPLAY'] = "foo"
       ENV['SSH_ASKPASS'] = "bar"
       ENV['SSH_AUTH_SOCK'] = "baz"
       ENV['SSH_AGENT_PID'] = "quux"
+      ENV['HOME'] = "fred"
     end
 
     after(:each) do
@@ -110,6 +125,7 @@ describe RightScale::Processes::SSHAgent do
       setvar 'SSH_ASKPASS', @askpass
       setvar 'SSH_AUTH_SOCK', @sshauth
       setvar 'SSH_AGENT_PID', @agentpid
+      setvar 'HOME', @home
     end
 
     it_should_behave_like 'Environment variables'
