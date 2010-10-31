@@ -34,8 +34,7 @@ describe RightScraper::Cookbook do
     it 'should have the right position' do
       parse_url(@repository, "/a")[:position].should == "/a"
     end
-    it 'should have no credentials' do
-      parse_url(@repository)[:username].should be_nil
+    it 'should have no password' do
       parse_url(@repository)[:password].should be_nil
     end
   end

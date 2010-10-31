@@ -81,8 +81,12 @@ module RightScraper
     def to_url
       repo_url = @repository.to_url
       if repo_url.userinfo
-        repo_url.user = nil
-        repo_url.password = nil
+        if repository.repo_type == :git
+          repo_url.password = nil
+        else
+          repo_url.user = nil
+          repo_url.password = nil
+        end
       end
       unless pos.nil?
         query = Cookbook.parse_query(repo_url.query || "")

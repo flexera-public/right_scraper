@@ -193,13 +193,29 @@ module RightScraper
     # === Returns
     # URI:: URI with username and password identification added
     def add_users_to(uri, username=nil, password=nil)
-      uri = URI.parse(uri) if uri.instance_of?(String)
-      if username
-        userinfo = URI.escape(username, USERPW)
-        userinfo += ":" + URI.escape(password, USERPW) unless password.nil?
-        uri.userinfo = userinfo
+      begin
+        uri = URI.parse(uri) if uri.instance_of?(String)
+        if username
+          userinfo = URI.escape(username, USERPW)
+          userinfo += ":" + URI.escape(password, USERPW) unless password.nil?
+          uri.userinfo = userinfo
+        end
+        uri
+      rescue URI::InvalidURIError
+        if uri =~ PATTERN::GIT_URI
+          user, host, path = $1, $2, $3
+          userinfo = URI.escape(user, USERPW)
+          userinfo += ":" + URI.escape(username, USERPW) unless username.nil?
+          path = "/" + path unless path.start_with?('/')
+          URI::Generic::build({:scheme => "ssh",
+                                :userinfo => userinfo,
+                                :host => host,
+                                :path => path
+                              })
+        else
+          raise
+        end
       end
-      uri
     end
 
     module PATTERN

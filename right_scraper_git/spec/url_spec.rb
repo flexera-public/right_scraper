@@ -28,31 +28,76 @@ describe RightScraper::Repository do
     @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :git,
                                              :url => url,
-                                             :first_credential => "foo:b/ar")
+                                             :first_credential => "foo")
   end
   it_should_behave_like "Production mode environment"
 
-  it 'should not throw an error when creating a repository for Git URIs' do
-    lambda do
-      make_repo "http://rightscale.com/%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "git://rightscale.com/%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "git@rightscale.com:/%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "git-foo@rightscale.com:/%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "git-foo@rightscale.com:%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "git+ssh://rightscale.com/%20CBLAH"
-    end.should_not raise_exception
-    lambda do
-      make_repo "ssh://rightscale.com/%20CBLAH"
-    end.should_not raise_exception
+  context 'with Git URIs' do
+    it 'should not throw an error for http URIs' do
+      lambda do
+        make_repo "http://rightscale.com/%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for git URIs' do
+      lambda do
+        make_repo "git://rightscale.com/%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for absolute SCP URIs' do
+      lambda do
+        make_repo "git@rightscale.com:/%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for SCP URIs with dashes in the username' do
+      lambda do
+        make_repo "git-foo@rightscale.com:/%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for relative SCP URIs' do
+      lambda do
+        make_repo "git-foo@rightscale.com:%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for git+ssh URIs' do
+      lambda do
+        make_repo "git+ssh://rightscale.com/%20CBLAH"
+      end.should_not raise_exception
+    end
+    it 'should not throw an error for ssh URIs' do
+      lambda do
+        make_repo "ssh://rightscale.com/%20CBLAH"
+      end.should_not raise_exception
+    end
+  end
+
+  context '#to_url' do
+    it 'should correctly convert http URIs' do
+      make_repo("http://rightscale.com/%20CBLAH").to_url.to_s.should ==
+        "http://foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert git URIs' do
+      make_repo("git://rightscale.com/%20CBLAH").to_url.to_s.should ==
+        "git://foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert SCP URIs' do
+      make_repo("git@rightscale.com:/%20CBLAH").to_url.to_s.should ==
+        "ssh://git:foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert SCP URIs with dashes in the username' do
+      make_repo("git-foo@rightscale.com:/%20CBLAH").to_url.to_s.should ==
+        "ssh://git-foo:foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert relative SCP URIs' do
+      make_repo("git-foo@rightscale.com:%20CBLAH").to_url.to_s.should ==
+        "ssh://git-foo:foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert git+ssh URIs' do
+      make_repo("git+ssh://rightscale.com/%20CBLAH").to_url.to_s.should ==
+        "git+ssh://foo@rightscale.com/%20CBLAH"
+    end
+    it 'should correctly convert ssh URIs' do
+      make_repo("ssh://rightscale.com/%20CBLAH").to_url.to_s.should ==
+        "ssh://foo@rightscale.com/%20CBLAH"
+    end
   end
 end
