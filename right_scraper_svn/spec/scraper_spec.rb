@@ -78,8 +78,6 @@ describe RightScale::Scraper do
       callback.should_receive(:call).with(:commit, :next, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :next, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :next, "", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:begin, :close, "", nil).at_least.once.at_most.once
-      callback.should_receive(:call).with(:commit, :close, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :scraping, "from svn #{@repo.url}", nil).at_least.once.at_most.once
       @scraper.scrape(@repo) do |phase, operation, explanation, exception|
         callback.call(phase, operation, explanation, exception)

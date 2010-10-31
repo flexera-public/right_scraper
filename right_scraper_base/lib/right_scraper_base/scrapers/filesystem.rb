@@ -93,10 +93,8 @@ module RightScale
       # Close the scraper, cleaning up any temporary data.
       def close
         super
-        @logger.operation(:close) do
-          reset_stack
-          FileUtils.remove_entry_secure @basedir if @temporary
-        end
+        reset_stack
+        FileUtils.remove_entry_secure @basedir if @temporary
       end
 
       # Return true if this scraper is closed.
