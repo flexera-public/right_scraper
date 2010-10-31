@@ -27,14 +27,14 @@ unless RUBY_PLATFORM=~/mswin/
 require File.expand_path(File.join(File.dirname(__FILE__), 'command_line_download_scraper_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 
-describe RightScale::Scrapers::CommandLineDownload do
+describe RightScraper::Scrapers::CommandLineDownload do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::ScraperHelper
-  include RightScale::SpecHelpers
+  include RightScraper::ScraperHelper
+  include RightScraper::SpecHelpers
 
   before(:each) do
-    @helper = RightScale::CommandLineDownloadScraperSpecHelper.new
+    @helper = RightScraper::CommandLineDownloadScraperSpecHelper.new
     @repo = @helper.repo
   end
 
@@ -44,7 +44,7 @@ describe RightScale::Scrapers::CommandLineDownload do
   end
 
   before(:all) do
-    @scraperclass = RightScale::Scrapers::CommandLineDownload
+    @scraperclass = RightScraper::Scrapers::CommandLineDownload
   end
 
   context 'given a password protected repository' do

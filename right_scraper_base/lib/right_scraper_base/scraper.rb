@@ -22,7 +22,7 @@
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
 
-module RightScale
+module RightScraper
   # Library main entry point. Instantiate this class and call the scrape
   # method to download or update a remote repository to the local disk.
   class Scraper
@@ -77,9 +77,9 @@ module RightScale
     # when possible with further calls.
     #
     # === Parameters
-    # repo(Hash|RightScale::Repository):: Repository to be scraped
-    #                                     Note: repo can either be a Hash or a RightScale::Repository instance.
-    #                                     See the RightScale::Repository class for valid Hash keys.
+    # repo(Hash|RightScraper::Repository):: Repository to be scraped
+    #                                     Note: repo can either be a Hash or a RightScraper::Repository instance.
+    #                                     See the RightScraper::Repository class for valid Hash keys.
     #
     # === Block
     # If a block is given, it will be called back with progress information
@@ -105,7 +105,7 @@ module RightScale
     # 'Invalid repository type':: If repository type is not known
     def scrape(repo, incremental=true, &callback)
       errorlen = errors.size
-      repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
+      repo = RightScraper::Repository.from_hash(repo) if repo.is_a?(Hash)
       @logger.callback = callback
       begin
         @logger.operation(:scraping, "from #{repo}") do
@@ -133,12 +133,12 @@ module RightScale
     # Path to directory where given repo should be or was downloaded
     #
     # === Parameters
-    # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
+    # repo(Hash|RightScraper::Repository):: Remote repository corresponding to local directory
     #
     # === Return
     # String:: Path to local directory that corresponds to given repository
     def repo_dir(repo)
-      RightScale::Scrapers::ScraperBase.repo_dir(scrape_dir, repo)
+      RightScraper::Scrapers::ScraperBase.repo_dir(scrape_dir, repo)
     end
 
     # (Array):: Error messages in case of failure

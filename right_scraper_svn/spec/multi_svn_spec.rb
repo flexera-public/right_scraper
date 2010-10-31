@@ -25,20 +25,20 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'multi_svn_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'scraper_helper'))
 
-describe RightScale::Scrapers::Svn do
+describe RightScraper::Scrapers::Svn do
   context 'in a multiple directory situation with a cookbooks_path set' do
     it_should_behave_like "Development mode environment"
 
-    include RightScale::ScraperHelper
+    include RightScraper::ScraperHelper
 
     before(:all) do
-      @scraperclass = RightScale::Scrapers::Svn
+      @scraperclass = RightScraper::Scrapers::Svn
       @ignore = ['.svn']
     end
 
     context 'given a SVN repository' do
       before(:each) do
-        @helper = RightScale::MultiSvnSpecHelper.new
+        @helper = RightScraper::MultiSvnSpecHelper.new
         @repo = @helper.repo
       end
 

@@ -26,7 +26,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'builders', 'fi
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'builders', 'union'))
 require 'tmpdir'
 
-module RightScale
+module RightScraper
   module Scrapers
     # Base class for generic filesystem based scrapers.  Subclasses
     # should override #ignorable_paths, and add some setup code to
@@ -50,7 +50,7 @@ module RightScale
       # <tt>:directory</tt>:: Directory to perform scraper work in
       #
       # === Parameters ===
-      # repository(RightScale::Repository):: repository to scrape
+      # repository(RightScraper::Repository):: repository to scrape
       # options(Hash):: scraper options
       def initialize(repository, options={})
         super
@@ -209,7 +209,7 @@ module RightScale
       # dir(Dir):: directory to read cookbook from
       def read_cookbook(dir)
         @logger.operation(:reading_cookbook, "from #{dir.path}") do
-          cookbook = RightScale::Cookbook.new(@repository, nil, strip_basedir(dir.path))
+          cookbook = RightScraper::Cookbook.new(@repository, nil, strip_basedir(dir.path))
           @builder.go(dir.path, cookbook)
           cookbook
         end

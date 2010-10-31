@@ -24,11 +24,11 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'download', 'command_line_download_scraper_spec_helper'))
 
-describe RightScale::Scanners::Scanner do
+describe RightScraper::Scanners::Scanner do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @helper = RightScale::CommandLineDownloadScraperSpecHelper.new
+    @helper = RightScraper::CommandLineDownloadScraperSpecHelper.new
     @repo = @helper.repo
   end
 
@@ -39,7 +39,7 @@ describe RightScale::Scanners::Scanner do
   it 'should be called correctly' do
     scanner = flexmock("scanner")
     scanner.should_receive(:new).with(Hash).once.and_return(scanner)
-    scanner.should_receive(:begin).with(RightScale::Cookbook).once
+    scanner.should_receive(:begin).with(RightScraper::Cookbook).once
     scanner.should_receive(:notice_dir).with(nil).once.and_return(true)
     scanner.should_receive(:notice).with("file1", Proc).once
     scanner.should_receive(:notice_dir).with("folder1").once.and_return(true)
@@ -47,7 +47,7 @@ describe RightScale::Scanners::Scanner do
     scanner.should_receive(:notice).with("folder1/file3", Proc).once
     scanner.should_receive(:notice_dir).with("folder2").once.and_return(false)
     scanner.should_receive(:notice).with("metadata.json", Proc).once
-    scanner.should_receive(:end).with(RightScale::Cookbook).once
+    scanner.should_receive(:end).with(RightScraper::Cookbook).once
     scanner.should_receive(:finish).with().once
 
     @scraper = @repo.scraper.new(@repo, :scanners => [scanner])

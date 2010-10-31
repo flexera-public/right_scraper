@@ -22,10 +22,10 @@
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), 'cookbook_helper'))
 
-describe RightScale::Cookbook do
+describe RightScraper::Cookbook do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::CookbookHelper
+  include RightScraper::CookbookHelper
 
   shared_examples_for 'download repositories' do
     it_should_behave_like 'generic repositories'
@@ -44,7 +44,7 @@ describe RightScale::Cookbook do
 
   context 'with a download repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "user",
@@ -71,7 +71,7 @@ describe RightScale::Cookbook do
 
   context 'with a download repository with a port' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "http://a.site:23/foo/bar/baz",
                                                      :first_credential => "user",
@@ -83,7 +83,7 @@ describe RightScale::Cookbook do
 
   context 'with a download repository with just a user' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "user")
@@ -94,7 +94,7 @@ describe RightScale::Cookbook do
 
   context 'with a weird download repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "urn:a.site:stuff")
     end
@@ -104,7 +104,7 @@ describe RightScale::Cookbook do
 
   context 'with a malicious download repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "http://foo.bar.baz.quux/%20CBLAH",
                                                      :first_credential => "foo:b/ar",
@@ -116,7 +116,7 @@ describe RightScale::Cookbook do
 
   context 'with a download repository that includes a query' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
                                                      :url => "http://foo.bar.baz.quux/stuff?q=bar")
     end
@@ -128,7 +128,7 @@ describe RightScale::Cookbook do
     context 'for a download repository' do
       before(:each) do
         @url = "download:http://foo:bar@baz.com/foo/bar/baz?q=blah"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should resolve to a download repository' do
         @cookbook.repository.repo_type.should == :download
@@ -145,7 +145,7 @@ describe RightScale::Cookbook do
     context 'for a download repository with strange credentials' do
       before(:each) do
         @url = "download:http://foo%3Ab%2Far:foo%40bar@baz.com/foo/bar/baz?q=blah"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should resolve to a download repository' do
         @cookbook.repository.repo_type.should == :download

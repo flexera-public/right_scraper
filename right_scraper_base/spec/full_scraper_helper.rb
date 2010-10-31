@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module FullScraperHelpers
     shared_examples_for "Normal repository contents" do
       it 'should scrape' do

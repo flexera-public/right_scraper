@@ -23,7 +23,7 @@
 require 'tempfile'
 require 'process_watcher'
 
-module RightScale
+module RightScraper
   module Processes
     # Manage a dedicated SSH agent.
     class SSHAgent

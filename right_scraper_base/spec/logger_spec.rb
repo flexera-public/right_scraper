@@ -26,10 +26,10 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base', 'loggers', 'noisy'))
 
-describe RightScale::Logger do
+describe RightScraper::Logger do
   before(:each) do
     @stream = StringIO.new()
-    @logger = RightScale::Logger.new(@stream)
+    @logger = RightScraper::Logger.new(@stream)
     @logger.level = Logger::WARN
   end
 
@@ -79,10 +79,10 @@ describe RightScale::Logger do
   end
 end
 
-describe RightScale::Loggers::NoisyLogger do
+describe RightScraper::Loggers::NoisyLogger do
   before(:each) do
     @stream = StringIO.new()
-    @logger = RightScale::Loggers::NoisyLogger.new(@stream)
+    @logger = RightScraper::Loggers::NoisyLogger.new(@stream)
   end
 
   after(:each) do

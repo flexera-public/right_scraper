@@ -24,11 +24,11 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'download', 'command_line_download_scraper_spec_helper'))
 
-describe RightScale::Builders::Builder do
+describe RightScraper::Builders::Builder do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @helper = RightScale::CommandLineDownloadScraperSpecHelper.new
+    @helper = RightScraper::CommandLineDownloadScraperSpecHelper.new
     @repo = @helper.repo
   end
 
@@ -39,7 +39,7 @@ describe RightScale::Builders::Builder do
   it 'should be called correctly' do
     builder = flexmock("builder")
     builder.should_receive(:new).with(Hash).once.and_return(builder)
-    builder.should_receive(:go).with(String, RightScale::Cookbook).once
+    builder.should_receive(:go).with(String, RightScraper::Cookbook).once
     builder.should_receive(:finish).with().once
 
     @scraper = @repo.scraper.new(@repo, :builders => [builder])

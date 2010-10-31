@@ -23,11 +23,11 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 
-describe RightScale::Repositories::Svn do
+describe RightScraper::Repositories::Svn do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+    @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :svn,
                                              :url => "http://foo.bar.baz.quux/%20CBLAH",
                                              :tag => 'foo',

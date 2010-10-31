@@ -24,7 +24,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'digest/sha1'
 
-module RightScale
+module RightScraper
   module Scanners
     # Build manifests from a filesystem.
     class Manifest < Scanner
@@ -37,7 +37,7 @@ module RightScale
       # Complete a scan for the given cookbook.
       #
       # === Parameters ===
-      # cookbook(RightScale::Cookbook):: cookbook to scan
+      # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
         cookbook.manifest = @manifest
       end

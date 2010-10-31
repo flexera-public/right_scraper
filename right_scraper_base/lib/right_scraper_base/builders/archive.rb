@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'process_watcher'
 require 'digest/sha1'
 
-module RightScale
+module RightScraper
   module Builders
     # Class for building tarballs from filesystem based checkouts.
     class Archive < Builder
@@ -48,7 +48,7 @@ module RightScale
       #
       # === Parameters
       # dir(String):: directory where cookbook exists
-      # cookbook(RightScale::Cookbook):: cookbook being built
+      # cookbook(RightScraper::Cookbook):: cookbook being built
       def go(dir, cookbook)
         @logger.operation(:creating_archive) do
           exclude_declarations =

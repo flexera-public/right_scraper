@@ -28,15 +28,15 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'git_scraper_spec_hel
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScale::Scraper do
+describe RightScraper::Scraper do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::FullScraperHelpers
+  include RightScraper::FullScraperHelpers
 
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
-    @scraper = RightScale::Scraper.new(@tmpdir)
+    @scraper = RightScraper::Scraper.new(@tmpdir)
   end
 
   after(:each) do
@@ -50,7 +50,7 @@ describe RightScale::Scraper do
 
   context 'given a Git repository' do
     before(:each) do
-      @helper = RightScale::GitScraperSpecHelper.new
+      @helper = RightScraper::GitScraperSpecHelper.new
       @repo = @helper.repo
     end
 

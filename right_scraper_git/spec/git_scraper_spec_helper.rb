@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'scraper_spec_helper_base'))
 require 'git'
 
-module RightScale
+module RightScraper
 
   # Git implementation of scraper spec helper
   # See parent class for methods headers comments
@@ -39,7 +39,7 @@ module RightScale
     end
 
     def repo
-      RightScale::Repository.from_hash(:display_name => "test git repo",
+      RightScraper::Repository.from_hash(:display_name => "test git repo",
                                        :repo_type => :git,
                                        :url => repo_path)
     end

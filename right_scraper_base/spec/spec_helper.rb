@@ -33,7 +33,7 @@ require 'json'
 Spec::Runner.configuration.mock_with :flexmock
 
 # Helper module
-module RightScale
+module RightScraper
 
   module SpecHelpers
     shared_examples_for "Development mode environment" do

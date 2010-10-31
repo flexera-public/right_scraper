@@ -24,10 +24,10 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'cookbooks', 'cookbook_helper'))
 
-describe RightScale::Cookbook do
+describe RightScraper::Cookbook do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::CookbookHelper
+  include RightScraper::CookbookHelper
 
   shared_examples_for 'svn repositories' do
     it_should_behave_like 'generic repositories'
@@ -43,7 +43,7 @@ describe RightScale::Cookbook do
 
   context 'with a SVN repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :svn,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "username",
@@ -80,7 +80,7 @@ describe RightScale::Cookbook do
 
   context 'with a SVN repository with a tag' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :svn,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :tag => "foo",
@@ -99,7 +99,7 @@ describe RightScale::Cookbook do
     context 'for a SVN repository' do
       before(:each) do
         @url = "svn:http://username:password@baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah&p=foo#DEADBEEF"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should resolve to a SVN repository' do
         @cookbook.repository.repo_type.should == :svn
@@ -122,7 +122,7 @@ describe RightScale::Cookbook do
     context 'for a SVN repository with strange credentials' do
       before(:each) do
         @url = "svn:http://foo%3Ab%2Far:foo%40bar@baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah&p=foo#DEADBEEF"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should have the same url (with sorted key/value pairs)' do
         @cookbook.repository.url.should == "http://baz.com/foo/bar/baz?a=b;a=z;b=blah;q=blah"
@@ -136,7 +136,7 @@ describe RightScale::Cookbook do
     context 'for a SVN repository with no tag' do
       before(:each) do
         @url = "svn:http://baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah&p=foo"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should have the same url (with sorted key/value pairs)' do
         @cookbook.repository.url.should == "http://baz.com/foo/bar/baz?a=b;a=z;b=blah;q=blah"
@@ -149,7 +149,7 @@ describe RightScale::Cookbook do
     context 'for a SVN repository with no credentials' do
       before(:each) do
         @url = "svn:http://baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah&p=foo"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should have the same url (with sorted key/value pairs)' do
         @cookbook.repository.url.should == "http://baz.com/foo/bar/baz?a=b;a=z;b=blah;q=blah"
@@ -163,7 +163,7 @@ describe RightScale::Cookbook do
     context 'for a SVN repository with no position' do
       before(:each) do
         @url = "svn:http://baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah#foo"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should have the same url (with sorted key/value pairs)' do
         @cookbook.repository.url.should == "http://baz.com/foo/bar/baz?a=b;a=z;b=blah;q=blah"

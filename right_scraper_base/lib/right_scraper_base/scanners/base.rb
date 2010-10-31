@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
-module RightScale
+module RightScraper
   module Scanners
     # Base class for scanning filesystems.  Subclasses should override
     # #notice and may override #new, #begin, #end and
@@ -72,14 +72,14 @@ module RightScale
       # Begin a scan for the given cookbook.
       #
       # === Parameters ===
-      # cookbook(RightScale::Cookbook):: cookbook to scan
+      # cookbook(RightScraper::Cookbook):: cookbook to scan
       def begin(cookbook)
       end
 
       # Finish a scan for the given cookbook.
       #
       # === Parameters ===
-      # cookbook(RightScale::Cookbook):: cookbook that just finished
+      # cookbook(RightScraper::Cookbook):: cookbook that just finished
       #                                  scanning
       def end(cookbook)
       end

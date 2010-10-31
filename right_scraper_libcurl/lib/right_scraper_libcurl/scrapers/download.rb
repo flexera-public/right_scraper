@@ -24,7 +24,7 @@ require 'curb'
 require 'libarchive_ruby'
 require 'tempfile'
 
-module RightScale
+module RightScraper
   module Scrapers
     # A scraper for cookbooks stored in archives on a web server
     # somewhere.
@@ -36,7 +36,7 @@ module RightScale
       # <tt>:directory</tt>:: Directory to perform scraper work in
       #
       # === Parameters
-      # repository(RightScale::Repository):: repository to scrape
+      # repository(RightScraper::Repository):: repository to scrape
       # options(Hash):: scraper options
       def initialize(repository, options={})
         super
@@ -112,11 +112,11 @@ module RightScale
 
         file.close
 
-        cookbook = RightScale::Cookbook.new(@repository, nil, pos)
+        cookbook = RightScraper::Cookbook.new(@repository, nil, pos)
 
         # This is hacky, but I don't have a better way to determine if
         # the user actually wants the archive built.
-        if @builder.subbuilders.include?(RightScale::Builders::Archive)
+        if @builder.subbuilders.include?(RightScraper::Builders::Archive)
           file.open
           cookbook.data[:archive] = file.read
           file.close

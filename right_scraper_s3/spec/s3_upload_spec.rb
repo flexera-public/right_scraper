@@ -26,10 +26,10 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 require 'tmpdir'
 require 'digest/sha1'
 
-describe RightScale::Scanners::S3Upload do
+describe RightScraper::Scanners::S3Upload do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::SpecHelpers
+  include RightScraper::SpecHelpers
 
   # Create download repository following given layout
   # Update @repo_path with path to repository
@@ -53,7 +53,7 @@ describe RightScale::Scanners::S3Upload do
   end
 
   before(:all) do
-    @scraperclass = RightScale::Scrapers::CommandLineDownload
+    @scraperclass = RightScraper::Scrapers::CommandLineDownload
   end
 
   before(:each) do
@@ -71,13 +71,13 @@ describe RightScale::Scanners::S3Upload do
     end
 
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
       @s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
-                            :logger => RightScale::Logger.new)
-      FileUtils.rm_rf(RightScale::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
+                            :logger => RightScraper::Logger.new)
+      FileUtils.rm_rf(RightScraper::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
     end
 
     it 'should raise an exception immediately' do
@@ -85,9 +85,9 @@ describe RightScale::Scanners::S3Upload do
       @s3.bucket(bucket_name).should be_nil
       lambda {
       @scraper = @scraperclass.new(@repo,
-                                   :scanners => [RightScale::Scanners::Metadata,
-                                                 RightScale::Scanners::Manifest,
-                                                 RightScale::Scanners::S3Upload],
+                                   :scanners => [RightScraper::Scanners::Metadata,
+                                                 RightScraper::Scanners::Manifest,
+                                                 RightScraper::Scanners::S3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
@@ -103,14 +103,14 @@ describe RightScale::Scanners::S3Upload do
     end
 
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
       bucket_name = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(@repo,
-                                   :scanners => [RightScale::Scanners::Metadata,
-                                                 RightScale::Scanners::Manifest,
-                                                 RightScale::Scanners::S3Upload],
+                                   :scanners => [RightScraper::Scanners::Metadata,
+                                                 RightScraper::Scanners::Manifest,
+                                                 RightScraper::Scanners::S3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
@@ -118,9 +118,9 @@ describe RightScale::Scanners::S3Upload do
                                    :max_seconds => 20)
       s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
-                            :logger => RightScale::Logger.new)
+                            :logger => RightScraper::Logger.new)
       @bucket = s3.bucket(bucket_name, create=true)
-      FileUtils.rm_rf(RightScale::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
+      FileUtils.rm_rf(RightScraper::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
     end
 
     after(:each) do

@@ -28,14 +28,14 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_libcurl'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'libcurl_download_scraper_spec_helper'))
 
-describe RightScale::Scrapers::LibCurlDownload do
+describe RightScraper::Scrapers::LibCurlDownload do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::ScraperHelper
-  include RightScale::SpecHelpers
+  include RightScraper::ScraperHelper
+  include RightScraper::SpecHelpers
 
   before(:each) do
-    @helper = RightScale::LibCurlDownloadScraperSpecHelper.new
+    @helper = RightScraper::LibCurlDownloadScraperSpecHelper.new
     @repo = @helper.repo
   end
 
@@ -45,7 +45,7 @@ describe RightScale::Scrapers::LibCurlDownload do
   end
 
   before(:all) do
-    @scraperclass = RightScale::Scrapers::LibCurlDownload
+    @scraperclass = RightScraper::Scrapers::LibCurlDownload
   end
 
   context 'given a password protected repository' do

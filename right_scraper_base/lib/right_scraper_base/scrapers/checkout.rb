@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'filesystem'))
 
-module RightScale
+module RightScraper
   module Scrapers
     # Base class for FS based scrapers that want to do version control
     # operations (CVS, SVN, etc.).  Subclasses can get away with

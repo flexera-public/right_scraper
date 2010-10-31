@@ -27,15 +27,15 @@ unless RUBY_PLATFORM=~/mswin/
 require File.expand_path(File.join(File.dirname(__FILE__), 'multi_dir_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 
-describe RightScale::Scrapers::CommandLineDownload do
+describe RightScraper::Scrapers::CommandLineDownload do
   context 'in a multiple directory situation with a cookbooks_path set' do
     it_should_behave_like "Development mode environment"
 
-    include RightScale::ScraperHelper
-    include RightScale::SpecHelpers
+    include RightScraper::ScraperHelper
+    include RightScraper::SpecHelpers
 
     before(:each) do
-      @helper = RightScale::MultiDirectorySpecHelper.new
+      @helper = RightScraper::MultiDirectorySpecHelper.new
       @repo = @helper.repo
     end
 
@@ -45,7 +45,7 @@ describe RightScale::Scrapers::CommandLineDownload do
     end
 
     before(:all) do
-      @scraperclass = RightScale::Scrapers::CommandLineDownload
+      @scraperclass = RightScraper::Scrapers::CommandLineDownload
     end
 
     context 'given a download repository' do

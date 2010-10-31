@@ -24,14 +24,14 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 require 'json'
 
-module RightScale
+module RightScraper
   module Scanners
     # Load cookbook metadata from a filesystem.
     class Metadata < Scanner
       # Begin a scan for the given cookbook.
       #
       # === Parameters
-      # cookbook(RightScale::Cookbook):: cookbook to scan
+      # cookbook(RightScraper::Cookbook):: cookbook to scan
       def begin(cookbook)
         @cookbook = cookbook
       end

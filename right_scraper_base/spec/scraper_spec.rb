@@ -29,15 +29,15 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScale::Scraper do
+describe RightScraper::Scraper do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::FullScraperHelpers
+  include RightScraper::FullScraperHelpers
 
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
-    @scraper = RightScale::Scraper.new(@tmpdir)
+    @scraper = RightScraper::Scraper.new(@tmpdir)
   end
 
   after(:each) do
@@ -51,7 +51,7 @@ describe RightScale::Scraper do
 
   context 'given an illegal download repository' do
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'illegal repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'illegal repo',
                                                :repo_type    => :download_command_line,
                                                :url          => "http://example.invalid/foo")
     end
@@ -83,7 +83,7 @@ describe RightScale::Scraper do
 
   context 'given a legal download repository' do
     before(:each) do
-      @helper = RightScale::CommandLineDownloadScraperSpecHelper.new
+      @helper = RightScraper::CommandLineDownloadScraperSpecHelper.new
       @repo = @helper.repo
     end
 
@@ -130,13 +130,13 @@ describe RightScale::Scraper do
   context 'given several repositories' do
     it 'should continue to scrape even if errors occur' do
       GC.start
-      repo = RightScale::Repository.from_hash(:display_name => 'illegal repo',
+      repo = RightScraper::Repository.from_hash(:display_name => 'illegal repo',
                                               :repo_type    => :download,
                                               :url          => "http://example.com/foo")
       @scraper.scrape(repo)
-      helpers = [RightScale::CommandLineDownloadScraperSpecHelper,
-                 RightScale::CommandLineDownloadScraperSpecHelper,
-                 RightScale::CommandLineDownloadScraperSpecHelper]
+      helpers = [RightScraper::CommandLineDownloadScraperSpecHelper,
+                 RightScraper::CommandLineDownloadScraperSpecHelper,
+                 RightScraper::CommandLineDownloadScraperSpecHelper]
       helpers.each do |klass|
         helper = klass.new
         @scraper.scrape(helper.repo)

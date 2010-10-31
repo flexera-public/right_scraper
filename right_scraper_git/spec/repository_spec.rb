@@ -24,7 +24,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'right_scraper_base/repositories/mock'
 
-describe RightScale::Repositories::Git do
+describe RightScraper::Repositories::Git do
   it_should_behave_like "Development mode environment"
 
   shared_examples_for 'git repository' do
@@ -59,7 +59,7 @@ describe RightScale::Repositories::Git do
 
   context 'with an HTTP scheme' do
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type => :git,
                                                :url => "http://foo.bar.baz.quux/%20CBLAH",
                                                :tag => 'foo',
@@ -75,7 +75,7 @@ describe RightScale::Repositories::Git do
 
   context 'with a git scheme' do
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type => :git,
                                                :url => "git://foo.bar.baz.quux/%20CBLAH",
                                                :tag => 'foo',
@@ -91,7 +91,7 @@ describe RightScale::Repositories::Git do
 
   context 'with an ssh-type scheme' do
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type => :git,
                                                :url => "foo@bar.baz.quux:/%20CBLAH",
                                                :tag => 'foo',

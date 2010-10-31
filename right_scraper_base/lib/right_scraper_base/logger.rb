@@ -23,7 +23,7 @@
 
 require 'logger'
 
-module RightScale
+module RightScraper
   # Very simplistic logger for scraper operations.
   class Logger < ::Logger
     # If no arguments, create a Logger that logs to nothing.
@@ -38,7 +38,7 @@ module RightScale
       @exceptional = false
     end
 
-    # (RightScale::Repository) Repository currently being examined.
+    # (RightScraper::Repository) Repository currently being examined.
     attr_writer :repository
 
     # Begin an operation that merits logging.  Will call #note_error

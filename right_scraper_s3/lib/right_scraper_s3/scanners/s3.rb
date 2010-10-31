@@ -23,7 +23,7 @@
 require 'right_aws'
 require 'json'
 
-module RightScale
+module RightScraper
   module Scanners
     # Upload scanned files to an S3 bucket.
     class S3Upload < Scanner
@@ -54,7 +54,7 @@ module RightScale
       # contents to S3.
       #
       # === Parameters
-      # cookbook(RightScale::Cookbook):: cookbook to scan
+      # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
         @bucket.put(File.join('Cooks', cookbook.cookbook_hash),
                     {

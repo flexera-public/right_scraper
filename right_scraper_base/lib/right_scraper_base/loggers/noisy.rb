@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
-module RightScale
+module RightScraper
   module Loggers
     # A very noisy logger, useful for debugging.
     class NoisyLogger < Logger

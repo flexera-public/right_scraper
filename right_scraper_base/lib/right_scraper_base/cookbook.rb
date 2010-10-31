@@ -23,13 +23,13 @@
 require 'digest/sha1'
 require 'uri'
 
-module RightScale
+module RightScraper
   # Localized representation of a cookbook.  Contains the repository
   # it was fetched from, the cookbook contents, and the metadata as a
   # hash.
   #
   # Cookbooks can be converted to and from URL-type syntaxes with
-  # RightScale::Cookbook#to_url and RightScale::Cookbook::from_url,
+  # RightScraper::Cookbook#to_url and RightScraper::Cookbook::from_url,
   # with the caveat that it is not at present possible to perfectly
   # reconstruct the repository a cookbook uses from the cookbook URL.
   # The JSON metadata for the Cookbook is in #metadata, and the
@@ -37,7 +37,7 @@ module RightScale
   # #cookbook_hash, which returns a unique identifier for that
   # cookbook.
   class Cookbook
-    # (RightScale::Repository) Repository the cookbook was fetched from.
+    # (RightScraper::Repository) Repository the cookbook was fetched from.
     attr_accessor :repository
 
     # (Hash) Metadata from the cookbook.
@@ -57,7 +57,7 @@ module RightScale
     # Create a new Cookbook from the given parameters.
     #
     # === Parameters
-    # repo(RightScale::Repository):: repository to load cookbook from
+    # repo(RightScraper::Repository):: repository to load cookbook from
     # metadata(Hash):: metadata for the cookbook
     # pos:: position in the repository
     def initialize(repo, metadata, pos)

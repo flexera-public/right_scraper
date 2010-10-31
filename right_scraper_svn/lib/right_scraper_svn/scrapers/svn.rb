@@ -22,7 +22,7 @@
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'svn_client'))
 
-module RightScale
+module RightScraper
   module Scrapers
     # Scraper for cookbooks stored in a Subversion repository.
     class Svn < CheckoutBasedScraper

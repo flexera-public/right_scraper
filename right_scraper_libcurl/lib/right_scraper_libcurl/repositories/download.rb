@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module Repositories
     # A "cookbook repository" that is just an archive file hanging off a
     # web server somewhere.
@@ -29,13 +29,13 @@ module RightScale
       # (ScraperBase class) Appropriate class for scraping this sort of
       # repository.
       def scraper
-        RightScale::Scrapers::LibCurlDownload
+        RightScraper::Scrapers::LibCurlDownload
       end
 
       # Add this repository to the list of available types.
-      @@types[:download] = RightScale::Repositories::LibCurlDownload
+      @@types[:download] = RightScraper::Repositories::LibCurlDownload
       # Add a way to get this class, specifically.
-      @@types[:download_libcurl] = RightScale::Repositories::LibCurlDownload
+      @@types[:download_libcurl] = RightScraper::Repositories::LibCurlDownload
     end
   end
 end

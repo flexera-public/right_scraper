@@ -23,9 +23,9 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 
-describe RightScale::Repository do
+describe RightScraper::Repository do
   def make_repo(url)
-    @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+    @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :svn,
                                              :url => url,
                                              :first_credential => "foo:b/ar",

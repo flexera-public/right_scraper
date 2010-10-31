@@ -24,7 +24,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_spec_helper_base'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper_base'))
 
-module RightScale
+module RightScraper
   class CommandLineDownloadScraperSpecHelper < ScraperSpecHelperBase
     def download_repo_path
       File.join(@tmpdir, "download")
@@ -33,7 +33,7 @@ module RightScale
     attr_reader :download_file
 
     def repo
-      RightScale::Repository.from_hash(:display_name => 'test repo',
+      RightScraper::Repository.from_hash(:display_name => 'test repo',
                                        :repo_type    => :download_command_line,
                                        :url          => "file://#{@download_file}",
                                        :first_credential => ENV['REMOTE_USER'],

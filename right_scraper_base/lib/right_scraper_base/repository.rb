@@ -25,7 +25,7 @@ require 'digest/sha1'
 require 'set'
 require 'socket'
 
-module RightScale
+module RightScraper
   # Description of remote repository that needs to be scraped.
   #
   # Repository definitions inherit from this base class.  A repository must
@@ -41,8 +41,8 @@ module RightScale
   # Subclasses should override #repo_type, #scraper, and #to_url; when
   # sensible, #revision should also be overridden.  The most important
   # methods are #to_url, which will return a +URI+ that completely
-  # characterizes the RightScale::Repository, and #scraper which
-  # returns the appropriate RightScale::Scrapers::ScraperBase to scan
+  # characterizes the RightScraper::Repository, and #scraper which
+  # returns the appropriate RightScraper::Scrapers::ScraperBase to scan
   # that repository.
   class Repository
     # (String) Human readable repository name used for progress reports
@@ -55,7 +55,7 @@ module RightScale
       raise NotImplementedError
     end
 
-    # (RightScale::Scrapers::ScraperBase class) Appropriate class for scraping this sort of
+    # (RightScraper::Scrapers::ScraperBase class) Appropriate class for scraping this sort of
     # repository.  Needs to be overridden appropriately by subclasses.
     def scraper
       raise NotImplementedError
@@ -79,10 +79,10 @@ module RightScale
     # Hash keys should correspond to attributes of this class
     #
     # === Parameters
-    # opts(Hash):: Hash to be converted into a RightScale::Repository instance
+    # opts(Hash):: Hash to be converted into a RightScraper::Repository instance
     #
     # === Return
-    # repo(RightScale::Repository):: Resulting repository instance
+    # repo(RightScraper::Repository):: Resulting repository instance
     def self.from_hash(opts)
       repo = @@types[opts[:repo_type]].new
       unless ENV['DEVELOPMENT']
@@ -146,7 +146,7 @@ module RightScale
     # === Returns
     # Boolean:: true iff this repository and +other+ are the same
     def ==(other)
-      if other.is_a?(RightScale::Repository)
+      if other.is_a?(RightScraper::Repository)
         checkout_hash == other.checkout_hash
       else
         false
@@ -162,7 +162,7 @@ module RightScale
     # === Returns
     # Boolean:: true iff this repository and +other+ are the same
     def equal_repo?(other)
-      if other.is_a?(RightScale::Repository)
+      if other.is_a?(RightScraper::Repository)
         repository_hash == other.repository_hash
       else
         false

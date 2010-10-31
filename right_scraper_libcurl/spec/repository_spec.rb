@@ -24,11 +24,11 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_libcurl'))
 
-describe RightScale::Repositories::Download do
+describe RightScraper::Repositories::Download do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+    @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :download,
                                              :url => "http://foo.bar.baz.quux/%20CBLAH",
                                              :first_credential => "foo:b/ar",
@@ -50,6 +50,6 @@ describe RightScale::Repositories::Download do
   end
 
   it 'should tell us to use the libcurl downloader' do
-    @repo.scraper.should == RightScale::Scrapers::LibCurlDownload
+    @repo.scraper.should == RightScraper::Scrapers::LibCurlDownload
   end
 end

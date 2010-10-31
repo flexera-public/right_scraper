@@ -28,20 +28,20 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'libcurl_download_scr
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScale::Scraper do
+describe RightScraper::Scraper do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::FullScraperHelpers
+  include RightScraper::FullScraperHelpers
 
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
-    @scraper = RightScale::Scraper.new(@tmpdir)
+    @scraper = RightScraper::Scraper.new(@tmpdir)
   end
 
   context 'given an illegal download repository' do
     before(:each) do
-      @repo = RightScale::Repository.from_hash(:display_name => 'illegal repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'illegal repo',
                                                :repo_type    => :download_libcurl,
                                                :url          => "http://example.com/foo")
     end
@@ -71,7 +71,7 @@ describe RightScale::Scraper do
   context 'given a legal download repository' do
     before(:each) do
       GC.start
-      @helper = RightScale::LibCurlDownloadScraperSpecHelper.new
+      @helper = RightScraper::LibCurlDownloadScraperSpecHelper.new
       @repo = @helper.repo
     end
 

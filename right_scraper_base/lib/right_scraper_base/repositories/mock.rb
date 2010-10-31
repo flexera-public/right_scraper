@@ -22,7 +22,7 @@
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
 
-module RightScale
+module RightScraper
   module Repositories
     # A "repository" that is just there for testing.  This class is not
     # loaded by default.
@@ -64,7 +64,7 @@ module RightScale
       end
 
       # Add this repository to the list of available types.
-      @@types[:mock] = RightScale::Repositories::Mock
+      @@types[:mock] = RightScraper::Repositories::Mock
     end
   end
 end

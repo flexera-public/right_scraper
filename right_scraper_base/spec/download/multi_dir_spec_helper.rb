@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'command_line_download_scraper_spec_helper'))
 
-module RightScale
+module RightScraper
   class MultiDirectorySpecHelper < CommandLineDownloadScraperSpecHelper
     def make_cookbooks
       super

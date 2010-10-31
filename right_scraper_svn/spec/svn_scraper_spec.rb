@@ -26,13 +26,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'svn_scraper_spec_hel
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'scraper_helper'))
 require 'set'
 
-describe RightScale::Scrapers::Svn do
+describe RightScraper::Scrapers::Svn do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::ScraperHelper
+  include RightScraper::ScraperHelper
 
   before(:all) do
-    @scraperclass = RightScale::Scrapers::Svn
+    @scraperclass = RightScraper::Scrapers::Svn
     @ignore = ['.svn']
   end
 
@@ -40,7 +40,7 @@ describe RightScale::Scrapers::Svn do
     before(:each) do
       pending "Not run unless REMOTE_USER and REMOTE_PASSWORD set" unless ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
       url = 'https://wush.net/svn/rightscale/cookbooks_test/'
-      @repo = RightScale::Repository.from_hash(:display_name => 'wush',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'wush',
                                                :repo_type    => :svn,
                                                :url          => url,
                                                :first_credential => ENV['REMOTE_USER'],
@@ -83,7 +83,7 @@ describe RightScale::Scrapers::Svn do
 
   context 'given a SVN repository' do
     before(:each) do
-      @helper = RightScale::SvnScraperSpecHelper.new
+      @helper = RightScraper::SvnScraperSpecHelper.new
       @repo = @helper.repo
     end
 

@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
 
-module RightScale
+module RightScraper
   module Builders
     # Base class for building additional metadata from filesystem
     # based checkouts.  Subclasses should override #go, and possibly
@@ -51,7 +51,7 @@ module RightScale
       #
       # === Parameters
       # dir(String):: directory cookbook exists at
-      # cookbook(RightScale::Cookbook):: cookbook instance being built
+      # cookbook(RightScraper::Cookbook):: cookbook instance being built
       def go(dir, cookbook)
       end
 

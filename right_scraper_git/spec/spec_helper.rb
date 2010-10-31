@@ -27,7 +27,7 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_git'))
 
-module RightScale
+module RightScraper
   module SpecHelpers
     #Code here
   end

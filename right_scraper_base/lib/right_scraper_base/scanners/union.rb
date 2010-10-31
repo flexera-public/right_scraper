@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module Scanners
     # Union scanner, to permit running multiple scanners while only
     # walking the fs once.
@@ -43,7 +43,7 @@ module RightScale
       # Begin a scan for the given cookbook.
       #
       # === Parameters
-      # cookbook(RightScale::Cookbook):: cookbook to scan
+      # cookbook(RightScraper::Cookbook):: cookbook to scan
       def begin(cookbook)
         @subscanners.each {|scanner| scanner.begin(cookbook)}
       end
@@ -51,7 +51,7 @@ module RightScale
       # Finish a scan for the given cookbook.
       #
       # === Parameters
-      # cookbook(RightScale::Cookbook):: cookbook that just finished scanning
+      # cookbook(RightScraper::Cookbook):: cookbook that just finished scanning
       def end(cookbook)
         @subscanners.each {|scanner| scanner.end(cookbook)}
       end

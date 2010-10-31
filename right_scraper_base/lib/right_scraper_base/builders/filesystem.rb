@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
 
-module RightScale
+module RightScraper
   module Builders
     # Build metadata by scanning the filesystem.
     class Filesystem < Builder
@@ -53,7 +53,7 @@ module RightScale
       #
       # === Parameters
       # dir(String):: directory cookbook exists at
-      # cookbook(RightScale::Cookbook):: cookbook instance being built
+      # cookbook(RightScraper::Cookbook):: cookbook instance being built
       def go(dir, cookbook)
         @logger.operation(:scanning_filesystem, "rooted at #{dir}") do
           @scanner.begin(cookbook)

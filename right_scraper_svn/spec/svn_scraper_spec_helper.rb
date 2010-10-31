@@ -26,7 +26,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_svn', 'svn_client'))
 require 'svn/repos'
 
-module RightScale
+module RightScraper
 
   # SVN implementation of scraper spec helper
   # See parent class for methods headers comments
@@ -50,10 +50,10 @@ module RightScale
     def initialize
       super()
       FileUtils.mkdir(svn_repo_path)
-      @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type    => :svn,
                                                :url          => repo_url)
-      @client = RightScale::SvnClient.new(@repo)
+      @client = RightScraper::SvnClient.new(@repo)
       @svnrepo = Svn::Repos.create(svn_repo_path, {}, {})
       @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)}
       make_cookbooks

@@ -24,7 +24,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'tmpdir'
 
-module RightScale
+module RightScraper
   module ScraperHelper
     shared_examples_for "From-scratch scraping" do
       before(:each) do

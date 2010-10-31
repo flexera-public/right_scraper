@@ -26,14 +26,14 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scanners', 'ma
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scanners', 'metadata'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scanners', 'union'))
 
-module RightScale
+module RightScraper
   module Scrapers
     # Base class for all scrapers.
     #
     # Scrapers scan a repository and return a number of
-    # RightScale::Cookbook instances.  Scrapers should never be
+    # RightScraper::Cookbook instances.  Scrapers should never be
     # instantiated directly, only through
-    # RightScale::Repository#scrape.  Scrapers implement a stream-type
+    # RightScraper::Repository#scrape.  Scrapers implement a stream-type
     # interface, with #next, #seek, #rewind and #tell just like +IO+
     # streams and +Dir+ instances.  #next returns Cookbooks, or +nil+
     # if the end of the repository has been reached.
@@ -42,7 +42,7 @@ module RightScale
     # are used for building metadata and manifest files, for example,
     # and for uploading the contents to S3.  The basic scraper
     # supports only scanners, which should be subclasses of
-    # RightScale::Scanners::Scanner.
+    # RightScraper::Scanners::Scanner.
     #
     # Scraper implementations should override #next, #seek, #pos, and
     # #rewind.
@@ -70,7 +70,7 @@ module RightScale
       # scrape operation.
       attr_accessor :max_seconds
 
-      # RightScale::Repository:: repository currently being scraped
+      # RightScraper::Repository:: repository currently being scraped
       attr_reader :repository
 
       # Create a new scraper for the given repository.  This class
@@ -82,13 +82,13 @@ module RightScale
       # <tt>:max_seconds</tt>:: Maximum number of seconds to spend reading
       # <tt>:logger</tt>:: Logger to use
       # <tt>:scanners</tt>:: List of Scanner classes to use, defaulting
-      #                      to RightScale::Scanners::Manifest and
-      #                      RightScale::Scanners::Metadata
+      #                      to RightScraper::Scanners::Manifest and
+      #                      RightScraper::Scanners::Metadata
       # <tt>:builders</tt>:: List of Builder classes to use, defaulting to
       #                      FilesystemBuilder
       #
       # === Parameters
-      # repository(RightScale::Repository):: repository to scrape
+      # repository(RightScraper::Repository):: repository to scrape
       # options(Hash):: scraper options
       def initialize(repository,options={})
         @repository = repository
@@ -96,11 +96,11 @@ module RightScale
         @max_seconds = options[:max_seconds] || nil
         @logger = options[:logger] || Logger.new
         @logger.repository = repository
-        scanners = options[:scanners] || [RightScale::Scanners::Metadata,
-                                          RightScale::Scanners::Manifest]
-        @scanner = RightScale::Scanners::Union.new(scanners, options)
-        builders = options[:builders] || [RightScale::Builders::Filesystem]
-        @builder = RightScale::Builders::Union.new(builders,
+        scanners = options[:scanners] || [RightScraper::Scanners::Metadata,
+                                          RightScraper::Scanners::Manifest]
+        @scanner = RightScraper::Scanners::Union.new(scanners, options)
+        builders = options[:builders] || [RightScraper::Builders::Filesystem]
+        @builder = RightScraper::Builders::Union.new(builders,
                                                    :scraper => self,
                                                    :scanner => @scanner,
                                                    :logger => @logger,
@@ -147,12 +147,12 @@ module RightScale
       #
       # === Parameters
       # root_dir(String):: Path to directory containing all scraped repositories
-      # repo(Hash|RightScale::Repository):: Remote repository corresponding to local directory
+      # repo(Hash|RightScraper::Repository):: Remote repository corresponding to local directory
       #
       # === Return
       # String:: Path to local directory that corresponds to given repository
       def self.repo_dir(root_dir, repo)
-        repo = RightScale::Repository.from_hash(repo) if repo.is_a?(Hash)
+        repo = RightScraper::Repository.from_hash(repo) if repo.is_a?(Hash)
         dir_name  = repo.repository_hash
         dir_path  = File.join(root_dir, dir_name)
         "#{dir_path}/repo"

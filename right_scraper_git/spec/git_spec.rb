@@ -23,10 +23,10 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'cookbooks', 'cookbook_helper'))
 
-describe RightScale::Cookbook do
+describe RightScraper::Cookbook do
   it_should_behave_like "Development mode environment"
 
-  include RightScale::CookbookHelper
+  include RightScraper::CookbookHelper
 
   shared_examples_for 'git repositories' do
     it_should_behave_like 'generic repositories'
@@ -42,7 +42,7 @@ describe RightScale::Cookbook do
 
   context 'with an invalid git repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :git,
                                                      :url => "http://a.site/foo/bar/baz")
     end
@@ -65,7 +65,7 @@ describe RightScale::Cookbook do
   context 'with a git repository with a credential that requires a password' do
     before(:each) do
       passwd_key = File.open(File.join(File.dirname(__FILE__), 'password_key')).read
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :git,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => passwd_key)
@@ -85,7 +85,7 @@ describe RightScale::Cookbook do
   context 'with an invalid git repository with a real credential' do
     before(:each) do
       passwd_key = File.open(File.join(File.dirname(__FILE__), 'demokey')).read
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :git,
                                                      :url => "http://example.example/foo/bar/baz",
                                                      :first_credential => passwd_key)
@@ -104,7 +104,7 @@ describe RightScale::Cookbook do
 
   context 'with a git repository' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :git,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "a-key")
@@ -139,7 +139,7 @@ describe RightScale::Cookbook do
   end
   context 'with a git repository with a tag' do
     before(:each) do
-      @repository = RightScale::Repository.from_hash(:display_name => 'test repo',
+      @repository = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                      :repo_type => :git,
                                                      :url => "http://a.site/foo/bar/baz",
                                                      :tag => "DEADBEEF",
@@ -157,7 +157,7 @@ describe RightScale::Cookbook do
     context 'for a git repository with a tag' do
       before(:each) do
         @url = "git:http://sshkey@baz.com/foo/bar/baz?a=z;a=b;q=blah;b=blah&p=foo#DEADBEEF"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should resolve to a git repository' do
         @cookbook.repository.repo_type.should == :git
@@ -178,7 +178,7 @@ describe RightScale::Cookbook do
     context 'for a git repository without a tag' do
       before(:each) do
         @url = "git:http://sshkey@baz.com/foo/bar/baz?q=blah;b=blah&p=foo"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should point to master' do
         @cookbook.repository.tag.should == "master"
@@ -187,7 +187,7 @@ describe RightScale::Cookbook do
     context 'for a git repository without a position' do
       before(:each) do
         @url = "git:http://sshkey@baz.com/foo/bar/baz?b=blah;q=blah"
-        @cookbook = RightScale::Cookbook.from_url @url
+        @cookbook = RightScraper::Cookbook.from_url @url
       end
       it 'should not have a position' do
         @cookbook.pos.should be_nil

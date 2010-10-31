@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module Repositories
     # A repository that is stored in a Subversion server.
     class Svn < Repository
@@ -71,11 +71,11 @@ module RightScale
       # (ScraperBase class) Appropriate class for scraping this sort of
       # repository.
       def scraper
-        RightScale::Scrapers::Svn
+        RightScraper::Scrapers::Svn
       end
 
       # Add this repository to the list of available types.
-      @@types[:svn] = RightScale::Repositories::Svn
+      @@types[:svn] = RightScraper::Repositories::Svn
 
       # Add git URL schemas to the list of okay schemas.
       @@okay_schemes << "svn"

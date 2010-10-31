@@ -22,7 +22,7 @@
 #++
 require 'svn/client'
 
-module RightScale
+module RightScraper
   # Simplified interface to the process of creating SVN client
   # contexts.
   #
@@ -37,7 +37,7 @@ module RightScale
     # Initialize the client with the given repository.
     #
     # === Parameters
-    # repo(RightScale::Repository):: SVN repository to work from
+    # repo(RightScraper::Repository):: SVN repository to work from
     def initialize(repo)
       @repository = repo
     end

@@ -27,7 +27,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'r
 require 'uri'
 require 'cgi'
 
-module RightScale
+module RightScraper
   module CookbookHelper
     def parse_query(string)
       CGI::parse(string)
@@ -69,8 +69,8 @@ module RightScale
     end
 
     def example_cookbook(repository, position=nil)
-      @helper = RightScale::ScraperSpecHelperBase.new if @helper.nil?
-      RightScale::Cookbook.new(repository, @helper.repo_content, position)
+      @helper = RightScraper::ScraperSpecHelperBase.new if @helper.nil?
+      RightScraper::Cookbook.new(repository, @helper.repo_content, position)
     end
 
     def parse_url(*args)

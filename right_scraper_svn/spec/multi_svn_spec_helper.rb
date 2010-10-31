@@ -23,7 +23,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "svn_scraper_spec_helper"))
 
-module RightScale
+module RightScraper
   class MultiSvnSpecHelper < SvnScraperSpecHelper
     def make_cookbooks
       super

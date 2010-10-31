@@ -24,7 +24,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_git', 'processes', 'ssh'))
 
-describe RightScale::Processes::SSHAgent do
+describe RightScraper::Processes::SSHAgent do
   shared_examples_for 'Environment variables' do
     def setvar(name, value)
       if value.nil?
@@ -36,7 +36,7 @@ describe RightScale::Processes::SSHAgent do
 
     it 'should set SSH_AUTH_SOCK' do
       oldsock = ENV['SSH_AUTH_SOCK']
-      RightScale::Processes::SSHAgent.with do |agent|
+      RightScraper::Processes::SSHAgent.with do |agent|
         ENV.should have_key('SSH_AUTH_SOCK')
         ENV['SSH_AUTH_SOCK'].should_not be_empty
         File.exists?(ENV['SSH_AUTH_SOCK']).should == true
@@ -46,7 +46,7 @@ describe RightScale::Processes::SSHAgent do
 
     it 'should set SSH_AGENT_PID' do
       oldpid = ENV['SSH_AUTH_PID']
-      RightScale::Processes::SSHAgent.with do |agent|
+      RightScraper::Processes::SSHAgent.with do |agent|
         ENV.should have_key('SSH_AGENT_PID')
         ENV['SSH_AGENT_PID'].should_not be_empty
         # This is a Unixism; sending signal 0 to a process tests whether
@@ -59,7 +59,7 @@ describe RightScale::Processes::SSHAgent do
 
     it 'should set SSH_ASKPASS' do
       oldpass = ENV['SSH_ASKPASS']
-      RightScale::Processes::SSHAgent.with do |agent|
+      RightScraper::Processes::SSHAgent.with do |agent|
         ENV.should have_key('SSH_ASKPASS')
         ENV['SSH_ASKPASS'].should_not be_empty
 
@@ -72,7 +72,7 @@ describe RightScale::Processes::SSHAgent do
 
     it 'should set HOME' do
       oldhome = ENV['HOME']
-      RightScale::Processes::SSHAgent.with do |agent|
+      RightScraper::Processes::SSHAgent.with do |agent|
         ENV.should have_key('HOME')
         ENV['HOME'].should_not be_empty
         ENV['HOME'].should == "/dev/null"
@@ -132,7 +132,7 @@ describe RightScale::Processes::SSHAgent do
   end
 
   it 'should be able to load the demo key' do
-    RightScale::Processes::SSHAgent.with do |agent|
+    RightScraper::Processes::SSHAgent.with do |agent|
       demofile = File.expand_path(File.join(File.dirname(__FILE__), 'demokey'))
       File.chmod(0600, demofile)
       demofile = File.join(File.dirname(__FILE__), 'demokey')
@@ -147,7 +147,7 @@ FULLOUTPUT
   it 'should fail on the passworded key' do
     pid = nil
     lambda {
-      RightScale::Processes::SSHAgent.with do |agent|
+      RightScraper::Processes::SSHAgent.with do |agent|
         pid = ENV['SSH_AGENT_PID'].to_i
         demofile = File.expand_path(File.join(File.dirname(__FILE__), 'password_key'))
         File.chmod(0600, demofile)
@@ -160,7 +160,7 @@ FULLOUTPUT
   end
 
   it 'should be able to load the demo key from memory' do
-    RightScale::Processes::SSHAgent.with do |agent|
+    RightScraper::Processes::SSHAgent.with do |agent|
       demofile = File.join(File.dirname(__FILE__), 'demokey')
       demodata = File.open(demofile).read
       agent.add_key(demodata)

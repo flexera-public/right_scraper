@@ -25,7 +25,7 @@ require 'digest/sha1'
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'tmpdir'
 
-module RightScale
+module RightScraper
 
   # Base class for all scrapers spec helpers
   # Define helper methods used to manage repositories using each

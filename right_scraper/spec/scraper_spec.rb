@@ -30,13 +30,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_sc
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScale::Scraper do
+describe RightScraper::Scraper do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
-    @scraper = RightScale::Scraper.new(@tmpdir)
+    @scraper = RightScraper::Scraper.new(@tmpdir)
   end
 
   after(:each) do
@@ -46,14 +46,14 @@ describe RightScale::Scraper do
   context 'given several repositories' do
     it 'should continue to scrape even if errors occur' do
       GC.start
-      repo = RightScale::Repository.from_hash(:display_name => 'illegal repo',
-                                              :repo_type    => :download,
-                                              :url          => "http://example.com/foo")
+      repo = RightScraper::Repository.from_hash(:display_name => 'illegal repo',
+                                                :repo_type    => :download,
+                                                :url          => "http://example.com/foo")
       @scraper.scrape(repo)
-      helpers = [RightScale::CommandLineDownloadScraperSpecHelper,
-                 RightScale::LibCurlDownloadScraperSpecHelper,
-                 RightScale::GitScraperSpecHelper,
-                 RightScale::SvnScraperSpecHelper]
+      helpers = [RightScraper::CommandLineDownloadScraperSpecHelper,
+                 RightScraper::LibCurlDownloadScraperSpecHelper,
+                 RightScraper::GitScraperSpecHelper,
+                 RightScraper::SvnScraperSpecHelper]
       helpers.each do |klass|
         helper = klass.new
         @scraper.scrape(helper.repo)

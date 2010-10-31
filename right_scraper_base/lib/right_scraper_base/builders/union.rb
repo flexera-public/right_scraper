@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module Builders
     # Union builder, to permit running multiple builders in sequence
     # with the same interface as running one.
@@ -42,7 +42,7 @@ module RightScale
       #
       # === Parameters
       # dir(String):: directory cookbook exists at
-      # cookbook(RightScale::Cookbook):: cookbook instance being built
+      # cookbook(RightScraper::Cookbook):: cookbook instance being built
       def go(dir, cookbook)
         @subbuilders.each {|builder| builder.go(dir, cookbook)}
       end

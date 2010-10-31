@@ -22,7 +22,7 @@
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'repository'))
 
-module RightScale
+module RightScraper
   module Repositories
     # A "cookbook repository" that is just an archive file hanging off a
     # web server somewhere.  This version uses a command line curl to
@@ -59,13 +59,13 @@ module RightScale
       # (ScraperBase class) Appropriate class for scraping this sort of
       # repository.
       def scraper
-        RightScale::Scrapers::CommandLineDownload
+        RightScraper::Scrapers::CommandLineDownload
       end
 
       # Add this repository to the list of available types.
-      @@types[:download] = RightScale::Repositories::Download
+      @@types[:download] = RightScraper::Repositories::Download
       # Add a way to get this class, specifically.
-      @@types[:download_command_line] = RightScale::Repositories::Download
+      @@types[:download_command_line] = RightScraper::Repositories::Download
     end
   end
 end

@@ -24,7 +24,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'filesystem'))
 require 'process_watcher'
 require 'tempfile'
 
-module RightScale
+module RightScraper
   module Scrapers
     # A scraper for cookbooks stored in archives on a web server
     # somewhere.  Uses command line curl and command line tar.

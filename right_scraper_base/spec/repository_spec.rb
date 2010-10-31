@@ -25,11 +25,11 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base', 'repositories', 'mock'))
 
-describe RightScale::Repository do
+describe RightScraper::Repository do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @repo = RightScale::Repository.from_hash(:display_name      => 'display_name',
+    @repo = RightScraper::Repository.from_hash(:display_name      => 'display_name',
                                              :repo_type         => :mock,
                                              :url               => 'url',
                                              :tag               => 'tag',
@@ -38,7 +38,7 @@ describe RightScale::Repository do
   end
 
   it 'should be initializable from a hash' do
-    @repo.should be_kind_of(RightScale::Repository)
+    @repo.should be_kind_of(RightScraper::Repository)
     @repo.display_name.should      == 'display_name'
     @repo.repo_type.should         == :mock
     @repo.url.should               == 'url'
@@ -56,11 +56,11 @@ describe RightScale::Repository do
   end
 end
 
-describe RightScale::Repositories::Download do
+describe RightScraper::Repositories::Download do
   it_should_behave_like "Development mode environment"
 
   before(:each) do
-    @repo = RightScale::Repository.from_hash(:display_name => 'test repo',
+    @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                              :repo_type => :download,
                                              :url => "http://foo.bar.baz.quux/%20CBLAH",
                                              :first_credential => "foo:b/ar",

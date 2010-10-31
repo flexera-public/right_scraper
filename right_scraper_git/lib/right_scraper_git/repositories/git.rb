@@ -21,7 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScale
+module RightScraper
   module Repositories
     # A cookbook repository stored in a Git repository.
     class Git < Repository
@@ -66,11 +66,11 @@ module RightScale
       # (ScraperBase class) Appropriate class for scraping this sort of
       # repository.
       def scraper
-        RightScale::Scrapers::Git
+        RightScraper::Scrapers::Git
       end
 
       # Add this repository to the list of available types.
-      @@types[:git] = RightScale::Repositories::Git
+      @@types[:git] = RightScraper::Repositories::Git
 
       # Add git URL schemas to the list of okay schemas.
       @@okay_schemes << "git"

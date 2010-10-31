@@ -23,7 +23,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'processes', 'ssh'))
 require 'git'
 
-module RightScale
+module RightScraper
   module Scrapers
     # Scraper for cookbooks stored in a git repository.
     class Git < CheckoutBasedScraper
@@ -34,7 +34,7 @@ module RightScale
         if @repository.first_credential.nil?
           super
         else
-          RightScale::Processes::SSHAgent.with do |agent|
+          RightScraper::Processes::SSHAgent.with do |agent|
             agent.add_key(@repository.first_credential)
             super
           end
