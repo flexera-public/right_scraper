@@ -174,13 +174,13 @@ module RightScraper
     protected
     # Return true iff this credential is useful.  Currently "useful"
     # means "nonempty and not all spaces".
-    def is_useful?(credential)
+    def self.is_useful?(credential)
       credential && !credential.strip.empty?
     end
 
     # Return the useful portion of this credential.  Currently strips
     # out any spaces.
-    def useful_part(credential)
+    def self.useful_part(credential)
       credential.strip
     end
 
