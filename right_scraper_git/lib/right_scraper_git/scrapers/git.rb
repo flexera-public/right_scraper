@@ -31,13 +31,10 @@ module RightScraper
       # underlying repository has a credential we need to initialize a
       # fresh SSHAgent and add the credential to it.
       def setup_dir
-        if @repository.first_credential.nil?
+        RightScraper::Processes::SSHAgent.with do |agent|
+          agent.add_key(@repository.first_credential) unless
+            @repository.first_credential.nil?
           super
-        else
-          RightScraper::Processes::SSHAgent.with do |agent|
-            agent.add_key(@repository.first_credential)
-            super
-          end
         end
       end
 
