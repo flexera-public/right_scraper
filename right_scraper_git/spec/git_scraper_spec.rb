@@ -210,7 +210,7 @@ describe RightScraper::Scrapers::Git do
     before(:each) do
       pending "Don't annoy GitHub unless ANNOY_GITHUB is set" unless ENV['ANNOY_GITHUB']
       @helper = RightScraper::GitScraperSpecHelper.new
-      credential_file = File.expand_path(File.join(File.dirname(__FILE__), '..', 'demokey'))
+      credential_file = File.expand_path(File.join(File.dirname(__FILE__), 'demokey'))
       credential = File.open(credential_file) { |f| f.read }
       @repo = RightScraper::Repository.from_hash(:display_name     => 'test repo',
                                                :repo_type        => :git,
