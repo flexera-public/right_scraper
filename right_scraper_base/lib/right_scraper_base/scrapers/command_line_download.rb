@@ -45,7 +45,7 @@ module RightScraper
 
         @logger.operation(:downloading) do
           credential_command = if @repository.first_credential && @repository.second_credential
-            ["-u", "#{@repository.first_credential}:@{repository.second_credential}"]
+            ["-u", "#{@repository.first_credential}:#{@repository.second_credential}"]
           else
             []
           end
