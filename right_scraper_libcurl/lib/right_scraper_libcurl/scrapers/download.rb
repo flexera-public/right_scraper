@@ -58,18 +58,6 @@ module RightScraper
         true
       end
 
-      # Return true iff this credential is useful.  Currently "useful"
-      # means "nonempty and not all spaces".
-      def is_useful?(credential)
-        credential && !credential.strip.empty?
-      end
-
-      # Return the useful portion of this credential.  Currently strips
-      # out any spaces.
-      def useful_part(credential)
-        credential.strip
-      end
-
       # Return next cookbook from the stream, or nil if none.
       def next
         return nil if @done
@@ -83,12 +71,12 @@ module RightScraper
 
         @logger.operation(:downloading) do
           easy = Curl::Easy.http_get(@repository.url) do |curl|
-            if is_useful?(@repository.first_credential) && is_useful?(@repository.second_credential)
+            if @repository.first_credential && @repository.second_credential
               curl.http_auth_types = [:any]
               curl.timeout = @max_seconds if @max_seconds
               # Curl::Easy doesn't support bailing if too large
-              curl.username = useful_part(@repository.first_credential)
-              curl.password = useful_part(@repository.second_credential)
+              curl.username = @repository.first_credential
+              curl.password = @repository.second_credential
             end
             curl.on_body do |body_data|
               file.write body_data

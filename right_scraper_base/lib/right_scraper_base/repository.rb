@@ -89,7 +89,9 @@ module RightScraper
         raise "Invalid URI #{opts[:url]}" unless validate_uri opts[:url]
       end
       opts.each do |k, v|
-        repo.__send__("#{k.to_s}=".to_sym, v) unless k == :repo_type
+        if k != :repo_type && is_useful?(v)
+          repo.__send__("#{k.to_s}=".to_sym, useful_part(v))
+        end
       end
       repo
     end
@@ -170,6 +172,18 @@ module RightScraper
     end
 
     protected
+    # Return true iff this credential is useful.  Currently "useful"
+    # means "nonempty and not all spaces".
+    def is_useful?(credential)
+      credential && !credential.strip.empty?
+    end
+
+    # Return the useful portion of this credential.  Currently strips
+    # out any spaces.
+    def useful_part(credential)
+      credential.strip
+    end
+
     # Compute a unique identifier for the given string.  Currently uses SHA1.
     #
     # === Parameters
