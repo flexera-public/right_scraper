@@ -74,6 +74,9 @@ module RightScraper
       # timeout(Fixnum):: time in seconds to wait before forcing
       #                   process to die.  Defaults to 10 seconds.
       def lay_to_rest(pid, timeout=10)
+        #refuse to kill ourselves, or to pass a bad arg to Process.kill
+        return 0 unless pid.is_a?(Integer) && pid > 0 
+        
         Process.kill('TERM', pid)
         time_waited = 0
         loop do
