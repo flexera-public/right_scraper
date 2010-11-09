@@ -33,7 +33,7 @@ module RightScraper
       end
 
       # Add this repository to the list of available types.
-      @@types[:download] = RightScraper::Repositories::LibCurlDownload
+      # @@types[:download] = RightScraper::Repositories::LibCurlDownload
       # Add a way to get this class, specifically.
       @@types[:download_libcurl] = RightScraper::Repositories::LibCurlDownload
     end
