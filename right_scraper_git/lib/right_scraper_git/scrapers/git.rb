@@ -59,21 +59,16 @@ module RightScraper
       # current repository, no fetching is done.
       def do_update
         git = ::Git.open(basedir)
-        @logger.operation(:checkout_revision) do
-          git.checkout(@repository.tag)
-        end if @repository.tag
-        possibles = git.branches.local.select {|branch| branch.name == @repository.tag}
-        # if possibles is empty, then tag is a SHA or a tag and in any
-        # case fetching makes no sense.
-        unless possibles.empty?
-          branch = possibles.first
-          remotename = git.config("branch.#{branch.name}.remote")
-          remote = git.remote(remotename)
-          @logger.operation(:fetch) do
-            remote.fetch
-          end
-          @logger.operation(:merge) do
-            remote.merge
+        do_checkout_revision(git)
+        if git.is_branch?(@repository.tag)
+          branch = git.branch(@repository.tag)
+          if branch.remote
+            @logger.operation(:fetch) do
+              branch.remote.fetch
+            end
+            @logger.operation(:merge) do
+              branch.remote.merge
+            end
           end
         end
         do_update_tag git
@@ -93,10 +88,18 @@ module RightScraper
         git = @logger.operation(:cloning, "to #{basedir}") do
           ::Git.clone(@repository.url, basedir)
         end
-        @logger.operation(:checkout_revision) do
-          git.checkout(@repository.tag)
-        end if @repository.tag
+        do_checkout_revision(git)
         do_update_tag git
+      end
+
+      def do_checkout_revision(git)
+        @logger.operation(:checkout_revision) do
+          if git.is_branch?(@repository.tag)
+            git.branch(@repository.tag).checkout
+          else
+            git.checkout(@repository.tag)
+          end
+        end if @repository.tag
       end
 
       # Ignore .git directories.
