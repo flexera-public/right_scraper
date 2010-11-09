@@ -22,6 +22,7 @@
 #++
 require 'tempfile'
 require 'process_watcher'
+require 'tmpdir'
 
 module RightScraper
   module Processes
@@ -38,12 +39,20 @@ module RightScraper
       # Open a connection to the SSH agent and set +ENV+
       # appropriately.
       def open
-        output = ProcessWatcher.watch('ssh-agent', ['-s'], nil, -1, 10)
-        output.split(/\n/).each do |line|
-          if line =~ /^(SSH_\w+)=(.*?); export \1;$/
-            ENV[$1] = $2
+        @dir = Dir.mktmpdir
+        @socketfile = File.join(@dir, "agent")
+        @monitor = ProcessWatcher::ProcessMonitor.new
+        @pid = @monitor.spawn('ssh-agent', '-a', @socketfile, '-d') {}
+        timeout = 0
+        until File.exists?(@socketfile)
+          timeout += 1
+          sleep 0.1
+          if timeout > 100
+            raise "Couldn't find SSH agent control socket in time.  Timing out"
           end
         end
+        ENV['SSH_AGENT_PID'] = @pid.to_s
+        ENV['SSH_AUTH_SOCK'] = @socketfile
         ENV['SSH_ASKPASS'] = File.expand_path(File.join(File.dirname(__FILE__),
                                                         '..', '..', '..',
                                                         'scripts',
@@ -54,7 +63,9 @@ module RightScraper
       # Close the connection to the SSH agent, and restore +ENV+.
       def close
         begin
-          lay_to_rest(ENV['SSH_AGENT_PID'].to_i)
+          FileUtils.remove_entry_secure @dir
+          lay_to_rest(@pid) if @pid
+          @monitor.cleanup if @monitor
         ensure
           setvar 'SSH_AGENT_PID', @agentpid
           setvar 'DISPLAY', @display
