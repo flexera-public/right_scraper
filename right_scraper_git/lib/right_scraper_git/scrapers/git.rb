@@ -94,8 +94,9 @@ module RightScraper
 
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
-          if git.is_branch?(@repository.tag)
-            git.branch(@repository.tag).checkout
+          if branch = git.branches.find {|b| File.basename(b.full) ==
+              @repository.tag}
+            branch.checkout
           else
             git.checkout(@repository.tag)
           end
