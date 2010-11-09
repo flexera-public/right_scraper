@@ -39,6 +39,11 @@ module RightScraper
       # Open a connection to the SSH agent and set +ENV+
       # appropriately.
       def open
+        ENV['SSH_ASKPASS'] = File.expand_path(File.join(File.dirname(__FILE__),
+                                                        '..', '..', '..',
+                                                        'scripts',
+                                                        'stub_ssh_askpass'))
+        ENV['HOME'] = "/dev/null"
         @dir = Dir.mktmpdir
         @socketfile = File.join(@dir, "agent")
         @monitor = ProcessWatcher::ProcessMonitor.new
@@ -53,11 +58,6 @@ module RightScraper
         end
         ENV['SSH_AGENT_PID'] = @pid.to_s
         ENV['SSH_AUTH_SOCK'] = @socketfile
-        ENV['SSH_ASKPASS'] = File.expand_path(File.join(File.dirname(__FILE__),
-                                                        '..', '..', '..',
-                                                        'scripts',
-                                                        'stub_ssh_askpass'))
-        ENV['HOME'] = "/dev/null"
       end
 
       # Close the connection to the SSH agent, and restore +ENV+.
@@ -86,8 +86,8 @@ module RightScraper
       #                   process to die.  Defaults to 10 seconds.
       def lay_to_rest(pid, timeout=10)
         #refuse to kill ourselves, or to pass a bad arg to Process.kill
-        return 0 unless pid.is_a?(Integer) && pid > 0 
-        
+        return 0 unless pid.is_a?(Integer) && pid > 0
+
         Process.kill('TERM', pid)
         time_waited = 0
         loop do
