@@ -93,7 +93,7 @@ module RightScraper
         if [:first_credential, :second_credential].include?(k) && is_useful?(v)
           v = useful_part(v)
         end
-        repo.__send__("#{k.to_s}=".to_sym, useful_part(v))
+        repo.__send__("#{k.to_s}=".to_sym, v)
       end
       repo
     end
