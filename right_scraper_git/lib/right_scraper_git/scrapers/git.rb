@@ -60,8 +60,7 @@ module RightScraper
       def do_update
         git = ::Git.open(basedir)
         do_checkout_revision(git)
-        if git.is_branch?(@repository.tag)
-          branch = git.branch(@repository.tag)
+        if branch = git.current_branch
           if branch.remote
             @logger.operation(:fetch) do
               branch.remote.fetch
@@ -94,13 +93,16 @@ module RightScraper
 
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
-          if branch = git.branches.find {|b| File.basename(b.full) ==
-              @repository.tag}
+          if branch = find_branch(git)
             branch.checkout
           else
             git.checkout(@repository.tag)
           end
         end if @repository.tag
+      end
+
+      def find_branch(git)
+        git.branches.find {|b| File.basename(b.full) == @repository.tag}
       end
 
       # Ignore .git directories.
