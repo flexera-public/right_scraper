@@ -146,7 +146,7 @@ describe RightScraper::Scrapers::Svn do
         @oldmetadata = @helper.repo_content
         @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
         @helper.commit_content
-        @repo.tag = @helper.commit_id(1)
+        @repo.tag = @helper.commit_id(1).to_s
       end
 
       it_should_behave_like "From-scratch scraping"

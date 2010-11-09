@@ -45,9 +45,21 @@ module RightScraper
         client = SvnClient.new(@repository)
         client.with_context do |ctx|
           @logger.operation(:update) do
-            ctx.update(basedir, @repository.tag || nil)
+            ctx.update(basedir, get_tag)
           end
           do_update_tag ctx
+        end
+      end
+
+      # Fetch the tag from the repository, or nil if one doesn't
+      # exist.  This is a separate method because the repo tag should
+      # be a number but is a string in the database.
+      def get_tag
+        case @repository.tag
+        when Fixnum then @repository.tag
+        when /^\d+$/ then @repository.tag.to_i
+        else
+          @repository.tag
         end
       end
 
@@ -65,7 +77,7 @@ module RightScraper
         client = SvnClient.new(@repository)
         client.with_context do |ctx|
           @logger.operation(:checkout_revision) do
-            ctx.checkout(@repository.url, basedir, @repository.tag || nil)
+            ctx.checkout(@repository.url, basedir, get_tag)
           end
           do_update_tag ctx
         end
