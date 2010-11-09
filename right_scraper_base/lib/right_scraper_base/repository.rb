@@ -89,9 +89,11 @@ module RightScraper
         raise "Invalid URI #{opts[:url]}" unless validate_uri opts[:url]
       end
       opts.each do |k, v|
-        if k != :repo_type && is_useful?(v)
-          repo.__send__("#{k.to_s}=".to_sym, useful_part(v))
+        next if k == :repo_type
+        if [:first_credential, :second_credential].include?(k) && is_useful?(v)
+          v = useful_part(v)
         end
+        repo.__send__("#{k.to_s}=".to_sym, useful_part(v))
       end
       repo
     end
