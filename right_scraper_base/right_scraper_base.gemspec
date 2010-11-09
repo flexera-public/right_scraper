@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_dependency('json', '>= 1.4.2')
-  spec.add_dependency('process_watcher', '~> 0.2')
+  spec.add_dependency('process_watcher', '~> 0.3')
   spec.requirements << 'curl command line client'
 
   spec.add_development_dependency('rspec')
