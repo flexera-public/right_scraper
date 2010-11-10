@@ -60,13 +60,16 @@ module RightScraper
       def do_update
         git = ::Git.open(basedir)
         do_checkout_revision(git)
-        if branch = git.current_branch
-          if branch.remote
+        branch_name = git.current_branch
+        if branch_name && branch_name != "(no branch)"
+          branch = git.branch(branch_name)
+          remote = find_remote_branch(git, branch_name)
+          if remote
             @logger.operation(:fetch) do
-              branch.remote.fetch
+              remote.remote.fetch
             end
             @logger.operation(:merge) do
-              branch.remote.merge
+              branch.merge(remote)
             end
           end
         end
@@ -94,6 +97,13 @@ module RightScraper
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
           if branch = find_branch(git)
+            if branch.remote
+              # need to make a local tracking branch
+              newbranch = git.branch(branch.name)
+              newbranch.update_ref(branch.gcommit)
+              newbranch.checkout
+              branch = newbranch
+            end
             branch.checkout
           else
             git.checkout(@repository.tag)
@@ -102,7 +112,16 @@ module RightScraper
       end
 
       def find_branch(git)
-        git.branches.find {|b| File.basename(b.full) == @repository.tag}
+        find_local_branch(git, @repository.tag) ||
+          find_remote_branch(git, @repository.tag)
+      end
+
+      def find_local_branch(git, name)
+        git.branches.local.find {|b| b.name == name}
+      end
+
+      def find_remote_branch(git, name)
+        git.branches.remote.find {|b| b.name == name}
       end
 
       # Ignore .git directories.

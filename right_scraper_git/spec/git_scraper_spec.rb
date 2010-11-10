@@ -202,6 +202,29 @@ describe RightScraper::Scrapers::Git do
             File.exists?(File.join(@olddir, 'branch_folder', 'bfile1')).should be_true
           end
         end
+
+        context 'with tag being an empty string' do
+          before(:each) do
+            @repo.tag = ""
+          end
+
+          before(:each) do
+            @olddir = @scraper.basedir
+            @scraper.close
+            @scraper = @scraperclass.new(@repo,
+                                         :directory => @helper.scraper_path,
+                                         :max_bytes => 1024**2,
+                                         :max_seconds => 20)
+          end
+
+          it 'should use the same directory for files' do
+            @olddir.should == @scraper.basedir
+          end
+
+          it 'should see the new change' do
+            File.exists?(File.join(@olddir, 'branch_folder', 'bfile1')).should be_true
+          end
+        end
       end
     end
   end

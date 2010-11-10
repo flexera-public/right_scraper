@@ -91,5 +91,13 @@ describe RightScraper::Scraper do
       end
       @scraper.succeeded?.should be_true
     end
+
+    context 'with tag being an empty string' do
+      before(:each) do
+        @repo.tag = ""
+      end
+
+      it_should_behave_like "Normal repository contents"
+    end
   end
 end
