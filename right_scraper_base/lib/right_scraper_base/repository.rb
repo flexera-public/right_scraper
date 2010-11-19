@@ -86,7 +86,7 @@ module RightScraper
     def self.from_hash(opts)
       repo = @@types[opts[:repo_type]].new
       unless ENV['DEVELOPMENT']
-        raise "Invalid URI #{opts[:url]}" unless validate_uri opts[:url]
+        validate_uri opts[:url]
       end
       opts.each do |k, v|
         next if k == :repo_type
@@ -244,40 +244,39 @@ module RightScraper
     def self.validate_uri(uri)
       begin
         uri = URI.parse(uri) if uri.instance_of?(String)
-        return false unless @@okay_schemes.include?(uri.scheme)
-        check_host(uri.host, uri.port)
+        raise "Invalid URI #{uri}: don't know how to interpret scheme #{uri.scheme}" unless @@okay_schemes.include?(uri.scheme)
+        check_host(uri, uri.host, uri.port)
       rescue URI::InvalidURIError
         # could be a Git type URI.
         if uri =~ PATTERN::GIT_URI
-          check_host($2, SSH_PORT)
+          check_host(uri, $2, SSH_PORT)
         else
           raise
         end
       end
     end
 
-    def self.check_host(host, port)
+    def self.check_host(uri, host, port)
       begin
         possibles = Socket.getaddrinfo(host, port, Socket::AF_INET, Socket::SOCK_STREAM, Socket::IPPROTO_TCP)
-        return false if possibles.empty?
+        raise "Invalid URI #{uri}: no hosts for #{host}:#{port}" if possibles.nil? || possibles.empty?
         possibles.each do |possible|
           family, port, hostname, address, protocol_family, socket_type, protocol = possible
 
           # Our EC2 gateway is not permitted.
-          return false if address == "169.254.169.254"
+          raise "Invalid URI #{uri}" if address == "169.254.169.254"
           # Loopbacks are not permitted.
-          return false if address =~ /^127\.[0-9]+\.[0-9]+\.[0-9]+$/
+          raise "Invalid URI #{uri}" if address =~ /^127\.[0-9]+\.[0-9]+\.[0-9]+$/
 
           # Private networks are not permitted
-          return false if address =~ /^10\.[0-9]+\.[0-9]+\.[0-9]+$/
-          return false if address =~ /^172\.(1[6-9]|[23][0-9])\.[0-9]+\.[0-9]+$/
-          return false if address =~ /^192\.168\.[0-9]+\.[0-9]+$/
-
+          raise "Invalid URI #{uri}" if address =~ /^10\.[0-9]+\.[0-9]+\.[0-9]+$/
+          raise "Invalid URI #{uri}" if address =~ /^172\.(1[6-9]|[23][0-9])\.[0-9]+\.[0-9]+$/
+          raise "Invalid URI #{uri}" if address =~ /^192\.168\.[0-9]+\.[0-9]+$/
         end
         true
       rescue SocketError
         # means the host doesn't exist
-        false
+        raise "Invalid URI #{uri}: no hosts for #{host}:#{port}"
       end
     end
   end
