@@ -25,6 +25,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'scraper_spec_helper_base'))
 require 'git'
 
+module Git
+  class Lib
+    def public_command(*args, &block)
+      command(*args, &block)
+    end
+  end
+end
 module RightScraper
 
   # Git implementation of scraper spec helper
@@ -63,6 +70,10 @@ module RightScraper
         }
         commit_content("Branch #{branch}")
       end
+    end
+
+    def force_rebase(upstream, newbase)
+      @git.lib.public_command("rebase", ["--onto", newbase, upstream])
     end
 
     def commit_id(index_from_last=0)

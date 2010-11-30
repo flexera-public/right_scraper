@@ -99,5 +99,33 @@ describe RightScraper::Scraper do
 
       it_should_behave_like "Normal repository contents"
     end
+
+    context 'with some additional commits' do
+      before(:each) do
+        @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
+        @helper.commit_content("change to master")
+      end
+
+      context 'after a successful scraper run' do
+        before(:each) do
+          @scraper.scrape(@repo)
+          @scraper.succeeded?.should be_true
+        end
+
+        context 'with some incompatible changes' do
+          before(:each) do
+            @helper.create_file_layout(@helper.repo_path, [{'other_branch_folder' => ['file7']}])
+            @helper.commit_content("2nd change to master")
+            @helper.force_rebase('master^', 'master^^')
+          end
+
+          it 'should still be successful' do
+            @scraper.scrape(@repo)
+            @scraper.errors.should == []
+            @scraper.succeeded?.should be_true
+          end
+        end
+      end
+    end
   end
 end

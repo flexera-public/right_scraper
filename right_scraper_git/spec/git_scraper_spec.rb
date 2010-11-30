@@ -181,7 +181,15 @@ describe RightScraper::Scrapers::Git do
       context 'when a change is made to the master repo' do
         before(:each) do
           @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
-          @helper.commit_content
+          @helper.commit_content("change to master")
+          @helper.create_file_layout(@helper.repo_path, ['frob'])
+          @helper.commit_content("alpha")
+          @helper.create_file_layout(@helper.repo_path, ['botz'])
+          @helper.commit_content("beta")
+          @helper.create_file_layout(@helper.repo_path, ['fred'])
+          @helper.commit_content("delta")
+          @helper.create_file_layout(@helper.repo_path, ['barney'])
+          @helper.commit_content("gamma")
         end
 
         context 'a new scraper' do
@@ -192,6 +200,41 @@ describe RightScraper::Scrapers::Git do
                                          :directory => @helper.scraper_path,
                                          :max_bytes => 1024**2,
                                          :max_seconds => 20)
+          end
+
+          context 'when an incompatible change is made to the master repo' do
+            before(:each) do
+              @scraper.next
+            end
+
+            before(:each) do
+              @helper.create_file_layout(@helper.repo_path, [{'other_branch_folder' => ['file7']}])
+              @helper.commit_content("2nd change to master")
+              @helper.force_rebase('master^', 'master^^^^^')
+            end
+
+            context 'a new scraper' do
+              before(:each) do
+                @olddir = @scraper.basedir
+                @scraper.close
+                @scraper = @scraperclass.new(@repo,
+                                             :directory => @helper.scraper_path,
+                                             :max_bytes => 1024**2,
+                                             :max_seconds => 20)
+              end
+
+              it 'should use the same directory for files' do
+                @olddir.should == @scraper.basedir
+              end
+
+              it 'should see the new change' do
+                File.exists?(File.join(@olddir, 'other_branch_folder', 'file7')).should be_true
+              end
+
+              it 'should not see the middle change' do
+                File.exists?(File.join(@olddir, 'frob')).should_not be_true
+              end
+            end
           end
 
           it 'should use the same directory for files' do

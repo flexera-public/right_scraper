@@ -69,8 +69,9 @@ module RightScraper
               remote.remote.fetch
             end
             @logger.operation(:merge) do
-              branch.merge(remote)
+              branch.update_ref(remote.gcommit)
             end
+            git.reset_hard(branch)
           end
         end
         do_update_tag git
