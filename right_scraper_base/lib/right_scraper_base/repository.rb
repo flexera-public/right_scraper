@@ -84,7 +84,9 @@ module RightScraper
     # === Return
     # repo(RightScraper::Repository):: Resulting repository instance
     def self.from_hash(opts)
-      repo = @@types[opts[:repo_type]].new
+      repo_class = @@types[opts[:repo_type]]
+      raise "Can't understand how to make #{opts[:repo_type]} repos" if repo_class.nil?
+      repo = repo_class.new
       unless ENV['DEVELOPMENT']
         validate_uri opts[:url]
       end

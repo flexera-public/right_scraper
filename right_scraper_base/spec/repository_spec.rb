@@ -28,31 +28,46 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 describe RightScraper::Repository do
   it_should_behave_like "Development mode environment"
 
-  before(:each) do
-    @repo = RightScraper::Repository.from_hash(:display_name      => 'display_name',
-                                             :repo_type         => :mock,
-                                             :url               => 'url',
-                                             :tag               => 'tag',
-                                             :first_credential  => 'first_credential',
-                                             :second_credential => 'second_credential')
+  context 'with a repository type that doesn\'t exist' do
+    it 'should throw a comprehensible error when you try to create it' do
+      lambda {
+        RightScraper::Repository.from_hash(:display_name      => 'display_name',
+                                           :repo_type         => :nonexistent,
+                                           :url               => 'url',
+                                           :tag               => 'tag',
+                                           :first_credential  => 'first_credential',
+                                           :second_credential => 'second_credential')
+      }.should raise_error(/Can't understand how to make nonexistent repos/)
+    end
   end
 
-  it 'should be initializable from a hash' do
-    @repo.should be_kind_of(RightScraper::Repository)
-    @repo.display_name.should      == 'display_name'
-    @repo.repo_type.should         == :mock
-    @repo.url.should               == 'url'
-    @repo.tag.should               == 'tag'
-    @repo.first_credential.should  == 'first_credential'
-    @repo.second_credential.should == 'second_credential'
-  end
+  context 'with a mock repository' do
+    before(:each) do
+      @repo = RightScraper::Repository.from_hash(:display_name      => 'display_name',
+                                                 :repo_type         => :mock,
+                                                 :url               => 'url',
+                                                 :tag               => 'tag',
+                                                 :first_credential  => 'first_credential',
+                                                 :second_credential => 'second_credential')
+    end
 
-  it 'should know the SHA-1 of its root location' do
-    @repo.repository_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
-  end
+    it 'should be initializable from a hash' do
+      @repo.should be_kind_of(RightScraper::Repository)
+      @repo.display_name.should      == 'display_name'
+      @repo.repo_type.should         == :mock
+      @repo.url.should               == 'url'
+      @repo.tag.should               == 'tag'
+      @repo.first_credential.should  == 'first_credential'
+      @repo.second_credential.should == 'second_credential'
+    end
 
-  it 'should know the SHA-1 of the identifier for this specific checkout' do
-    @repo.checkout_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
+    it 'should know the SHA-1 of its root location' do
+      @repo.repository_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
+    end
+
+    it 'should know the SHA-1 of the identifier for this specific checkout' do
+      @repo.checkout_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
+    end
   end
 end
 
@@ -61,10 +76,10 @@ describe RightScraper::Repositories::Download do
 
   before(:each) do
     @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
-                                             :repo_type => :download,
-                                             :url => "http://foo.bar.baz.quux/%20CBLAH",
-                                             :first_credential => "foo:b/ar",
-                                             :second_credential => "foo@bar")
+                                               :repo_type => :download,
+                                               :url => "http://foo.bar.baz.quux/%20CBLAH",
+                                               :first_credential => "foo:b/ar",
+                                               :second_credential => "foo@bar")
   end
 
   it 'should have the same repository hash with or without credentials' do
