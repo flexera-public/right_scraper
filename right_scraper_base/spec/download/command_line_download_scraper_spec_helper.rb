@@ -65,7 +65,9 @@ module RightScraper
         example = File.open(tarball, 'r').read
         cookbook.data[:archive].should == example
       end
-      cookbook.repository.should == repository
+      cookbook.repository.tag.should_not == nil
+      cookbook.repository.repository_hash.should == repository.repository_hash
+      cookbook.repository.checkout_hash.should_not == repository.checkout_hash
       cookbook.pos.should == position
       cookbook.metadata.should == repo_content
       cookbook.manifest.should == manifest

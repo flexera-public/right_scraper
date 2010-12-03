@@ -78,8 +78,20 @@ describe RightScraper::Repositories::Download do
     @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
                                                :repo_type => :download,
                                                :url => "http://foo.bar.baz.quux/%20CBLAH",
+                                               :tag => "412530982323",
                                                :first_credential => "foo:b/ar",
                                                :second_credential => "foo@bar")
+  end
+
+  it 'should have a tag' do
+    @repo.tag.should == '412530982323'
+  end
+
+  it 'should include the tag in the checkout hash' do
+    @repo.checkout_hash.should_not == @repo.repository_hash
+    oldhash = @repo.checkout_hash
+    @repo.tag = "42398"
+    @repo.checkout_hash.should_not == oldhash
   end
 
   it 'should have the same repository hash with or without credentials' do

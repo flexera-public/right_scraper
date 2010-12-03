@@ -39,6 +39,9 @@ module RightScraper
       # (String) Optional, password
       attr_accessor :second_credential
 
+      # (String) Optional, SHA of contents
+      attr_accessor :tag
+
       # Unique representation for this repo, should resolve to the same string
       # for repos that should be cloned in same directory
       #
@@ -54,6 +57,14 @@ module RightScraper
       # URI:: URL representing this repository
       def to_url
         add_users_to(url, first_credential, second_credential)
+      end
+
+      # Return a unique identifier for this revision in this repository.
+      #
+      # === Returns
+      # String:: opaque unique ID for this revision in this repository
+      def checkout_hash
+        digest("#{repo_type} #{url} #{tag}")
       end
 
       # (ScraperBase class) Appropriate class for scraping this sort of

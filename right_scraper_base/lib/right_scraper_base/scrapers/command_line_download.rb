@@ -23,6 +23,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'filesystem'))
 require 'process_watcher'
 require 'tempfile'
+require 'digest/sha1'
 
 module RightScraper
   module Scrapers
@@ -56,6 +57,8 @@ module RightScraper
           end
         end
 
+        note_tag(file)
+
         @logger.operation(:unpacking) do
           path = @repository.to_url.path
           if path =~ /\.gz$/
@@ -72,6 +75,19 @@ module RightScraper
             end
           end
         end
+      end
+
+      # Amend @repository with the tag information from the downloaded
+      # file.
+      #
+      # === Parameters
+      # file(String):: file that was downloaded
+      def note_tag(file)
+        digest = Digest::SHA1.new
+        File.open(file) {|f| digest << f.read(4096) }
+        repo = @repository.clone
+        repo.tag = digest.hexdigest
+        @repository = repo
       end
     end
   end
