@@ -41,6 +41,7 @@ module RightScraper
 
       # (String) Optional, SHA of contents
       attr_accessor :tag
+      alias_method :revision, :tag
 
       # Unique representation for this repo, should resolve to the same string
       # for repos that should be cloned in same directory
