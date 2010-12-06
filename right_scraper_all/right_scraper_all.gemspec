@@ -49,6 +49,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
+  spec.add_development_dependency('ruby-debug')
 
   spec.description = <<-EOF
   RightScraper provides a simple interface to download and keep local copies of remote

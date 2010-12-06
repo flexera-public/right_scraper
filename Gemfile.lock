@@ -2,16 +2,23 @@ GEM
   remote: http://rubygems.org/
   specs:
     blackwinter-git (1.2.7)
+    columnize (0.3.2)
     curb (0.7.7.1)
     flexmock (0.8.8)
     json (1.4.6)
     libarchive (0.1.1)
+    linecache (0.43)
     process_watcher (0.3)
     right_aws (2.0.0)
       right_http_connection (>= 1.2.1)
     right_http_connection (1.2.4)
     rspec (1.3.1)
     rtags (0.98)
+    ruby-debug (0.10.4)
+      columnize (>= 0.1)
+      ruby-debug-base (~> 0.10.4.0)
+    ruby-debug-base (0.10.4)
+      linecache (>= 0.3)
 
 PLATFORMS
   ruby
@@ -26,3 +33,4 @@ DEPENDENCIES
   right_aws (~> 2.0)
   rspec (~> 1.3)
   rtags
+  ruby-debug

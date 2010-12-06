@@ -1,2 +1,6 @@
+--colour
 --format=nested
 --backtrace
+--loadby mtime
+--reverse
+--debugger
