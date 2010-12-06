@@ -34,8 +34,28 @@ module RightScraper
   #     ...
   #   end
   module SvnClient
+    def calculate_version
+      unless @svn_version
+        out = ProcessWatcher.watch("svn", ["--version", "--quiet"],
+                                   basedir, @max_bytes || -1, @max_seconds || -1)
+        @svn_version = out.chomp.split(".").map {|e| e.to_i}
+      end
+      @svn_version
+    end
+
     def svn_arguments
-      args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
+      version = calculate_version
+      case
+      when version[0] != 1
+        raise "SVN major revision is not 1, cannot be sure it will run properly."
+      when version[1] < 4
+        raise "SVN minor revision < 4; cannot be sure it will run properly."
+      when version[1] < 6
+        # --trust-server-cert is a 1.6ism
+        args = ["--no-auth-cache", "--non-interactive"]
+      else
+        args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
+      end
       if repository.first_credential && repository.second_credential
         args << "--username"
         args << repository.first_credential
