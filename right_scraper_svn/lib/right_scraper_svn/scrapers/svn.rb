@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'svn_client'))
+require 'process_watcher'
 
 module RightScraper
   module Scrapers
@@ -36,18 +37,34 @@ module RightScraper
         File.exists?(File.join(basedir, '.svn'))
       end
 
+      def svn_arguments
+        args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
+        if @repository.first_credential && @repository.second_credential
+          args << "--username"
+          args << @repository.first_credential
+          args << "--password"
+          args << @repository.second_credential
+        end
+        args
+      end
+
       # Incrementally update the checkout.  The operations are as follows:
       # * update to #tag
       # In theory if #tag is a revision number that already exists no
       # update is necessary.  It's not clear if the SVN client libraries
       # are bright enough to notice this.
       def do_update
-        client = SvnClient.new(@repository)
-        client.with_context do |ctx|
-          @logger.operation(:update) do
-            ctx.update(basedir, get_tag)
-          end
-          do_update_tag ctx
+        @logger.operation(:update) do
+          run_svn("update", get_tag_argument)
+        end
+        do_update_tag
+      end
+
+      def get_tag_argument
+        if @repository.tag
+          tag_cmd = ["-r", get_tag.to_s]
+        else
+          tag_cmd = []
         end
       end
 
@@ -63,10 +80,26 @@ module RightScraper
         end
       end
 
-      def do_update_tag(ctx)
+      def run_svn_no_chdir(*args)
+        ProcessWatcher.watch("svn", [args, svn_arguments].flatten,
+                             basedir, @max_bytes || -1, @max_seconds || -1) do |phase, operation, exception|
+          #$stderr.puts "#{phase} #{operation} #{exception}"
+        end
+      end
+
+      def run_svn(*args)
+        Dir.chdir(basedir) do
+          run_svn_no_chdir(*args)
+        end
+      end
+
+      def do_update_tag
         @repository = @repository.clone
-        ctx.info(basedir) do |path, info|
-          @repository.tag = info.rev.to_s
+        info = run_svn("info")
+        info.split('\n').each do |line|
+          if line =~ /Revision: (\d+)/
+            @repository.tag = $1
+          end
         end
       end
 
@@ -74,13 +107,10 @@ module RightScraper
       # * checkout repository at #tag to #basedir
       def do_checkout
         super
-        client = SvnClient.new(@repository)
-        client.with_context do |ctx|
-          @logger.operation(:checkout_revision) do
-            ctx.checkout(@repository.url, basedir, get_tag)
-          end
-          do_update_tag ctx
+        @logger.operation(:checkout_revision) do
+          run_svn_no_chdir("checkout", @repository.url, basedir, get_tag_argument)
         end
+        do_update_tag
       end
 
       # Ignore .svn directories.
