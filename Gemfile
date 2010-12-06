@@ -11,4 +11,5 @@ group :development do
   gem "rspec", "~> 1.3"
   gem "flexmock"
   gem "rtags"
+  gem "ruby-debug"
 end

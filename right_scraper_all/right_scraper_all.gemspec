@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
 
   spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'curl command line client'
-  spec.requirements << 'Subversion Ruby client bindings'
+  spec.requirements << 'Subversion command line client'
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')

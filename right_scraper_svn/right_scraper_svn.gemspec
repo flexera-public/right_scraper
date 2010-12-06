@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_dependency('right_scraper_base', '>= 2.0.0')
-  spec.requirements << 'Subversion Ruby client bindings'
+  spec.requirements << 'Subversion command line client'
 
   spec.add_development_dependency('rspec')
   spec.add_development_dependency('flexmock')
