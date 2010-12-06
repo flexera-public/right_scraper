@@ -20,7 +20,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'svn/client'
+require 'process_watcher'
 
 module RightScraper
   # Simplified interface to the process of creating SVN client
@@ -33,41 +33,48 @@ module RightScraper
   #   client.with_context do |ctx|
   #     ...
   #   end
-  class SvnClient
-    # Initialize the client with the given repository.
-    #
-    # === Parameters
-    # repo(RightScraper::Repository):: SVN repository to work from
-    def initialize(repo)
-      @repository = repo
+  module SvnClient
+    def svn_arguments
+      args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
+      if repository.first_credential && repository.second_credential
+        args << "--username"
+        args << repository.first_credential
+        args << "--password"
+        args << repository.second_credential
+      end
+      args
     end
 
-    # Create a SVN client context set up for the repository given, and
-    # call the attached block with the context ensuring that it will
-    # be closed upon exit.
-    #
-    # === Parameters
-    # log(String):: Optional log message to use
-    def with_context(log="")
-      context = ::Svn::Client::Context.new
-      context.set_log_msg_func do |items|
-        [true, log]
+    def get_tag_argument
+      if repository.tag
+        tag_cmd = ["-r", get_tag.to_s]
+      else
+        tag_cmd = ["-r", "HEAD"]
       end
-      context.add_simple_prompt_provider(0) do |cred, realm, username, may_save|
-        cred.username = @repository.first_credential unless @repository.first_credential.nil?
-        cred.password = @repository.second_credential unless @repository.second_credential.nil?
-        cred.may_save = false
+    end
+
+    def run_svn_no_chdir(*args)
+      ProcessWatcher.watch("svn", [args, svn_arguments].flatten,
+                           basedir, @max_bytes || -1, @max_seconds || -1) do |phase, operation, exception|
+        #$stderr.puts "#{phase} #{operation} #{exception}"
       end
-      context.add_username_prompt_provider(0) do |cred, realm, username, may_save|
-        cred.username = @repository.first_credential unless @repository.first_credential.nil?
-        cred.password = @repository.second_credential unless @repository.second_credential.nil?
-        cred.may_save = false
+    end
+
+    def run_svn(*args)
+      Dir.chdir(basedir) do
+        run_svn_no_chdir(*args)
       end
-      return context unless block_given?
-      begin
-        yield context
-      ensure
-        context.destroy if context.respond_to?(:destroy)
+    end
+
+    # Fetch the tag from the repository, or nil if one doesn't
+    # exist.  This is a separate method because the repo tag should
+    # be a number but is a string in the database.
+    def get_tag
+      case repository.tag
+      when Fixnum then repository.tag
+      when /^\d+$/ then repository.tag.to_i
+      else
+        repository.tag
       end
     end
   end

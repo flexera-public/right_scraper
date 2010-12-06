@@ -23,19 +23,21 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'scraper_spec_helper_base'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_svn'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_svn', 'svn_client'))
-require 'svn/repos'
+require 'process_watcher'
 
 module RightScraper
 
   # SVN implementation of scraper spec helper
   # See parent class for methods headers comments
   class SvnScraperSpecHelper < ScraperSpecHelperBase
+    include RightScraper::SvnClient
+
     def svn_repo_path
       File.join(@tmpdir, "svn")
     end
 
     attr_reader :repo
+    alias_method :repository, :repo
 
     def scraper_path
       File.join(@tmpdir, "scraper")
@@ -47,15 +49,17 @@ module RightScraper
       url = "#{file_prefix}#{svn_repo_path}"
     end
 
+    alias_method :basedir, :repo_path
+
     def initialize
       super()
       FileUtils.mkdir(svn_repo_path)
       @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
-                                               :repo_type    => :svn,
-                                               :url          => repo_url)
-      @client = RightScraper::SvnClient.new(@repo)
-      @svnrepo = Svn::Repos.create(svn_repo_path, {}, {})
-      @client.with_context {|ctx| ctx.checkout(repo_url, repo_path)}
+                                                 :repo_type    => :svn,
+                                                 :url          => repo_url)
+      output, status = ProcessWatcher.run("svnadmin", "create", svn_repo_path)
+      raise "Can't create repo: #{output}" if status != 0
+      run_svn_no_chdir "checkout", repo_url, repo_path
       make_cookbooks
       commit_content
     end
@@ -64,37 +68,24 @@ module RightScraper
       create_cookbook(repo_path, repo_content)
     end
 
-    def close
-      @svnrepo.close unless @svnrepo.nil?
-      @svnrepo = nil
-      @repository.close unless @repos.nil?
-      @repository = nil
-      super
-    end
-
     def delete(location, log="")
-      @client.with_context(log) {|ctx|
-        ctx.delete(location)
-      }
+      run_svn "delete", location
     end
 
     def commit_content(commit_message='commit message')
-      @client.with_context(commit_message) {|ctx|
-        Dir.glob(File.join(repo_path, '*')) {|file| ctx.add(file, true, true) }
-        ctx.commit(repo_path)
-      }
+      run_svn "add", Dir.glob(File.join(repo_path, '**/*'))
+      run_svn "commit", "--message", commit_message
     end
 
     def commit_id(index_from_last=0)
-      @client.with_context('fetching logs') {|ctx|
-        seen = []
-        ctx.log(repo_path, 1, "HEAD", 0, true, nil,
-                nil) {|changed, rev, author, date, message|
-          seen << rev
-          seen.shift if seen.length > index_from_last+1
-        }
-        seen.first
-      }
+      output = run_svn "log", "-l", (index_from_last + 1).to_s, "-r", "HEAD:0"
+      id = nil
+      output.split(/\n/).each do |line|
+        if line =~ /^r(\d+)/
+          id = $1
+        end
+      end
+      id
     end
   end
 end

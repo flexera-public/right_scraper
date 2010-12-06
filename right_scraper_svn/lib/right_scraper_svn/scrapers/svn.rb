@@ -27,6 +27,7 @@ module RightScraper
   module Scrapers
     # Scraper for cookbooks stored in a Subversion repository.
     class Svn < CheckoutBasedScraper
+      include RightScraper::SvnClient
       # Return true if a checkout exists.  Currently tests for .svn in
       # the checkout.
       #
@@ -35,17 +36,6 @@ module RightScraper
       #           incremental updating can occur).
       def exists?
         File.exists?(File.join(basedir, '.svn'))
-      end
-
-      def svn_arguments
-        args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
-        if @repository.first_credential && @repository.second_credential
-          args << "--username"
-          args << @repository.first_credential
-          args << "--password"
-          args << @repository.second_credential
-        end
-        args
       end
 
       # Incrementally update the checkout.  The operations are as follows:
@@ -60,45 +50,13 @@ module RightScraper
         do_update_tag
       end
 
-      def get_tag_argument
-        if @repository.tag
-          tag_cmd = ["-r", get_tag.to_s]
-        else
-          tag_cmd = []
-        end
-      end
-
-      # Fetch the tag from the repository, or nil if one doesn't
-      # exist.  This is a separate method because the repo tag should
-      # be a number but is a string in the database.
-      def get_tag
-        case @repository.tag
-        when Fixnum then @repository.tag
-        when /^\d+$/ then @repository.tag.to_i
-        else
-          @repository.tag
-        end
-      end
-
-      def run_svn_no_chdir(*args)
-        ProcessWatcher.watch("svn", [args, svn_arguments].flatten,
-                             basedir, @max_bytes || -1, @max_seconds || -1) do |phase, operation, exception|
-          #$stderr.puts "#{phase} #{operation} #{exception}"
-        end
-      end
-
-      def run_svn(*args)
-        Dir.chdir(basedir) do
-          run_svn_no_chdir(*args)
-        end
-      end
-
       def do_update_tag
         @repository = @repository.clone
-        info = run_svn("info")
-        info.split('\n').each do |line|
-          if line =~ /Revision: (\d+)/
+        log = run_svn("log", "-r", 'HEAD')
+        log.split(/\n/).each do |line|
+          if line =~ /^r(\d+)/
             @repository.tag = $1
+            break
           end
         end
       end

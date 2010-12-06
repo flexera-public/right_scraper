@@ -145,7 +145,7 @@ describe RightScraper::Scrapers::Svn do
       before(:each) do
         @oldmetadata = @helper.repo_content
         @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
-        @helper.commit_content
+        @helper.commit_content('added branch content')
         @repo.tag = @helper.commit_id(1).to_s
       end
 
@@ -204,6 +204,47 @@ describe RightScraper::Scrapers::Svn do
 
           it 'should see the new change' do
             File.exists?(File.join(@olddir, 'branch_folder', 'bfile1')).should be_true
+          end
+        end
+      end
+
+      context 'when a textual change is made to the master repo' do
+        before(:each) do
+          File.open(File.join(@helper.repo_path, "file1"), 'w') do |f|
+            f.puts "bar"
+          end
+          @helper.commit_content("appended bar")
+          File.open(File.join(@helper.repo_path, "file1"), 'a+') do |f|
+            f.puts "bar"
+          end
+          @helper.commit_content("appended bar again")
+          File.open(File.join(@helper.repo_path, "file1"), 'a+') do |f|
+            f.puts "bar"
+          end
+          @helper.commit_content("appended bar again^2")
+          File.open(File.join(@helper.repo_path, "file1"), 'a+') do |f|
+            f.puts "bar"
+          end
+          @helper.commit_content("appended bar again^3")
+        end
+
+        context 'a new scraper' do
+          before(:each) do
+            @olddir = @scraper.basedir
+            @scraper.close
+            @scraper = @scraperclass.new(@repo,
+                                         :directory => @helper.scraper_path,
+                                         :max_bytes => 1024**2,
+                                         :max_seconds => 20)
+          end
+
+          it 'should notice the new revision' do
+            cookbook = @scraper.next
+            cookbook.repository.tag.should == "5"
+          end
+
+          it 'should see the new change' do
+            File.open(File.join(@olddir, 'file1')).read.should == "bar\n" * 4
           end
         end
       end
