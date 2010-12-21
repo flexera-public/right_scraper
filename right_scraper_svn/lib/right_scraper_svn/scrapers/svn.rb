@@ -28,6 +28,7 @@ module RightScraper
     # Scraper for cookbooks stored in a Subversion repository.
     class Svn < CheckoutBasedScraper
       include RightScraper::SvnClient
+
       # Return true if a checkout exists.  Currently tests for .svn in
       # the checkout.
       #
@@ -50,6 +51,10 @@ module RightScraper
         do_update_tag
       end
 
+      # Update our idea of what the head of the repository is.  We
+      # would like to use svn info, but that doesn't do the right
+      # thing all the time; the right thing to do is to run log and
+      # pick out the first tag.
       def do_update_tag
         @repository = @repository.clone
         log = run_svn("log", "-r", 'HEAD')
