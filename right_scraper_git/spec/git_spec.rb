@@ -24,12 +24,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'cookbooks', 'cookbook_helper'))
 
 describe RightScraper::Cookbook do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::CookbookHelper
 
-  shared_examples_for 'git repositories' do
-    it_should_behave_like 'generic repositories'
+  shared_examples_for 'a git repository' do
+    it_should_behave_like 'a generic repository'
 
     it 'should have the right position' do
       parse_url(@repository, "/a")[:position].should == "/a"
@@ -46,7 +46,7 @@ describe RightScraper::Cookbook do
                                                      :url => "http://a.site/foo/bar/baz")
     end
 
-    it_should_behave_like 'git repositories'
+    it_should_behave_like 'a git repository'
 
     it 'should fail to scrape' do
       lambda {
@@ -70,7 +70,7 @@ describe RightScraper::Cookbook do
                                                      :first_credential => passwd_key)
     end
 
-    it_should_behave_like 'git repositories'
+    it_should_behave_like 'a git repository'
 
     it 'should close the connection to the agent' do
       oldpid = ENV['SSH_AGENT_PID']
@@ -90,7 +90,7 @@ describe RightScraper::Cookbook do
                                                      :first_credential => passwd_key)
     end
 
-    it_should_behave_like 'git repositories'
+    it_should_behave_like 'a git repository'
 
     it 'should close the connection to the agent' do
       oldpid = ENV['SSH_AGENT_PID']
@@ -109,7 +109,7 @@ describe RightScraper::Cookbook do
                                                      :first_credential => "a-key")
     end
 
-    it_should_behave_like 'git repositories'
+    it_should_behave_like 'a git repository'
 
     it 'should have a tag' do
       parse_url(@repository)[:tag].should == "master"
@@ -145,7 +145,7 @@ describe RightScraper::Cookbook do
                                                      :first_credential => "a-key")
     end
 
-    it_should_behave_like 'git repositories'
+    it_should_behave_like 'a git repository'
 
     it 'should have a tag' do
       parse_url(@repository)[:tag].should == "DEADBEEF"

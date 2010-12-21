@@ -38,29 +38,37 @@ ENV["DEVELOPMENT"] ||= "yes"
 module RightScraper
 
   module SpecHelpers
-    shared_examples_for "Development mode environment" do
-      before(:each) do
-        @oldtest = ENV['DEVELOPMENT']
-        ENV['DEVELOPMENT'] = "yes"
-      end
-      after(:each) do
-        if @oldtest.nil?
-          ENV.delete('DEVELOPMENT')
-        else
-          ENV['DEVELOPMENT'] = @oldtest
+    module DevelopmentModeEnvironment
+      def DevelopmentModeEnvironment.included(mod)
+        mod.module_eval do
+          before(:each) do
+            @oldtest = ENV['DEVELOPMENT']
+            ENV['DEVELOPMENT'] = "yes"
+          end
+          after(:each) do
+            if @oldtest.nil?
+              ENV.delete('DEVELOPMENT')
+            else
+              ENV['DEVELOPMENT'] = @oldtest
+            end
+          end
         end
       end
     end
-    shared_examples_for "Production mode environment" do
-      before(:each) do
-        @oldtest = ENV['DEVELOPMENT']
-        ENV.delete('DEVELOPMENT')
-      end
-      after(:each) do
-        if @oldtest.nil?
-          ENV.delete('DEVELOPMENT')
-        else
-          ENV['DEVELOPMENT'] = @oldtest
+    module ProductionModeEnvironment
+      def ProductionModeEnvironment.included(mod)
+        mod.module_eval do
+          before(:each) do
+            @oldtest = ENV['DEVELOPMENT']
+            ENV.delete('DEVELOPMENT')
+          end
+          after(:each) do
+            if @oldtest.nil?
+              ENV.delete('DEVELOPMENT')
+            else
+              ENV['DEVELOPMENT'] = @oldtest
+            end
+          end
         end
       end
     end

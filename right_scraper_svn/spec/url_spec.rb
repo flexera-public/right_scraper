@@ -31,7 +31,7 @@ describe RightScraper::Repository do
                                              :first_credential => "foo:b/ar",
                                              :second_credential => "blah")
   end
-  it_should_behave_like "Production mode environment"
+  include RightScraper::SpecHelpers::ProductionModeEnvironment
 
   it 'should not throw an error when creating a repository for SVN URIs' do
     lambda do

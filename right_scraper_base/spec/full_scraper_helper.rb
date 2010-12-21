@@ -23,7 +23,7 @@
 
 module RightScraper
   module FullScraperHelpers
-    shared_examples_for "Normal repository contents" do
+    shared_examples_for "a normal repository" do
       it 'should scrape' do
         @scraper.scrape(@repo)
         @scraper.succeeded?.should be_true

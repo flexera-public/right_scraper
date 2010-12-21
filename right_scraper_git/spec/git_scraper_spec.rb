@@ -27,7 +27,7 @@ require 'set'
 require 'libarchive_ruby'
 
 describe RightScraper::Scrapers::Git do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
 
@@ -55,7 +55,7 @@ describe RightScraper::Scrapers::Git do
     end
 
     context 'with one cookbook' do
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape the master branch' do
         check_cookbook @scraper.next
@@ -80,7 +80,7 @@ describe RightScraper::Scrapers::Git do
         @helper.commit_content("subcookbook added")
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should still see only one cookbook' do
         @scraper.next.should_not == nil
@@ -103,7 +103,7 @@ describe RightScraper::Scrapers::Git do
         @helper.commit_content("secondary cookbooks added")
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape' do
         @cookbook_places.each do |place|
@@ -127,7 +127,7 @@ describe RightScraper::Scrapers::Git do
                                                  :tag          => 'test_branch')
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape a branch' do
         check_cookbook @scraper.next
@@ -145,7 +145,7 @@ describe RightScraper::Scrapers::Git do
                                                  :tag          => @helper.commit_id(1))
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape a sha' do
         check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.basedir
@@ -289,7 +289,7 @@ describe RightScraper::Scrapers::Git do
       @helper = nil
     end
 
-    it_should_behave_like "From-scratch scraping"
+    include RightScraper::SpecHelpers::FromScratchScraping
 
     it 'should see a cookbook' do
       @scraper.next.should_not be_nil

@@ -77,7 +77,7 @@ module RightScraper
       split_url(example_cookbook(*args).to_url)
     end
 
-    shared_examples_for 'generic repositories' do
+    shared_examples_for 'a generic repository' do
       it 'should have the right scheme' do
         parse_url(@repository)[:scheme].should == @repository.repo_type.to_s
       end

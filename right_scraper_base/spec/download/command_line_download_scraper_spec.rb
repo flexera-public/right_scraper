@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'command_line_downloa
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 
 describe RightScraper::Scrapers::CommandLineDownload do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
   include RightScraper::SpecHelpers

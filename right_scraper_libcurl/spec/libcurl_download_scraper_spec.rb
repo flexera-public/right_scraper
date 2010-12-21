@@ -29,7 +29,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 require File.expand_path(File.join(File.dirname(__FILE__), 'libcurl_download_scraper_spec_helper'))
 
 describe RightScraper::Scrapers::LibCurlDownload do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
   include RightScraper::SpecHelpers
@@ -60,7 +60,7 @@ describe RightScraper::Scrapers::LibCurlDownload do
     end
 
     after(:each) do
-      @scraper.close
+      @scraper.close if @scraper
     end
 
     it 'should scrape' do

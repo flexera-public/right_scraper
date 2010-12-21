@@ -30,7 +30,7 @@ describe RightScraper::Repository do
                                              :url => url,
                                              :first_credential => "foo")
   end
-  it_should_behave_like "Production mode environment"
+  include RightScraper::SpecHelpers::ProductionModeEnvironment
 
   context 'with Git URIs' do
     it 'should not throw an error for http URIs' do

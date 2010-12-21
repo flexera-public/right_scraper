@@ -25,20 +25,25 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'tmpdir'
 
 module RightScraper
-  module ScraperHelper
-    shared_examples_for "From-scratch scraping" do
-      before(:each) do
-        @scraper = @scraperclass.new(@repo,
-                                     :max_bytes => 1024**2,
-                                     :max_seconds => 20)
-      end
+  module SpecHelpers
+    module FromScratchScraping
+      def FromScratchScraping.included(mod)
+        mod.module_eval do
+          before(:each) do
+            @scraper = @scraperclass.new(@repo,
+                                         :max_bytes => 1024**2,
+                                         :max_seconds => 20)
+          end
 
-      after(:each) do
-        @scraper.close
-        @scraper = nil
+          after(:each) do
+            @scraper.close if @scraper
+            @scraper = nil
+          end
+        end
       end
     end
-
+  end
+  module ScraperHelper
     def archive_skeleton(archive)
       files = Set.new
       Archive.read_open_memory(archive) do |ar|

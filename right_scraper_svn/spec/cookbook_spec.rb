@@ -25,12 +25,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'cookbooks', 'cookbook_helper'))
 
 describe RightScraper::Cookbook do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::CookbookHelper
 
   shared_examples_for 'svn repositories' do
-    it_should_behave_like 'generic repositories'
+    it_should_behave_like 'a generic repository'
 
     it 'should have the right position' do
       parse_url(@repository, "/a")[:position].should == "/a"

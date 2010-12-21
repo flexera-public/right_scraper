@@ -31,7 +31,7 @@ require 'tmpdir'
 require 'flexmock'
 
 describe RightScraper::Scraper do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   before(:each) do
     @stream = StringIO.new()

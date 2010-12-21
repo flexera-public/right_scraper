@@ -30,7 +30,7 @@ require 'tmpdir'
 require 'flexmock'
 
 describe RightScraper::Scraper do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::FullScraperHelpers
 
@@ -91,7 +91,7 @@ describe RightScraper::Scraper do
       @helper.close
     end
 
-    it_should_behave_like "Normal repository contents"
+    it_should_behave_like "a normal repository"
 
     it 'should log correctly as it scrapes' do
       callback = flexmock("callback")
