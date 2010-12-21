@@ -26,11 +26,13 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base'))
 
 require 'flexmock'
-require 'spec'
+require 'rspec'
 require 'find'
 require 'json'
 
-Spec::Runner.configuration.mock_with :flexmock
+RSpec.configure do |c|
+  c.mock_with(:flexmock)
+end
 
 ENV["DEVELOPMENT"] ||= "yes"
 
@@ -151,7 +153,7 @@ module RightScraper
       dirs + files.sort
     end
 
-    Spec::Matchers.define :begin_with do |path|
+    RSpec::Matchers.define :begin_with do |path|
       match do |directory|
         directory[0...path.length] == path
       end

@@ -8,7 +8,8 @@ gem "right_aws", "~> 2.0"
 gem "process_watcher", "~> 0.3"
 
 group :development do
-  gem "rspec", "~> 1.3"
+  gem "rspec", "~> 2.3"
+  gem "rake"
   gem "flexmock"
   gem "rtags"
   gem "ruby-debug"
