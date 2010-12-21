@@ -32,6 +32,8 @@ require 'json'
 
 Spec::Runner.configuration.mock_with :flexmock
 
+ENV["DEVELOPMENT"] ||= "yes"
+
 # Helper module
 module RightScraper
 
