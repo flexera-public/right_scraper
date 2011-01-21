@@ -40,6 +40,7 @@ module RightScraper
       # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
         cookbook.manifest = @manifest
+        @manifest = {}
       end
 
       # Notice a file during scanning.
