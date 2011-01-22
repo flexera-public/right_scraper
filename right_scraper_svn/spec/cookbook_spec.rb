@@ -57,7 +57,9 @@ describe RightScraper::Cookbook do
     end
 
     it 'should have a cookbook hash' do
-      example_cookbook(@repository).cookbook_hash.should == 'bac54f7e9b87f35fd63f8f6e79f3428c374ddb10'
+      repo_hash = Digest::SHA1.hexdigest("1\000svn\000http://a.site/foo/bar/baz\000HEAD")
+      example_cookbook(@repository).cookbook_hash.should ==
+        Digest::SHA1.hexdigest("1\000#{repo_hash}\000")
     end
 
     it 'should have a cookbook hash invariant under credential changes' do

@@ -22,6 +22,8 @@
 #++
 require 'digest/sha1'
 require 'uri'
+require File.expand_path(File.join(File.dirname(__FILE__), 'version'))
+
 
 module RightScraper
   # Localized representation of a cookbook.  Contains the repository
@@ -102,7 +104,7 @@ module RightScraper
     # Return a hexadecimal string that uniquely identifies this
     # cookbook.
     def cookbook_hash
-      Digest::SHA1.hexdigest("#{@repository.checkout_hash} #{pos}")
+      Digest::SHA1.hexdigest("#{RS_PROTOCOL_VERSION}\000#{@repository.checkout_hash}\000#{pos}")
     end
 
     # Create a new Cookbook from the given Cookbook URL.  It should

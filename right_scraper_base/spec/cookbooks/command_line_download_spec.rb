@@ -55,9 +55,9 @@ describe RightScraper::Cookbook do
 
     it 'should have a cookbook hash' do
       checkout_hash =
-        Digest::SHA1.hexdigest('download http://a.site/foo/bar/baz ')
+        Digest::SHA1.hexdigest("1\000download\000http://a.site/foo/bar/baz\000")
       example_cookbook(@repository).cookbook_hash.should ==
-        Digest::SHA1.hexdigest("#{checkout_hash} ")
+        Digest::SHA1.hexdigest("1\000#{checkout_hash}\000")
     end
 
     it 'should have a cookbook hash invariant under credential changes' do
