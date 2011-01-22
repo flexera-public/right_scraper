@@ -62,11 +62,13 @@ describe RightScraper::Repository do
     end
 
     it 'should know the SHA-1 of its root location' do
-      @repo.repository_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
+      @repo.repository_hash.should ==
+        Digest::SHA1.hexdigest("1\000mock\000url")
     end
 
     it 'should know the SHA-1 of the identifier for this specific checkout' do
-      @repo.checkout_hash.should == 'fa8b5c4ab1d1a9731eeae937ed29ae31cbe811e5'
+      @repo.checkout_hash.should ==
+        Digest::SHA1.hexdigest("1\000mock\000url")
     end
   end
 end

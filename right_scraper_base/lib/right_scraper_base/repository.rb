@@ -24,6 +24,7 @@ require 'uri'
 require 'digest/sha1'
 require 'set'
 require 'socket'
+require File.expand_path(File.join(File.dirname(__FILE__), 'version'))
 
 module RightScraper
   # Description of remote repository that needs to be scraped.
@@ -131,7 +132,7 @@ module RightScraper
     # === Returns
     # String:: opaque unique ID for this repository
     def repository_hash
-      digest("#{repo_type} #{url}")
+      digest("#{RS_PROTOCOL_VERSION}\000#{repo_type}\000#{url}")
     end
 
 
