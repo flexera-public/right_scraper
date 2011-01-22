@@ -50,7 +50,8 @@ describe RightScraper::Repositories::Svn do
   end
 
   it 'should have a checkout hash' do
-    @repo.checkout_hash.should == '37023a219be58f4ee69eb1cb2960c5ce908e15da'
+    @repo.checkout_hash.should ==
+      Digest::SHA1.hexdigest("1\000svn\000http://foo.bar.baz.quux/%20CBLAH\000foo")
   end
 
   it 'should have a different checkout hash from repository hash' do

@@ -67,7 +67,8 @@ describe RightScraper::Repositories::Git do
     end
 
     it 'should have a checkout hash' do
-      @repo.checkout_hash.should == '9985f68cc380c3f57315fb4055b469b643115382'
+      @repo.checkout_hash.should ==
+        Digest::SHA1.hexdigest("1\000git\000http://foo.bar.baz.quux/%20CBLAH\000foo")
     end
 
     it_should_behave_like 'git repository'
@@ -83,7 +84,8 @@ describe RightScraper::Repositories::Git do
     end
 
     it 'should have a checkout hash' do
-      @repo.checkout_hash.should == '988531b4e8433788fd620d778bea195cde74ebdc'
+      @repo.checkout_hash.should ==
+        Digest::SHA1.hexdigest("1\000git\000git://foo.bar.baz.quux/%20CBLAH\000foo")
     end
 
     it_should_behave_like 'git repository'
@@ -99,7 +101,8 @@ describe RightScraper::Repositories::Git do
     end
 
     it 'should have a checkout hash' do
-      @repo.checkout_hash.should == '57e583d27b485809957b1893f41af35620956b08'
+      @repo.checkout_hash.should ==
+        Digest::SHA1.hexdigest("1\000git\000foo@bar.baz.quux:/%20CBLAH\000foo")
     end
 
     it_should_behave_like 'git repository'

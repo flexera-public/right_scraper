@@ -65,7 +65,7 @@ module RightScraper
       # === Returns
       # String:: opaque unique ID for this revision in this repository
       def checkout_hash
-        digest("#{repo_type} #{url} #{tag}")
+        digest("#{RS_PROTOCOL_VERSION}\000#{repo_type}\000#{url}\000#{tag}")
       end
 
       # (ScraperBase class) Appropriate class for scraping this sort of
