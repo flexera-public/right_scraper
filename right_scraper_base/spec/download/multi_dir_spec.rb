@@ -21,15 +21,12 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-# Not supported on Windows
-unless RUBY_PLATFORM=~/mswin/
-
 require File.expand_path(File.join(File.dirname(__FILE__), 'multi_dir_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
 
 describe RightScraper::Scrapers::CommandLineDownload do
   context 'in a multiple directory situation with a cookbooks_path set' do
-    it_should_behave_like "Development mode environment"
+    include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
     include RightScraper::ScraperHelper
     include RightScraper::SpecHelpers
@@ -101,5 +98,3 @@ describe RightScraper::Scrapers::CommandLineDownload do
     end
   end
 end
-
-end # unless RUBY_PLATFORM=~/mswin/

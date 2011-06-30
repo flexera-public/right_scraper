@@ -50,8 +50,9 @@ module RightScraper
           else
             []
           end
-          ProcessWatcher.watch("curl", ["--silent", "--fail", "--location-trusted", "-o",
-                                        file, credential_command, @repository.url].flatten,
+          ProcessWatcher.watch("curl", ["--silent", "--show-error", "--location", "--fail",
+                                        "--location-trusted", "-o", file,
+                                        credential_command, @repository.url].flatten,
                                workdir, @max_bytes || -1, @max_seconds || -1) do |phase, command, exception|
             @logger.note_phase(phase, :running_command, command, exception)
           end

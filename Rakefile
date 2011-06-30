@@ -22,9 +22,11 @@
 #++
 
 require 'rubygems'
+require 'bundler/setup'
+
 require 'fileutils'
 require 'rake'
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/clean'
@@ -48,27 +50,26 @@ CLEAN.include('right_scraper_all/lib')
 
 task :specs => :spec
 
-desc "Run unit tests"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = Dir['*/spec/**/*_spec.rb']
-  t.spec_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'right_scraper', 'spec', 'spec.opts')).map {|l| l.chomp.split " "}.flatten
-  end
+# == Unit Tests == #
+
+desc 'Run unit tests'
+RSpec::Core::RakeTask.new do |t|
+  t.pattern = '*/spec/**/*_spec.rb'
 end
 
-desc "Run unit tests with RCov"
-Spec::Rake::SpecTask.new(:rcov) do |t|
-  t.spec_files = Dir['*/spec/**/*_spec.rb']
-  t.rcov = true
-  t.rcov_opts = lambda do
-    IO.readlines(File.join(File.dirname(__FILE__), 'right_scraper', 'spec', 'rcov.opts')).map {|l| l.chomp.split " "}.flatten
+namespace :spec do
+  desc "Run unit tests with RCov"
+  RSpec::Core::RakeTask.new(:rcov) do |t|
+    t.pattern = '*/spec/**/*_spec.rb'
+    t.rcov = true
+    t.rcov_opts = %q[--exclude "spec"]
   end
-end
 
-desc "Print Specdoc for unit tests"
-Spec::Rake::SpecTask.new(:doc) do |t|
-   t.spec_opts = ["--format", "specdoc", "--dry-run"]
-   t.spec_files = Dir['*/spec/**/*_spec.rb']
+  desc "Print Specdoc for unit tests"
+  RSpec::Core::RakeTask.new(:doc) do |t|
+    t.pattern = '*/spec/**/*_spec.rb'
+    t.rspec_opts = ["--format", "documentation"]
+  end
 end
 
 # == Documentation == #

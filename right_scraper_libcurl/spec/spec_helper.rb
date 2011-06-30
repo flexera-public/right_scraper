@@ -22,6 +22,7 @@
 #++
 
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib')))
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'lib')))
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_scraper_base', 'spec', 'spec_helper'))
 require 'right_scraper_base'

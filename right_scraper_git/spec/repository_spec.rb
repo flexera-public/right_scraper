@@ -25,9 +25,9 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'right_scraper_base/repositories/mock'
 
 describe RightScraper::Repositories::Git do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
-  shared_examples_for 'git repository' do
+  shared_examples_for 'git repository for hashing' do
     it 'should have the same repository hash with or without credentials' do
       initial_hash = @repo.repository_hash
       @repo.first_credential = nil
@@ -71,7 +71,7 @@ describe RightScraper::Repositories::Git do
         Digest::SHA1.hexdigest("1\000git\000http://foo.bar.baz.quux/%20CBLAH\000foo")
     end
 
-    it_should_behave_like 'git repository'
+    it_should_behave_like 'git repository for hashing'
   end
 
   context 'with a git scheme' do
@@ -88,7 +88,7 @@ describe RightScraper::Repositories::Git do
         Digest::SHA1.hexdigest("1\000git\000git://foo.bar.baz.quux/%20CBLAH\000foo")
     end
 
-    it_should_behave_like 'git repository'
+    it_should_behave_like 'git repository for hashing'
   end
 
   context 'with an ssh-type scheme' do
@@ -105,6 +105,6 @@ describe RightScraper::Repositories::Git do
         Digest::SHA1.hexdigest("1\000git\000foo@bar.baz.quux:/%20CBLAH\000foo")
     end
 
-    it_should_behave_like 'git repository'
+    it_should_behave_like 'git repository for hashing'
   end
 end

@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_libcurl'))
 
 describe RightScraper::Repositories::Download do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   before(:each) do
     @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',

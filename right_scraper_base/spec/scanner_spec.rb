@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'download', 'command_line_download_scraper_spec_helper'))
 
 describe RightScraper::Scanners::Scanner do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   before(:each) do
     @helper = RightScraper::CommandLineDownloadScraperSpecHelper.new

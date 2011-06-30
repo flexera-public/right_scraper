@@ -25,7 +25,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_git', 'processes', 'ssh'))
 
 describe RightScraper::Processes::SSHAgent do
-  shared_examples_for 'Environment variables' do
+  shared_examples_for 'a process that sets environment variables' do
     def setvar(name, value)
       if value.nil?
         ENV.delete name
@@ -103,7 +103,7 @@ describe RightScraper::Processes::SSHAgent do
       setvar 'HOME', @home
     end
 
-    it_should_behave_like 'Environment variables'
+    it_should_behave_like 'a process that sets environment variables'
   end
 
   context 'with relevant environment variables set' do
@@ -128,7 +128,7 @@ describe RightScraper::Processes::SSHAgent do
       setvar 'HOME', @home
     end
 
-    it_should_behave_like 'Environment variables'
+    it_should_behave_like 'a process that sets environment variables'
   end
 
   it 'should be able to load the demo key' do

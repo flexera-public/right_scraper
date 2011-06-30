@@ -26,39 +26,51 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper_base'))
 
 require 'flexmock'
-require 'spec'
+require 'rspec'
 require 'find'
 require 'json'
 
-Spec::Runner.configuration.mock_with :flexmock
+RSpec.configure do |c|
+  c.mock_with(:flexmock)
+end
+
+ENV["DEVELOPMENT"] ||= "yes"
 
 # Helper module
 module RightScraper
 
   module SpecHelpers
-    shared_examples_for "Development mode environment" do
-      before(:each) do
-        @oldtest = ENV['DEVELOPMENT']
-        ENV['DEVELOPMENT'] = "yes"
-      end
-      after(:each) do
-        if @oldtest.nil?
-          ENV.delete('DEVELOPMENT')
-        else
-          ENV['DEVELOPMENT'] = @oldtest
+    module DevelopmentModeEnvironment
+      def DevelopmentModeEnvironment.included(mod)
+        mod.module_eval do
+          before(:each) do
+            @oldtest = ENV['DEVELOPMENT']
+            ENV['DEVELOPMENT'] = "yes"
+          end
+          after(:each) do
+            if @oldtest.nil?
+              ENV.delete('DEVELOPMENT')
+            else
+              ENV['DEVELOPMENT'] = @oldtest
+            end
+          end
         end
       end
     end
-    shared_examples_for "Production mode environment" do
-      before(:each) do
-        @oldtest = ENV['DEVELOPMENT']
-        ENV.delete('DEVELOPMENT')
-      end
-      after(:each) do
-        if @oldtest.nil?
-          ENV.delete('DEVELOPMENT')
-        else
-          ENV['DEVELOPMENT'] = @oldtest
+    module ProductionModeEnvironment
+      def ProductionModeEnvironment.included(mod)
+        mod.module_eval do
+          before(:each) do
+            @oldtest = ENV['DEVELOPMENT']
+            ENV.delete('DEVELOPMENT')
+          end
+          after(:each) do
+            if @oldtest.nil?
+              ENV.delete('DEVELOPMENT')
+            else
+              ENV['DEVELOPMENT'] = @oldtest
+            end
+          end
         end
       end
     end
@@ -141,7 +153,7 @@ module RightScraper
       dirs + files.sort
     end
 
-    Spec::Matchers.define :begin_with do |path|
+    RSpec::Matchers.define :begin_with do |path|
       match do |directory|
         directory[0...path.length] == path
       end

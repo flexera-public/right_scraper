@@ -27,7 +27,7 @@ require 'tmpdir'
 require 'digest/sha1'
 
 describe RightScraper::Scanners::S3Upload do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::SpecHelpers
 

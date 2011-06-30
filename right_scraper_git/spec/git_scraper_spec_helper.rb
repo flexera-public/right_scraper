@@ -72,6 +72,22 @@ module RightScraper
       end
     end
 
+    def setup_tag(tag)
+      @git.add_tag(tag)
+    end
+
+    def branch?(branch)
+      Git.open(File.join(scraper_path, repo.repository_hash)).branches.find {|b| b.name == branch}
+    end
+
+    def tag?(tag)
+      Git.open(File.join(scraper_path, repo.repository_hash)).tags.find {|t| t.name == tag}
+    end
+
+    def delete_branch(branch)
+      @git.branch(branch).delete
+    end
+
     def force_rebase(upstream, newbase)
       @git.lib.public_command("rebase", ["--onto", newbase, upstream])
     end

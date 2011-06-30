@@ -23,12 +23,12 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'cookbook_helper'))
 
 describe RightScraper::Cookbook do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::CookbookHelper
 
-  shared_examples_for 'download repositories' do
-    it_should_behave_like 'generic repositories'
+  shared_examples_for 'a download repository' do
+    it_should_behave_like 'a generic repository'
 
     it 'should have no tag' do
       parse_url(@repository)[:tag].should be_nil
@@ -51,7 +51,7 @@ describe RightScraper::Cookbook do
                                                      :second_credential => "password")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
 
     it 'should have a cookbook hash' do
       checkout_hash =
@@ -81,7 +81,7 @@ describe RightScraper::Cookbook do
                                                      :second_credential => "password")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
   end
 
   context 'with a download repository with just a user' do
@@ -92,7 +92,7 @@ describe RightScraper::Cookbook do
                                                      :first_credential => "user")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
   end
 
   context 'with a weird download repository' do
@@ -102,7 +102,7 @@ describe RightScraper::Cookbook do
                                                      :url => "urn:a.site:stuff")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
   end
 
   context 'with a malicious download repository' do
@@ -114,7 +114,7 @@ describe RightScraper::Cookbook do
                                                      :second_credential => "foo@bar")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
   end
 
   context 'with a download repository that includes a query' do
@@ -124,7 +124,7 @@ describe RightScraper::Cookbook do
                                                      :url => "http://foo.bar.baz.quux/stuff?q=bar")
     end
 
-    it_should_behave_like 'download repositories'
+    it_should_behave_like 'a download repository'
   end
 
   context 'when built from a Cookbook URL' do

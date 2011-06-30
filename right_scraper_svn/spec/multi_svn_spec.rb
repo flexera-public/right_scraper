@@ -27,7 +27,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'right_sc
 
 describe RightScraper::Scrapers::Svn do
   context 'in a multiple directory situation with a cookbooks_path set' do
-    it_should_behave_like "Development mode environment"
+    include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
     include RightScraper::ScraperHelper
 
@@ -47,7 +47,7 @@ describe RightScraper::Scrapers::Svn do
         @helper = nil
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should see two cookbooks' do
         @scraper.next.should_not == nil

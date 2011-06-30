@@ -59,22 +59,28 @@ module RightScraper
       # current repository, no fetching is done.
       def do_update
         git = ::Git.open(basedir)
-        do_checkout_revision(git)
-        branch_name = git.current_branch
-        if branch_name && branch_name != "(no branch)"
-          branch = git.branch(branch_name)
-          remote = find_remote_branch(git, branch_name)
-          if remote
-            @logger.operation(:fetch) do
-              remote.remote.fetch
-            end
-            @logger.operation(:merge) do
-              branch.update_ref(remote.gcommit)
-            end
-            git.reset_hard(branch)
+        if remote = find_remote_branch(git, repo_tag)
+          # This is gross, but the git library doesn't make it easy to
+          # remove the remote branches by hand.  Perhaps we'll go with
+          # libgit2 some day.
+          git.branches.remote.each do |branch|
+            # there's an ugly bug in the git gem parsing routines that causes it to see lines like
+            #   origin/HEAD -> origin/master
+            # and not process them properly.  Ignore these.
+            git.lib.branch_new(["-D", "-r", branch.full]) unless branch.full =~ / -> /
           end
+          @logger.operation(:fetch) do
+            remote.remote.fetch
+          end
+          new_remote = find_remote_branch(git, repo_tag)
+          local = find_local_branch(git, repo_tag) || git.branch(branch.name)
+          @logger.operation(:reset) do
+            local.update_ref(new_remote.gcommit)
+          end
+          git.reset_hard
         end
-        do_update_tag git
+        do_checkout_revision(git)
+        do_update_tag(git)
       end
 
       def do_update_tag(git)
@@ -97,24 +103,37 @@ module RightScraper
 
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
-          if branch = find_branch(git)
-            if branch.remote
-              # need to make a local tracking branch
-              newbranch = git.branch(branch.name)
-              newbranch.update_ref(branch.gcommit)
-              newbranch.checkout
-              branch = newbranch
-            end
+          branch = find_branch(git, repo_tag)
+          case
+          when branch && tag?(git, repo_tag) then
+            raise "Ambiguous reference: '#{repo_tag}' denotes both a branch and a tag"
+          when branch && branch.remote then
+            # need to make a local tracking branch
+            newbranch = git.branch(branch.name)
+            newbranch.update_ref(branch.gcommit)
+            newbranch.checkout
+            branch = newbranch
+            branch.checkout
+          when branch then
             branch.checkout
           else
-            git.checkout(@repository.tag)
+            git.checkout(repo_tag)
           end
-        end if @repository.tag
+        end if repo_tag
       end
 
-      def find_branch(git)
-        find_local_branch(git, @repository.tag) ||
-          find_remote_branch(git, @repository.tag)
+      def tag?(git, name)
+        git.tags.find {|t| t.name == name}
+      end
+
+      def repo_tag
+        name = (@repository.tag || "master").chomp
+        name = "master" if name.empty?
+        name
+      end
+
+      def find_branch(git, tag)
+        find_local_branch(git, tag) || find_remote_branch(git, tag)
       end
 
       def find_local_branch(git, name)

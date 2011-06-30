@@ -27,7 +27,7 @@ require 'set'
 require 'libarchive_ruby'
 
 describe RightScraper::Scrapers::Git do
-  it_should_behave_like "Development mode environment"
+  include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
 
@@ -55,7 +55,7 @@ describe RightScraper::Scrapers::Git do
     end
 
     context 'with one cookbook' do
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape the master branch' do
         check_cookbook @scraper.next
@@ -80,7 +80,7 @@ describe RightScraper::Scrapers::Git do
         @helper.commit_content("subcookbook added")
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should still see only one cookbook' do
         @scraper.next.should_not == nil
@@ -103,7 +103,7 @@ describe RightScraper::Scrapers::Git do
         @helper.commit_content("secondary cookbooks added")
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape' do
         @cookbook_places.each do |place|
@@ -127,9 +127,44 @@ describe RightScraper::Scrapers::Git do
                                                  :tag          => 'test_branch')
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape a branch' do
+        check_cookbook @scraper.next
+      end
+    end
+
+    context 'and a branch and a tag that are named the same' do
+      before(:each) do
+        @helper.setup_branch('test_branch')
+        @helper.setup_tag('test_branch')
+        @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
+                                                 :repo_type    => :git,
+                                                 :url          => @helper.repo_path,
+                                                 :tag          => 'test_branch')
+      end
+
+      it 'should fail to scrape' do
+        lambda {
+          @scraper = @scraperclass.new(@repo)
+          @scraper.next
+          @scraper.close
+        }.should raise_exception(/Ambiguous reference/)
+      end
+    end
+
+    context 'and a tag' do
+      before(:each) do
+        @helper.setup_tag('test_tag')
+        @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
+                                                 :repo_type    => :git,
+                                                 :url          => @helper.repo_path,
+                                                 :tag          => 'test_tag')
+      end
+
+      include RightScraper::SpecHelpers::FromScratchScraping
+
+      it 'should scrape a tag' do
         check_cookbook @scraper.next
       end
     end
@@ -145,7 +180,7 @@ describe RightScraper::Scrapers::Git do
                                                  :tag          => @helper.commit_id(1))
       end
 
-      it_should_behave_like "From-scratch scraping"
+      include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape a sha' do
         check_cookbook @scraper.next, :metadata => @oldmetadata, :rootdir => @scraper.basedir
@@ -190,6 +225,67 @@ describe RightScraper::Scrapers::Git do
           @helper.commit_content("delta")
           @helper.create_file_layout(@helper.repo_path, ['barney'])
           @helper.commit_content("gamma")
+        end
+
+        context 'when a branch is made on the master repo' do
+          before(:each) do
+            @helper.setup_branch("foo")
+            @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+            @helper.commit_content("branch")
+            @helper.setup_branch("master")
+          end
+
+          context 'and a scrape happens' do
+            before(:each) do
+              @olddir = @scraper.basedir
+              @scraper.close
+              @scraper = @scraperclass.new(@repo,
+                                           :directory => @helper.scraper_path,
+                                           :max_bytes => 1024**2,
+                                           :max_seconds => 20)
+              @scraper.next
+            end
+
+            context 'and the branch is deleted' do
+              before(:each) do
+                @helper.delete_branch("foo")
+              end
+
+              context 'a new scraper' do
+                before(:each) do
+                  @olddir = @scraper.basedir
+                  @scraper.close
+                  @scraper = @scraperclass.new(@repo,
+                                               :directory => @helper.scraper_path,
+                                               :max_bytes => 1024**2,
+                                               :max_seconds => 20)
+                end
+
+                it 'should not see any such branch exists' do
+                  @helper.branch?("foo").should be_false
+                end
+              end
+            end
+          end
+
+          context 'a new scraper' do
+            before(:each) do
+              @olddir = @scraper.basedir
+              @scraper.close
+              @scraper = @scraperclass.new(@repo,
+                                           :directory => @helper.scraper_path,
+                                           :max_bytes => 1024**2,
+                                           :max_seconds => 20)
+            end
+
+            it 'should not see the new change' do
+              File.exists?(File.join(@olddir, 'fredbarney')).should be_false
+            end
+
+            it 'should note that the branch exists' do
+              @helper.branch?("foo").should be_true
+            end
+          end
         end
 
         context 'a new scraper' do
@@ -289,7 +385,7 @@ describe RightScraper::Scrapers::Git do
       @helper = nil
     end
 
-    it_should_behave_like "From-scratch scraping"
+    include RightScraper::SpecHelpers::FromScratchScraping
 
     it 'should see a cookbook' do
       @scraper.next.should_not be_nil
