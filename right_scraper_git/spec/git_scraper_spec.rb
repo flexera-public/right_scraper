@@ -192,6 +192,67 @@ describe RightScraper::Scrapers::Git do
           @helper.commit_content("gamma")
         end
 
+        context 'when a branch is made on the master repo' do
+          before(:each) do
+            @helper.setup_branch("foo")
+            @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+            @helper.commit_content("branch")
+            @helper.setup_branch("master")
+          end
+
+          context 'and a scrape happens' do
+            before(:each) do
+              @olddir = @scraper.basedir
+              @scraper.close
+              @scraper = @scraperclass.new(@repo,
+                                           :directory => @helper.scraper_path,
+                                           :max_bytes => 1024**2,
+                                           :max_seconds => 20)
+              @scraper.next
+            end
+
+            context 'and the branch is deleted' do
+              before(:each) do
+                @helper.delete_branch("foo")
+              end
+
+              context 'a new scraper' do
+                before(:each) do
+                  @olddir = @scraper.basedir
+                  @scraper.close
+                  @scraper = @scraperclass.new(@repo,
+                                               :directory => @helper.scraper_path,
+                                               :max_bytes => 1024**2,
+                                               :max_seconds => 20)
+                end
+
+                it 'should not see any such branch exists' do
+                  @helper.branch?("foo").should be_false
+                end
+              end
+            end
+          end
+
+          context 'a new scraper' do
+            before(:each) do
+              @olddir = @scraper.basedir
+              @scraper.close
+              @scraper = @scraperclass.new(@repo,
+                                           :directory => @helper.scraper_path,
+                                           :max_bytes => 1024**2,
+                                           :max_seconds => 20)
+            end
+
+            it 'should not see the new change' do
+              File.exists?(File.join(@olddir, 'fredbarney')).should be_false
+            end
+
+            it 'should note that the branch exists' do
+              @helper.branch?("foo").should be_true
+            end
+          end
+        end
+
         context 'a new scraper' do
           before(:each) do
             @olddir = @scraper.basedir

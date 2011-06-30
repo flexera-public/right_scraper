@@ -72,6 +72,14 @@ module RightScraper
       end
     end
 
+    def branch?(branch)
+      Git.open(File.join(scraper_path, repo.repository_hash)).branches.find {|b| b.name == branch}
+    end
+
+    def delete_branch(branch)
+      @git.branch(branch).delete
+    end
+
     def force_rebase(upstream, newbase)
       @git.lib.public_command("rebase", ["--onto", newbase, upstream])
     end
