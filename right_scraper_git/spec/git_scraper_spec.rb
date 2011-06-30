@@ -134,6 +134,41 @@ describe RightScraper::Scrapers::Git do
       end
     end
 
+    context 'and a branch and a tag that are named the same' do
+      before(:each) do
+        @helper.setup_branch('test_branch')
+        @helper.setup_tag('test_branch')
+        @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
+                                                 :repo_type    => :git,
+                                                 :url          => @helper.repo_path,
+                                                 :tag          => 'test_branch')
+      end
+
+      it 'should fail to scrape' do
+        lambda {
+          @scraper = @scraperclass.new(@repo)
+          @scraper.next
+          @scraper.close
+        }.should raise_exception(/Ambiguous reference/)
+      end
+    end
+
+    context 'and a tag' do
+      before(:each) do
+        @helper.setup_tag('test_tag')
+        @repo = RightScraper::Repository.from_hash(:display_name => 'test repo',
+                                                 :repo_type    => :git,
+                                                 :url          => @helper.repo_path,
+                                                 :tag          => 'test_tag')
+      end
+
+      include RightScraper::SpecHelpers::FromScratchScraping
+
+      it 'should scrape a tag' do
+        check_cookbook @scraper.next
+      end
+    end
+
     context 'and a sha ref' do
       before(:each) do
         @oldmetadata = @helper.repo_content

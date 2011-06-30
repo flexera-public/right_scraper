@@ -103,14 +103,18 @@ module RightScraper
 
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
-          if branch = find_branch(git)
-            if branch.remote
-              # need to make a local tracking branch
-              newbranch = git.branch(branch.name)
-              newbranch.update_ref(branch.gcommit)
-              newbranch.checkout
-              branch = newbranch
-            end
+          branch = find_branch(git, repo_tag)
+          case
+          when branch && tag?(git, repo_tag) then
+            raise "Ambiguous reference: '#{repo_tag}' denotes both a branch and a tag"
+          when branch && branch.remote then
+            # need to make a local tracking branch
+            newbranch = git.branch(branch.name)
+            newbranch.update_ref(branch.gcommit)
+            newbranch.checkout
+            branch = newbranch
+            branch.checkout
+          when branch then
             branch.checkout
           else
             git.checkout(repo_tag)
