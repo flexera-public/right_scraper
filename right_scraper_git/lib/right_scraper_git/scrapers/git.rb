@@ -73,7 +73,7 @@ module RightScraper
             remote.remote.fetch
           end
           new_remote = find_remote_branch(git, repo_tag)
-          local = find_local_branch(git, repo_tag) || git.branch(branch.name)
+          local = find_local_branch(git, repo_tag) || git.branch(repo_tag)
           @logger.operation(:reset) do
             local.update_ref(new_remote.gcommit)
           end
