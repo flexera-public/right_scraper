@@ -109,11 +109,9 @@ module RightScraper
             raise "Ambiguous reference: '#{repo_tag}' denotes both a branch and a tag"
           when branch && branch.remote then
             # need to make a local tracking branch
-            newbranch = git.branch(branch.name)
+            newbranch = find_local_branch(git, branch.name) || git.branch(branch.name)
             newbranch.update_ref(branch.gcommit)
             newbranch.checkout
-            branch = newbranch
-            branch.checkout
           when branch then
             branch.checkout
           else
