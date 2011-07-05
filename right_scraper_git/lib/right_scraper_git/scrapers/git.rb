@@ -48,6 +48,12 @@ module RightScraper
         File.exists?(File.join(basedir, '.git'))
       end
 
+      def do_fetch(git)
+        @logger.operation(:fetch) do
+          git.fetch(['--prune', '--tags', '--all'])
+        end
+      end
+
       # Incrementally update the checkout.  The operations are as follows:
       # * checkout #tag
       # * if #tag is the head of a branch:
@@ -59,26 +65,8 @@ module RightScraper
       # current repository, no fetching is done.
       def do_update
         git = ::Git.open(basedir)
-        if remote = find_remote_branch(git, repo_tag)
-          # This is gross, but the git library doesn't make it easy to
-          # remove the remote branches by hand.  Perhaps we'll go with
-          # libgit2 some day.
-          git.branches.remote.each do |branch|
-            # there's an ugly bug in the git gem parsing routines that causes it to see lines like
-            #   origin/HEAD -> origin/master
-            # and not process them properly.  Ignore these.
-            git.lib.branch_new(["-D", "-r", branch.full]) unless branch.full =~ / -> /
-          end
-          @logger.operation(:fetch) do
-            remote.remote.fetch
-          end
-          new_remote = find_remote_branch(git, repo_tag)
-          local = find_local_branch(git, repo_tag) || git.branch(repo_tag)
-          @logger.operation(:reset) do
-            local.update_ref(new_remote.gcommit)
-          end
-          git.reset_hard
-        end
+        do_fetch(git)
+        git.reset_hard
         do_checkout_revision(git)
         do_update_tag(git)
       end
@@ -97,22 +85,19 @@ module RightScraper
         git = @logger.operation(:cloning, "to #{basedir}") do
           ::Git.clone(@repository.url, basedir)
         end
+        do_fetch(git)
         do_checkout_revision(git)
         do_update_tag git
       end
 
       def do_checkout_revision(git)
         @logger.operation(:checkout_revision) do
-          branch = find_branch(git, repo_tag)
           case
-          when branch && tag?(git, repo_tag) then
+          when tag?(git, repo_tag) && branch?(git, repo_tag) then
             raise "Ambiguous reference: '#{repo_tag}' denotes both a branch and a tag"
-          when branch && branch.remote then
-            # need to make a local tracking branch
-            newbranch = find_local_branch(git, branch.name) || git.branch(branch.name)
-            newbranch.update_ref(branch.gcommit)
-            newbranch.checkout
-          when branch then
+          when branch = find_remote_branch(git, repo_tag) then
+            branch.checkout
+          when branch = find_local_branch(git, repo_tag) then
             branch.checkout
           else
             git.checkout(repo_tag)
@@ -122,6 +107,10 @@ module RightScraper
 
       def tag?(git, name)
         git.tags.find {|t| t.name == name}
+      end
+
+      def branch?(git, name)
+        git.branches.find {|t| t.name == name}
       end
 
       def repo_tag
