@@ -106,15 +106,23 @@ describe RightScraper::Scrapers::Git do
       include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape' do
-        @cookbook_places.each do |place|
-          check_cookbook @scraper.next, :position => place[@helper.repo_path.length+1..-1]
+        scraped = []
+        while scrape = @scraper.next
+          place = (@cookbook_places - scraped).detect {|place| File.join(@helper.repo_path, scrape.pos) == place}
+          scraped << place
+          check_cookbook scrape, :position => scrape.pos
         end
+        scraped.should have(@cookbook_places.size).repositories
       end
 
       it 'should be able to seek' do
-        @scraper.seek "cookbooks/second"
-        check_cookbook @scraper.next, :position => "cookbooks/second"
-        check_cookbook @scraper.next, :position => "other_random_place"
+        order = []
+        while scrape = @scraper.next
+          order << scrape.pos
+        end
+        @scraper.seek order[1]
+        check_cookbook @scraper.next, :position => order[1]
+        check_cookbook @scraper.next, :position => order[2]
       end
     end
 
