@@ -230,6 +230,28 @@ describe RightScraper::Scrapers::Git do
         @scraper.next.should == nil
       end
 
+      context 'after the scraper runs once' do
+        before(:each) do
+          check_cookbook @scraper.next
+        end
+
+        context 'and a branch is made on the master repo' do
+          before(:each) do
+            @helper.setup_branch("foo")
+            @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+            @helper.commit_content("branch")
+            @helper.setup_branch("master")
+          end
+
+          it 'should be able to check the new branch out' do
+            @repo.tag = "foo"
+            reset_scraper
+            @scraper.next
+            File.exists?(File.join(@scraper.basedir, 'fredbarney')).should be_true
+          end
+        end
+      end
+
       context 'when a change is made to the master repo' do
         before(:each) do
           @helper.create_file_layout(@helper.repo_path, @helper.branch_content)
