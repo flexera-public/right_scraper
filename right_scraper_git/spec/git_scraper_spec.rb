@@ -196,6 +196,15 @@ describe RightScraper::Scrapers::Git do
     end
 
     context 'and an incremental scraper' do
+      def reset_scraper
+        @olddir = @scraper.basedir
+        @scraper.close
+        @scraper = @scraperclass.new(@repo,
+                                     :directory => @helper.scraper_path,
+                                     :max_bytes => 1024**2,
+                                     :max_seconds => 20)
+      end
+
       before(:each) do
         @scraper = @scraperclass.new(@repo,
                                      :directory => @helper.scraper_path,
@@ -245,12 +254,7 @@ describe RightScraper::Scrapers::Git do
 
           context 'and a scrape happens' do
             before(:each) do
-              @olddir = @scraper.basedir
-              @scraper.close
-              @scraper = @scraperclass.new(@repo,
-                                           :directory => @helper.scraper_path,
-                                           :max_bytes => 1024**2,
-                                           :max_seconds => 20)
+              reset_scraper
               @scraper.next
             end
 
@@ -261,12 +265,7 @@ describe RightScraper::Scrapers::Git do
 
               context 'a new scraper' do
                 before(:each) do
-                  @olddir = @scraper.basedir
-                  @scraper.close
-                  @scraper = @scraperclass.new(@repo,
-                                               :directory => @helper.scraper_path,
-                                               :max_bytes => 1024**2,
-                                               :max_seconds => 20)
+                  reset_scraper
                 end
 
                 it 'should not see any such branch exists' do
@@ -278,12 +277,7 @@ describe RightScraper::Scrapers::Git do
 
           context 'a new scraper' do
             before(:each) do
-              @olddir = @scraper.basedir
-              @scraper.close
-              @scraper = @scraperclass.new(@repo,
-                                           :directory => @helper.scraper_path,
-                                           :max_bytes => 1024**2,
-                                           :max_seconds => 20)
+              reset_scraper
             end
 
             it 'should not see the new change' do
@@ -298,12 +292,7 @@ describe RightScraper::Scrapers::Git do
 
         context 'a new scraper' do
           before(:each) do
-            @olddir = @scraper.basedir
-            @scraper.close
-            @scraper = @scraperclass.new(@repo,
-                                         :directory => @helper.scraper_path,
-                                         :max_bytes => 1024**2,
-                                         :max_seconds => 20)
+            reset_scraper
           end
 
           context 'when an incompatible change is made to the master repo' do
@@ -319,12 +308,7 @@ describe RightScraper::Scrapers::Git do
 
             context 'a new scraper' do
               before(:each) do
-                @olddir = @scraper.basedir
-                @scraper.close
-                @scraper = @scraperclass.new(@repo,
-                                             :directory => @helper.scraper_path,
-                                             :max_bytes => 1024**2,
-                                             :max_seconds => 20)
+                reset_scraper
               end
 
               it 'should use the same directory for files' do
@@ -356,12 +340,7 @@ describe RightScraper::Scrapers::Git do
           end
 
           before(:each) do
-            @olddir = @scraper.basedir
-            @scraper.close
-            @scraper = @scraperclass.new(@repo,
-                                         :directory => @helper.scraper_path,
-                                         :max_bytes => 1024**2,
-                                         :max_seconds => 20)
+            reset_scraper
           end
 
           it 'should use the same directory for files' do
