@@ -50,7 +50,8 @@ module RightScraper
 
       def do_fetch(git)
         @logger.operation(:fetch) do
-          git.fetch(['--prune', '--tags', '--all'])
+          git.tags.each {|tag| git.lib.tag(['-d', tag.name])}
+          git.fetch(['--all', '--prune', '--tags'])
         end
       end
 

@@ -312,6 +312,69 @@ describe RightScraper::Scrapers::Git do
           end
         end
 
+        context 'when a tag is created on the master repo' do
+          before(:each) do
+            @helper.setup_tag("foo")
+          end
+
+          context 'and a scrape happens' do
+            before(:each) do
+              reset_scraper
+              @scraper.next
+            end
+
+            context 'and the tag is deleted' do
+              before(:each) do
+                @helper.delete_tag("foo")
+              end
+
+              context 'a new scraper' do
+                before(:each) do
+                  reset_scraper
+                end
+
+                it 'should not see any such tag' do
+                  @helper.tag?("foo").should be_false
+                end
+              end
+            end
+
+            context 'and the tag is reset' do
+              before(:each) do
+                @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+                @helper.commit_content("branch")
+                @helper.delete_tag("foo")
+                @helper.setup_tag("foo")
+              end
+
+              context 'a new scraper targetted on the tag' do
+                before(:each) do
+                  @repo.tag = "foo"
+                  reset_scraper
+                end
+
+                it 'should not see any such tag' do
+                  @helper.tag?("foo").should be_true
+                end
+
+                it 'should notice the new change' do
+                  File.exists?(File.join(@olddir, 'fredbarney')).should be_true
+                end
+              end
+            end
+          end
+
+          context 'a new scraper' do
+            before(:each) do
+              reset_scraper
+            end
+
+            it 'should note that the tag exists' do
+              @helper.tag?("foo").should be_true
+            end
+          end
+        end
+
         context 'a new scraper' do
           before(:each) do
             reset_scraper

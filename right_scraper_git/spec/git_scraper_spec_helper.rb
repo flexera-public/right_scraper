@@ -76,6 +76,10 @@ module RightScraper
       @git.add_tag(tag)
     end
 
+    def delete_tag(tag)
+      @git.lib.tag(['-d', tag])
+    end
+
     def branch?(branch)
       Git.open(File.join(scraper_path, repo.repository_hash)).branches.find {|b| b.name == branch}
     end
