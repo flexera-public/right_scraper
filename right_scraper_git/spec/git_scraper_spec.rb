@@ -106,15 +106,23 @@ describe RightScraper::Scrapers::Git do
       include RightScraper::SpecHelpers::FromScratchScraping
 
       it 'should scrape' do
-        @cookbook_places.each do |place|
-          check_cookbook @scraper.next, :position => place[@helper.repo_path.length+1..-1]
+        scraped = []
+        while scrape = @scraper.next
+          place = (@cookbook_places - scraped).detect {|place| File.join(@helper.repo_path, scrape.pos) == place}
+          scraped << place
+          check_cookbook scrape, :position => scrape.pos
         end
+        scraped.should have(@cookbook_places.size).repositories
       end
 
       it 'should be able to seek' do
-        @scraper.seek "cookbooks/second"
-        check_cookbook @scraper.next, :position => "cookbooks/second"
-        check_cookbook @scraper.next, :position => "other_random_place"
+        order = []
+        while scrape = @scraper.next
+          order << scrape.pos
+        end
+        @scraper.seek order[1]
+        check_cookbook @scraper.next, :position => order[1]
+        check_cookbook @scraper.next, :position => order[2]
       end
     end
 
@@ -188,6 +196,15 @@ describe RightScraper::Scrapers::Git do
     end
 
     context 'and an incremental scraper' do
+      def reset_scraper
+        @olddir = @scraper.basedir
+        @scraper.close
+        @scraper = @scraperclass.new(@repo,
+                                     :directory => @helper.scraper_path,
+                                     :max_bytes => 1024**2,
+                                     :max_seconds => 20)
+      end
+
       before(:each) do
         @scraper = @scraperclass.new(@repo,
                                      :directory => @helper.scraper_path,
@@ -211,6 +228,28 @@ describe RightScraper::Scrapers::Git do
       it 'the scraper should only see one cookbook' do
         @scraper.next.should_not == nil
         @scraper.next.should == nil
+      end
+
+      context 'after the scraper runs once' do
+        before(:each) do
+          check_cookbook @scraper.next
+        end
+
+        context 'and a branch is made on the master repo' do
+          before(:each) do
+            @helper.setup_branch("foo")
+            @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+            @helper.commit_content("branch")
+            @helper.setup_branch("master")
+          end
+
+          it 'should be able to check the new branch out' do
+            @repo.tag = "foo"
+            reset_scraper
+            @scraper.next
+            File.exists?(File.join(@scraper.basedir, 'fredbarney')).should be_true
+          end
+        end
       end
 
       context 'when a change is made to the master repo' do
@@ -237,12 +276,7 @@ describe RightScraper::Scrapers::Git do
 
           context 'and a scrape happens' do
             before(:each) do
-              @olddir = @scraper.basedir
-              @scraper.close
-              @scraper = @scraperclass.new(@repo,
-                                           :directory => @helper.scraper_path,
-                                           :max_bytes => 1024**2,
-                                           :max_seconds => 20)
+              reset_scraper
               @scraper.next
             end
 
@@ -253,12 +287,7 @@ describe RightScraper::Scrapers::Git do
 
               context 'a new scraper' do
                 before(:each) do
-                  @olddir = @scraper.basedir
-                  @scraper.close
-                  @scraper = @scraperclass.new(@repo,
-                                               :directory => @helper.scraper_path,
-                                               :max_bytes => 1024**2,
-                                               :max_seconds => 20)
+                  reset_scraper
                 end
 
                 it 'should not see any such branch exists' do
@@ -270,12 +299,7 @@ describe RightScraper::Scrapers::Git do
 
           context 'a new scraper' do
             before(:each) do
-              @olddir = @scraper.basedir
-              @scraper.close
-              @scraper = @scraperclass.new(@repo,
-                                           :directory => @helper.scraper_path,
-                                           :max_bytes => 1024**2,
-                                           :max_seconds => 20)
+              reset_scraper
             end
 
             it 'should not see the new change' do
@@ -288,14 +312,72 @@ describe RightScraper::Scrapers::Git do
           end
         end
 
+        context 'when a tag is created on the master repo' do
+          before(:each) do
+            @helper.setup_tag("foo")
+          end
+
+          context 'and a scrape happens' do
+            before(:each) do
+              reset_scraper
+              @scraper.next
+            end
+
+            context 'and the tag is deleted' do
+              before(:each) do
+                @helper.delete_tag("foo")
+              end
+
+              context 'a new scraper' do
+                before(:each) do
+                  reset_scraper
+                end
+
+                it 'should not see any such tag' do
+                  @helper.tag?("foo").should be_false
+                end
+              end
+            end
+
+            context 'and the tag is reset' do
+              before(:each) do
+                @helper.create_file_layout(@helper.repo_path, ['fredbarney'])
+                @helper.commit_content("branch")
+                @helper.delete_tag("foo")
+                @helper.setup_tag("foo")
+              end
+
+              context 'a new scraper targetted on the tag' do
+                before(:each) do
+                  @repo.tag = "foo"
+                  reset_scraper
+                end
+
+                it 'should not see any such tag' do
+                  @helper.tag?("foo").should be_true
+                end
+
+                it 'should notice the new change' do
+                  File.exists?(File.join(@olddir, 'fredbarney')).should be_true
+                end
+              end
+            end
+          end
+
+          context 'a new scraper' do
+            before(:each) do
+              reset_scraper
+            end
+
+            it 'should note that the tag exists' do
+              @helper.tag?("foo").should be_true
+            end
+          end
+        end
+
         context 'a new scraper' do
           before(:each) do
-            @olddir = @scraper.basedir
-            @scraper.close
-            @scraper = @scraperclass.new(@repo,
-                                         :directory => @helper.scraper_path,
-                                         :max_bytes => 1024**2,
-                                         :max_seconds => 20)
+            reset_scraper
           end
 
           context 'when an incompatible change is made to the master repo' do
@@ -311,12 +393,7 @@ describe RightScraper::Scrapers::Git do
 
             context 'a new scraper' do
               before(:each) do
-                @olddir = @scraper.basedir
-                @scraper.close
-                @scraper = @scraperclass.new(@repo,
-                                             :directory => @helper.scraper_path,
-                                             :max_bytes => 1024**2,
-                                             :max_seconds => 20)
+                reset_scraper
               end
 
               it 'should use the same directory for files' do
@@ -348,12 +425,7 @@ describe RightScraper::Scrapers::Git do
           end
 
           before(:each) do
-            @olddir = @scraper.basedir
-            @scraper.close
-            @scraper = @scraperclass.new(@repo,
-                                         :directory => @helper.scraper_path,
-                                         :max_bytes => 1024**2,
-                                         :max_seconds => 20)
+            reset_scraper
           end
 
           it 'should use the same directory for files' do

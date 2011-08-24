@@ -66,6 +66,8 @@ describe RightScraper::Scraper do
       callback.should_receive(:call).with(:begin, :checkout, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:begin, :cloning, "to #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :cloning, "to #{@tmpdir}/#{@repo.repository_hash}", nil).at_least.once.at_most.once
+      callback.should_receive(:call).with(:begin, :fetch, "", nil).once
+      callback.should_receive(:call).with(:commit, :fetch, "", nil).once
       callback.should_receive(:call).with(:begin, :checkout_revision, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :checkout_revision, "", nil).at_least.once.at_most.once
       callback.should_receive(:call).with(:commit, :checkout, "", nil).at_least.once.at_most.once
