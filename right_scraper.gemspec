@@ -42,6 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('libarchive', '>= 0.1.1')
   spec.add_dependency('curb', '>= 0.7.7.1')
   spec.add_dependency('right_aws', '>= 2.0')
+  spec.add_dependency('process_watcher', '~> 0.3')
 
   spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'curl command line client'
