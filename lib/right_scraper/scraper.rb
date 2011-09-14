@@ -41,7 +41,7 @@ module RightScraper
     # <tt>:max_seconds</tt>:: Maximum number of seconds to spend reading from remote repo, unlimited if nil
     def initialize(options={})
       @temporary = !options.has_key?(:basedir)
-      options[:basedir] ||= Tmpname.create('d')
+      options[:basedir] ||= Dir.mktmpdir
       @logger = ScraperLogger.new
       @options = options.merge({:logger => @logger})
       @resources = []

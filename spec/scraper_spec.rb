@@ -31,100 +31,117 @@ describe RightScraper::Scraper do
 
   include RightScraper::SharedExamples
 
-  before(:each) do
-    @tmpdir = Dir.mktmpdir
-    @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
-  end
-
-  after(:each) do
-    FileUtils.remove_entry_secure @tmpdir
-  end
-
-  it 'starts out successful' do
-    @scraper.succeeded?.should be_true
-    @scraper.errors.should == []
-  end
-
-  context 'given a legal download repository' do
+  shared_examples_for 'scrapes to given base dir' do
     before(:each) do
-      @helper = RightScraper::DownloadRetrieverSpecHelper.new
-      @repo = @helper.repo
+      @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
     end
 
     after(:each) do
-      @helper.close
+      FileUtils.remove_entry_secure @tmpdir unless @tmpdir.nil?
     end
 
-    it_should_behave_like "a normal repository"
-
-    it 'should log correctly as it scrapes' do
-      callback = flexmock("callback")
-      callback.should_receive(:call).with(:begin, :retrieving, "from #{@repo}", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :initialize, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :initialize, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :downloading, "", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :running_command, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :running_command, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :downloading, "", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :unpacking, "", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :running_command, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :running_command, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :unpacking, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :retrieving, "from #{@repo}", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :scraping, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :finding_next_cookbook, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :reading_cookbook, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :scanning_filesystem, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :metadata_parsing, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :metadata_parsing, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :scanning_filesystem, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :reading_cookbook, String, nil).once.ordered
-      callback.should_receive(:call).with(:commit, :finding_next_cookbook, String, nil).once.ordered
-      callback.should_receive(:call).with(:begin, :next, "", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :searching, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :searching, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :next, "", nil).once.ordered
-      callback.should_receive(:call).with(:begin, :next, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :next, "", nil).once.ordered
-      callback.should_receive(:call).with(:commit, :scraping, String, nil).once.ordered
-      @scraper.scrape(@repo) do |phase, operation, explanation, exception|
-        callback.call(phase, operation, explanation, exception)
-      end
-      @scraper.errors.should == []
+    it 'starts out successful' do
       @scraper.succeeded?.should be_true
-      @scraper.resources.size.should == 1
+      @scraper.errors.should == []
     end
-  end
 
-  context 'given several repositories' do
-    it 'should continue to scrape even if errors occur' do
-      GC.start
-      repo = RightScraper::Repositories::Base.from_hash(:display_name => 'illegal repo',
-                                                        :repo_type    => :download,
-                                                        :url          => "http://example.com/foo")
-      @scraper.scrape(repo)
-      helpers = [RightScraper::DownloadRetrieverSpecHelper,
-                 RightScraper::DownloadRetrieverSpecHelper,
-                 RightScraper::DownloadRetrieverSpecHelper]
-      helpers.each do |klass|
-        helper = klass.new
-        @scraper.scrape(helper.repo)
-        helper.close
+    context 'given a legal download repository' do
+      before(:each) do
+        @helper = RightScraper::DownloadRetrieverSpecHelper.new
+        @repo = @helper.repo
       end
+
+      after(:each) do
+        @helper.close
+      end
+
+      it_should_behave_like "a normal repository"
+
+      it 'should log correctly as it scrapes' do
+        callback = flexmock("callback")
+        callback.should_receive(:call).with(:begin, :retrieving, "from #{@repo}", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :initialize, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :initialize, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :downloading, "", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :running_command, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :running_command, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :downloading, "", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :unpacking, "", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :running_command, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :running_command, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :unpacking, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :retrieving, "from #{@repo}", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :scraping, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :finding_next_cookbook, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :reading_cookbook, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :scanning_filesystem, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :metadata_parsing, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :metadata_parsing, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :scanning_filesystem, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :reading_cookbook, String, nil).once.ordered
+        callback.should_receive(:call).with(:commit, :finding_next_cookbook, String, nil).once.ordered
+        callback.should_receive(:call).with(:begin, :next, "", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :searching, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :searching, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :next, "", nil).once.ordered
+        callback.should_receive(:call).with(:begin, :next, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :next, "", nil).once.ordered
+        callback.should_receive(:call).with(:commit, :scraping, String, nil).once.ordered
+        @scraper.scrape(@repo) do |phase, operation, explanation, exception|
+          callback.call(phase, operation, explanation, exception)
+        end
+        @scraper.errors.should == []
+        @scraper.succeeded?.should be_true
+        @scraper.resources.size.should == 1
+      end
+    end
+
+    context 'given several repositories' do
+      it 'should continue to scrape even if errors occur' do
+        GC.start
+        repo = RightScraper::Repositories::Base.from_hash(:display_name => 'illegal repo',
+                                                          :repo_type    => :download,
+                                                          :url          => "http://example.com/foo")
+        @scraper.scrape(repo)
+        helpers = [RightScraper::DownloadRetrieverSpecHelper,
+                   RightScraper::DownloadRetrieverSpecHelper,
+                   RightScraper::DownloadRetrieverSpecHelper]
+        helpers.each do |klass|
+          helper = klass.new
+          @scraper.scrape(helper.repo)
+          helper.close
+        end
+        @scraper.succeeded?.should be_false
+        @scraper.resources.size.should == 3
+        @scraper.errors.size.should == 1
+      end
+    end
+
+    it 'catches normal logging behavior' do
+      logger = @scraper.instance_variable_get(:@logger)
+      logger.should_not be_nil
+      logger.info("foo")
+      logger.error("foo")
       @scraper.succeeded?.should be_false
-      @scraper.resources.size.should == 3
-      @scraper.errors.size.should == 1
+      @scraper.errors.should == [[nil, :log, {:severity => Logger::ERROR,
+                                       :message => "foo",
+                                       :progname => nil}]]
     end
   end
 
-  it 'catches normal logging behavior' do
-    logger = @scraper.instance_variable_get(:@logger)
-    logger.should_not be_nil
-    logger.info("foo")
-    logger.error("foo")
-    @scraper.succeeded?.should be_false
-    @scraper.errors.should == [[nil, :log, {:severity => Logger::ERROR,
-                                     :message => "foo",
-                                     :progname => nil}]]
+  context 'when base dir is not provided' do
+    before(:each) do
+      @tmpdir = nil
+    end
+
+    it_should_behave_like 'scrapes to given base dir'
+  end
+
+  context 'when base dir is provided' do
+    before(:each) do
+      @tmpdir = Dir.mktmpdir
+    end
+
+    it_should_behave_like 'scrapes to given base dir'
   end
 end
