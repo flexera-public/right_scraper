@@ -22,25 +22,23 @@
 #++
 
 require 'rubygems'
+require 'rubygems/package_task'
 require 'bundler/setup'
 
 require 'fileutils'
 require 'rake'
 require 'rspec/core/rake_task'
 require 'rdoc/task'
-require 'rubygems/package_task'
 require 'rake/clean'
 
 task :default => 'spec'
 
 # == Gem packaging == #
 
-task :package => :gem
-directory 'pkg'
-task :gem => 'pkg' do
-  Dir['right_scraper*'].each do |file|
-    Dir.chdir(file) { sh "env PACKAGE_DIR=../pkg rake gem" }
-  end
+desc "Build right_scraper gem"
+Gem::PackageTask.new(Gem::Specification.load("right_scraper.gemspec")) do |package|
+  package.need_zip = true
+  package.need_tar = true
 end
 
 CLEAN.include('pkg')
