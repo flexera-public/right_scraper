@@ -4,10 +4,10 @@
 #
 ruby do
   version  'ruby-1.9.2-p290'
-  rubygems '1.6.2'
+  rubygems '1.8.10'
   gemset   'right_scraper'
 end
 bundler do
-  version     '1.0.10'
+  version     '1.0.18'
   bundle_path File.join(ENV["HOME"], '.rightscale', 'right_scraper')
 end

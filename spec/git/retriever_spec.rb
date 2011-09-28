@@ -113,15 +113,17 @@ describe RightScraper::Retrievers::Git do
         include RightScraper::SpecHelpers::FromScratchScraping
         include RightScraper::SpecHelpers::WorkflowScraping
 
-        it 'should still see only one workflow' do
+        it 'should see two workflows' do
+          @scraper.next_resource.should_not == nil
           @scraper.next_resource.should_not == nil
           @scraper.next_resource.should == nil
         end
 
         it 'should have the subworkflow in the manifest' do
           workflow = @scraper.next_resource
-          workflow.manifest["workflow.def"].should == "15ce480ea6c94b51056e028b0e0bd7da8024d924"
-          workflow.manifest["workflow.meta"].should == "5f36b2ea290645ee34d943220a14b54ee5ea5be5"
+          workflow = @scraper.next_resource
+          workflow.manifest["workflow.def"].should == "e687ad52d8fba8010a255e3c2a9e891264a24910"
+          workflow.manifest["workflow.meta"].should == "58060413e90f84add5b2dace3ba7e30d2689336f"
         end
       end
 
@@ -150,8 +152,30 @@ describe RightScraper::Retrievers::Git do
           end
           scraped.should have(@workflow_places.size).repositories
         end
-
       end
+
+      context 'with two-level deep workflows' do
+        before(:each) do
+          @workflow_places = [File.join(@helper.repo_path, "workflows", "first"),
+            File.join(@helper.repo_path, "workflows", "some_dir", "some_subdir", "second"),
+            File.join(@helper.repo_path, "workflows", "some_dir", "some_subdir", "third")]
+          @workflow_places.each {|place| secondary_workflow(place)}
+          @helper.commit_content("secondary workflows added")
+        end
+
+        include RightScraper::SpecHelpers::FromScratchScraping
+        include RightScraper::SpecHelpers::WorkflowScraping
+
+        it 'should scrape' do
+          @scraper.scrape
+          @scraper.resources.each do |res|
+            res.metadata_path.should_not be_nil
+            res.definition_path.should_not be_nil
+          end
+          @scraper.resources.size.should == @workflow_places.size + 1 # One in the root repo_path
+        end
+      end
+
     end
 
     context 'of cookbooks' do

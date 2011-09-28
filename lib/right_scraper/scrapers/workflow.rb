@@ -41,6 +41,14 @@ module RightScraper
       # dir(Dir):: directory to begin search in
       def find_next(dir)
         @logger.operation(:finding_next_workflow, "in #{dir.path}") do
+
+          # Note: there could be multiple workflow definitions in one directory
+          # so we need to record the current position whether we found a workflow
+          # or not. The next iteration will search again in the current directory
+          # event if we found one. If we don't find one then we call 
+          # 'search_dirs' which will recurse in the sub-directories.
+          @stack << dir
+
           def_ext = RightScraper::Resources::Workflow::DEFINITION_EXT
           meta_ext = RightScraper::Resources::Workflow::METADATA_EXT
           potentials = Dir[File.join(dir.path, "*#{def_ext}")]
@@ -56,7 +64,6 @@ module RightScraper
               workflow
             end
           else
-            @stack << dir
             search_dirs
           end
         end

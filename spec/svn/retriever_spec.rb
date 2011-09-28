@@ -131,8 +131,11 @@ describe RightScraper::Retrievers::Svn do
       include RightScraper::SpecHelpers::CookbookScraping
 
       it 'should scrape' do
-        @cookbook_places.each do |place|
-          check_resource @scraper.next_resource, :position => place[@helper.repo_path.length+1..-1]
+        scraped = []
+        while scrape = @scraper.next_resource
+          place = (@cookbook_places - scraped).detect {|place| File.join(@helper.repo_path, scrape.pos) == place}
+          scraped << place
+          check_resource scrape, :position => place[@helper.repo_path.length+1..-1]
         end
         scraped.should have(@cookbook_places.size).repositories
       end
