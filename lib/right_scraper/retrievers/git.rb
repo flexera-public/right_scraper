@@ -20,16 +20,43 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'git'
 
 module RightScraper
   module Retrievers
     # Retriever for resources stored in a git repository.
     class Git < CheckoutBasedRetriever
+
+      @@available = false
+
+      # Determines if downloader is available.
+      def available?
+        unless @@available
+          begin
+            require 'git'
+            # note that require 'git' does the same version check on load but
+            # we don't want to assume any particular implementation.
+            #
+            # FIX: we might want to parse the result and require a minimum git
+            # client version.
+            cmd = "git --version"
+            `#{cmd}`
+            if $?.success?
+              @@available = true
+            else
+              raise RetrieverError, "\"#{cmd}\" exited with #{$?.exitstatus}"
+            end
+          rescue
+            @logger.note_error($!, :available, "git retriever is unavailable")
+          end
+        end
+        @@available
+      end
+
       # In addition to normal retriever initialization, if the
       # underlying repository has a credential we need to initialize a
       # fresh SSHAgent and add the credential to it.
       def retrieve
+        raise RetrieverError.new("git retriever is unavailable") unless available?
         RightScraper::Processes::SSHAgent.with do |agent|
           agent.add_key(@repository.first_credential) unless
             @repository.first_credential.nil?

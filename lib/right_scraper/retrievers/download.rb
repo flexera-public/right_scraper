@@ -30,6 +30,28 @@ module RightScraper
     # somewhere.  Uses command line curl and command line tar.
     class Download < Base
 
+      @@available = false
+
+      # Determines if downloader is available.
+      def available?
+        unless @@available
+          begin
+            # FIX: we might want to parse the result and require a minimum curl
+            # version.
+            cmd = "curl --version"
+            `#{cmd}`
+            if $?.success?
+              @@available = true
+            else
+              raise RetrieverError, "\"#{cmd}\" exited with #{$?.exitstatus}"
+            end
+          rescue
+            @logger.note_error($!, :available, "download retriever is unavailable")
+          end
+        end
+        @@available
+      end
+
       # Directory used to download tarballs
       def workdir
         File.join(@basedir, @repository.repository_hash)
@@ -42,6 +64,7 @@ module RightScraper
 
       # Download tarball and unpack it
       def retrieve
+        raise RetrieverError.new("download retriever is unavailable") unless available?
         FileUtils.remove_entry_secure workdir if File.exists?(workdir)
         FileUtils.mkdir_p repo_dir
         file = File.join(workdir, "package")
