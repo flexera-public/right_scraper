@@ -83,10 +83,11 @@ describe RightScraper::Scanners::CookbookS3Upload do
       bucket_name = 'this-bucket-does-not-exist'
       @s3.bucket(bucket_name).should be_nil
       lambda {
-      @scraper = @scraperclass.new(:repo_dir => @download_repo_path,
+      @scraper = @scraperclass.new(:repository => @repo,
+                                   :repo_dir => @download_repo_path,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
-                                                 RightScraper::Scanners::S3Upload],
+                                                 RightScraper::Scanners::CookbookS3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
@@ -106,10 +107,11 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
       bucket_name = 'com.rightscale.test.20100823'
-      @scraper = @scraperclass.new(:repo_dir => @download_repo_path,
+      @scraper = @scraperclass.new(:repository => @repo,
+                                   :repo_dir => @download_repo_path,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
-                                                 RightScraper::Scanners::S3Upload],
+                                                 RightScraper::Scanners::CookbookS3Upload],
                                    :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
@@ -128,7 +130,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
 
     context 'that has scraped' do
       before(:each) do
-        @cookbook = @scraper.next
+        @cookbook = @scraper.next_resource
         @cookbook.should_not be_nil
       end
 

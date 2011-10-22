@@ -40,12 +40,14 @@ describe RightScraper::Retrievers::Svn do
     before(:each) do
       pending "Not run unless REMOTE_USER and REMOTE_PASSWORD set" unless ENV['REMOTE_USER'] && ENV['REMOTE_PASSWORD']
       url = 'https://wush.net/svn/rightscale/cookbooks_test/'
+      @helper = RightScraper::SvnRetrieverSpecHelper.new
       @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'wush',
                                                :repo_type    => :svn,
                                                :url          => url,
                                                :first_credential => ENV['REMOTE_USER'],
                                                :second_credential => ENV['REMOTE_PASSWORD'])
       @retriever = @retriever_class.new(@repo, :max_bytes => 1024**2,
+                                               :basedir     => @helper.scraper_path,
                                                :max_seconds => 20)
     end
 
@@ -61,17 +63,17 @@ describe RightScraper::Retrievers::Svn do
 
     # quick_start not actually being a cookbook
     it 'should scrape 5 repositories' do
+      @retriever.retrieve
+      @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
+                                                      :ignorable_paths => @retriever.ignorable_paths,
+                                                      :repo_dir        => @retriever.repo_dir,
+                                                      :repository      => @retriever.repository)
       locations = Set.new
       (1..5).each {|n|
         cookbook = @scraper.next_resource
         locations << cookbook.pos
         cookbook.should_not == nil
       }
-      @retriever.retrieve
-      @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                      :ignorable_paths => @retriever.ignorable_paths,
-                                                      :repo_dir        => @retriever.repo_dir,
-                                                      :repository      => @retriever.repository)
       @scraper.next_resource.should == nil
       locations.should == Set.new(["cookbooks/app_rails",
                                    "cookbooks/db_mysql",
