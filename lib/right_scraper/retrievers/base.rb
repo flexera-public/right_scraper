@@ -43,6 +43,9 @@ module RightScraper
       # String:: Path to directory where files are retrieved
       attr_reader :repo_dir
 
+      # exceptions
+      class RetrieverError < Exception; end
+
       # Create a new retriever for the given repository.  This class
       # recognizes several options, and subclasses may recognize
       # additional options.  Options may never be required.
@@ -71,6 +74,11 @@ module RightScraper
         @logger.operation(:initialize, "setting up in #{@repo_dir}") do
           FileUtils.mkdir_p(@repo_dir)
         end
+      end
+
+      # Determines if retriever is available (has required CLI tools, etc.)
+      def available?
+        raise NotImplementedError
       end
 
       # Paths to ignore when traversing the filesystem.  Mostly used for

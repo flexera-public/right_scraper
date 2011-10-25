@@ -24,16 +24,17 @@
 module RightScraper
   module Retrievers
 
-    # Base class for retrievers that want to do version control
-    # operations (CVS, SVN, etc.).  Subclasses can get away with
-    # implementing only #do_checkout but to support incremental
-    # operation need to implement #exists? and #do_update, in addition
-    # to Retrievers::Base#ignorable_paths.
+    # Base class for retrievers that want to do version control operations
+    # (CVS, SVN, etc.). Subclasses can get away with implementing only
+    # Retrievers::Base#available? and #do_checkout but to support incremental
+    # operation need to implement #exists? and #do_update, in addition to
+    # Retrievers::Base#ignorable_paths.
     class CheckoutBasedRetriever < Base
 
       # Check out repository into the directory.  Occurs between
       # variable initialization and beginning scraping.
       def retrieve
+        raise RetrieverError.new("retriever is unavailable") unless available?
         if exists?
           begin
             @logger.operation(:updating) do

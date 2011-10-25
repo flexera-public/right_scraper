@@ -82,7 +82,7 @@ module RightScraper
         retriever = nil
         @logger.operation(:retrieving, "from #{repo}") do
           retriever = repo.retriever(@options)
-          retriever.retrieve
+          retriever.retrieve if retriever.available?
         end
 
         # 2. Now scrape if there is a scraper in the options

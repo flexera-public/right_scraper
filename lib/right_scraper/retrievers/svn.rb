@@ -31,6 +31,28 @@ module RightScraper
 
       include RightScraper::SvnClient
 
+      @@available = false
+
+      # Determines if svn is available.
+      def available?
+        unless @@available
+          begin
+            # FIX: we might want to parse the result and require a minimum svn
+            # client version.
+            cmd = "svn --version"
+            `#{cmd}`
+            if $?.success?
+              @@available = true
+            else
+              raise RetrieverError, "\"#{cmd}\" exited with #{$?.exitstatus}"
+            end
+          rescue
+            @logger.note_error($!, :available, "svn retriever is unavailable")
+          end
+        end
+        @@available
+      end
+
       # Return true if a checkout exists.  Currently tests for .svn in
       # the checkout.
       #
