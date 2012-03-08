@@ -24,7 +24,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name      = 'right_scraper'
-  spec.version   = '3.0.1'
+  spec.version   = '3.0.2'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
