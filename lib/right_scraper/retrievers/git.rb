@@ -58,8 +58,9 @@ module RightScraper
       def retrieve
         raise RetrieverError.new("git retriever is unavailable") unless available?
         RightScraper::Processes::SSHAgent.with do |agent|
-          agent.add_key(@repository.first_credential) unless
-            @repository.first_credential.nil?
+          unless @repository.first_credential.nil? || @repository.first_credential.blank?
+            agent.add_key(@repository.first_credential)
+          end
           super
         end
       end
