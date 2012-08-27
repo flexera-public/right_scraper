@@ -21,11 +21,12 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'tmpdir'
+
 module RightScraper
   module Retrievers
     # Retriever for resources stored in a git repository.
     class Git < CheckoutBasedRetriever
-
       @@available = false
 
       # Determines if downloader is available.
@@ -58,7 +59,7 @@ module RightScraper
       def retrieve
         raise RetrieverError.new("git retriever is unavailable") unless available?
         RightScraper::Processes::SSHAgent.with do |agent|
-          unless @repository.first_credential.nil? || @repository.first_credential.blank?
+          unless @repository.first_credential.nil? || @repository.first_credential.empty?
             agent.add_key(@repository.first_credential)
           end
           super
@@ -111,7 +112,9 @@ module RightScraper
       def do_checkout
         super
         git = @logger.operation(:cloning, "to #{@repo_dir}") do
-          ::Git.clone(@repository.url, @repo_dir)
+          without_host_key_checking do
+            ::Git.clone(@repository.url, @repo_dir)
+          end
         end
         do_fetch(git)
         do_checkout_revision(git)
@@ -131,6 +134,11 @@ module RightScraper
             git.checkout(repo_tag)
           end
         end if repo_tag
+      end
+
+      # Ignore .git directories.
+      def ignorable_paths
+        ['.git']
       end
 
       def tag?(git, name)
@@ -159,9 +167,29 @@ module RightScraper
         git.branches.remote.find {|b| b.name == name}
       end
 
-      # Ignore .git directories.
-      def ignorable_paths
-        ['.git']
+      # Temporarily disable SSH host-key checking for SSH clients invoked by Git, for the duration of the
+      # block that is passed to this method.
+      #
+      # @yield after disabling strict host key checking, yields to caller
+      def without_host_key_checking
+        tmpdir = Dir.mktmpdir
+        ssh_cmd = File.join(tmpdir, 'ssh')
+
+        File.open(ssh_cmd, 'w') do |cmd|
+          cmd.puts "#!/bin/bash"
+          cmd.puts "exec ssh -o StrictHostKeyChecking=no ${@}"
+        end
+        FileUtils.chmod(0700, ssh_cmd)
+
+        old_env = ENV['GIT_SSH']
+        ENV['GIT_SSH'] = ssh_cmd
+
+        result = yield
+      ensure
+        FileUtils.rm_rf(tmpdir)
+        ENV['GIT_SSH'] = old_env
+
+        result
       end
     end
   end
