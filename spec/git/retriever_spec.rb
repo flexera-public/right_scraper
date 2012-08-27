@@ -508,7 +508,7 @@ describe RightScraper::Retrievers::Git do
       @repo = RightScraper::Repositories::Base.from_hash(
         :display_name     => 'test repo',
         :repo_type        => :git,
-        :url              => 'git@github.com:rightscale-test-account/cookbooks.git',
+        :url              => 'git@github.com:xeger/cookbooks_test_fixture.git',
         :first_credential => credential)
         @helper.setup_cookbooks
     end
@@ -524,6 +524,30 @@ describe RightScraper::Retrievers::Git do
     it 'should see a cookbook' do
       pending "Don't annoy GitHub unless ANNOY_GITHUB is set" unless ENV['ANNOY_GITHUB']
       @scraper.next_resource.should_not be_nil
+    end
+
+    context :without_host_key_checking do
+      before(:each) do
+        @retriever = RightScraper::Retrievers::Git.new(@repo, :basedir=>@helper.scraper_path)
+      end
+
+
+      it 'should override the git-SSH command' do
+        ENV['GIT_SSH'] = nil
+        @retriever.without_host_key_checking do
+          ENV['GIT_SSH'].should =~ /ssh/
+          # Run the git-ssh command, make sure it invokes the SSH client
+          `#{ENV['GIT_SSH']} -V 2>&1`.should =~ /OpenSSH_[0-9]+\.[0-9]+/
+        end
+      end
+
+      it 'should clean up after itself' do
+        ENV['GIT_SSH'] = 'banana'
+        @retriever.without_host_key_checking do
+          ENV['GIT_SSH'].should =~ /ssh/
+        end
+        ENV['GIT_SSH'].should == 'banana'
+      end
     end
   end
 end

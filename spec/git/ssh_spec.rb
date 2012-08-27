@@ -136,9 +136,9 @@ describe RightScraper::Processes::SSHAgent do
       File.chmod(0600, demofile)
       demofile = File.join(File.dirname(__FILE__), 'demokey')
       agent.add_keyfile(demofile)
-      `ssh-add -l`.should == "2048 3d:6a:4f:8b:ec:35:da:e9:7e:cc:e8:2d:03:2f:6f:23 #{demofile} (RSA)\n"
+      `ssh-add -l`.should == "2048 c7:66:87:fc:17:b5:2f:32:f2:c1:ed:40:a6:8d:17:44 #{demofile} (RSA)\n"
       `ssh-add -L`.should == <<FULLOUTPUT
-ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAxJsM8sZ6++Nky/ogLEYhKtKivB37sPB9M6Un0z6PkIRgUsGdntMJqP1U6820jH+n1/lOH/MnlUsvzoo8DnOdbe9kGOHBmtWmNcjqacZUn9DbpbjvlI7RUUmZ5OBKn8Pjt2qbSXnnci9Q5j5Rgh6DR8A70S04FIUP8AGpCIO23BhA928CiM18zN5mBvzET7L2DYiNhJJFsFWMbN13CdukTjNVNLETEusNVUU09G1NxX4esKky7tHh1c9APFvu98KjYOHkv1o7dB7T4dO3KaKCNWINCHeeoE+QmAkhAZwI72ijRkPxH+QMisMsHucPFvgOVVObxHWu9hRlNWIOodANHQ== #{demofile}
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC18gNzaOwgJkHhUgPPNtCNp0H08ywzH1AquwSca19ZOedGnRWa673t4sXW0BeBn1wd8v0EulHRNwIyn0xJLsEStMOpo4A0qN+B2sM9gjBcY8nMOyUqy5s32pXncGfEwiRuiAxqz45VJqvL3CD8X5WxG300u/DNUbLZN0IT1aPn52Bo6gcGleZklxF1cccrbMelWfXE7KYKjD3/TfLdJeOlP9PJM8ijFHCsyWcKt5AH8bFkQ/xETPfqPzUIwvLDU7HpVDLZZ6JBi2rxhAAG+NhE3GMmY5i+vMB+g7CCfY200SFxzyjIcag05MGGko8Rv9bHnE3AYj9cxCULyDJyZm/T #{demofile}
 FULLOUTPUT
     end
   end
@@ -163,8 +163,9 @@ FULLOUTPUT
       demofile = File.join(File.dirname(__FILE__), 'demokey')
       demodata = File.open(demofile).read
       agent.add_key(demodata)
-      `ssh-add -l`.should =~ /^2048 3d:6a:4f:8b:ec:35:da:e9:7e:cc:e8:2d:03:2f:6f:23 .*? \(RSA\)\n$/
-      `ssh-add -L`.should =~ %r{^ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAxJsM8sZ6\+\+Nky/ogLEYhKtKivB37sPB9M6Un0z6PkIRgUsGdntMJqP1U6820jH\+n1/lOH/MnlUsvzoo8DnOdbe9kGOHBmtWmNcjqacZUn9DbpbjvlI7RUUmZ5OBKn8Pjt2qbSXnnci9Q5j5Rgh6DR8A70S04FIUP8AGpCIO23BhA928CiM18zN5mBvzET7L2DYiNhJJFsFWMbN13CdukTjNVNLETEusNVUU09G1NxX4esKky7tHh1c9APFvu98KjYOHkv1o7dB7T4dO3KaKCNWINCHeeoE\+QmAkhAZwI72ijRkPxH\+QMisMsHucPFvgOVVObxHWu9hRlNWIOodANHQ== .*\n$}
+      `ssh-add -l`.should =~ /^2048 c7:66:87:fc:17:b5:2f:32:f2:c1:ed:40:a6:8d:17:44 .*? \(RSA\)\n$/
+      expected_pubkey = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC18gNzaOwgJkHhUgPPNtCNp0H08ywzH1AquwSca19ZOedGnRWa673t4sXW0BeBn1wd8v0EulHRNwIyn0xJLsEStMOpo4A0qN+B2sM9gjBcY8nMOyUqy5s32pXncGfEwiRuiAxqz45VJqvL3CD8X5WxG300u/DNUbLZN0IT1aPn52Bo6gcGleZklxF1cccrbMelWfXE7KYKjD3/TfLdJeOlP9PJM8ijFHCsyWcKt5AH8bFkQ/xETPfqPzUIwvLDU7HpVDLZZ6JBi2rxhAAG+NhE3GMmY5i+vMB+g7CCfY200SFxzyjIcag05MGGko8Rv9bHnE3AYj9cxCULyDJyZm/T'
+      `ssh-add -L`.should =~ %r{^#{Regexp.escape(expected_pubkey)} .*\n$}
     end
   end
 end
