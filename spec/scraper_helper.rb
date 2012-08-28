@@ -39,7 +39,9 @@ module RightScraper
           end
 
           after(:each) do
-            FileUtils.remove_entry_secure(@basedir)
+            if @basedir && File.directory?(@basedir)
+              FileUtils.remove_entry_secure(@basedir)
+            end
             @scraper = nil
           end
         end

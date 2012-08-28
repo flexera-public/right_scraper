@@ -56,8 +56,8 @@ describe RightScraper::Scanners::CookbookS3Upload do
   end
 
   before(:each) do
-    pending "Not run unless AMAZON_ACCESS_KEY_ID and AMAZON_SECRET_ACCESS_KEY set" unless
-            ENV['AMAZON_ACCESS_KEY_ID'] && ENV['AMAZON_SECRET_ACCESS_KEY']
+    pending "Not run unless AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY set" unless
+            ENV['AWS_ACCESS_KEY_ID'] && ENV['AWS_SECRET_ACCESS_KEY']
   end
 
   context "given a bucket that doesn't exist" do
@@ -73,8 +73,8 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      @s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
-                            aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
+      @s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
+                            aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
                             :logger => RightScraper::Logger.new)
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
     end
@@ -88,8 +88,8 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
                                                  RightScraper::Scanners::CookbookS3Upload],
-                                   :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
-                                   :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
+                                   :s3_key => ENV['AWS_ACCESS_KEY_ID'],
+                                   :s3_secret => ENV['AWS_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
@@ -112,13 +112,13 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
                                                  RightScraper::Scanners::CookbookS3Upload],
-                                   :s3_key => ENV['AMAZON_ACCESS_KEY_ID'],
-                                   :s3_secret => ENV['AMAZON_SECRET_ACCESS_KEY'],
+                                   :s3_key => ENV['AWS_ACCESS_KEY_ID'],
+                                   :s3_secret => ENV['AWS_SECRET_ACCESS_KEY'],
                                    :s3_bucket => bucket_name,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
-      s3 = RightAws::S3.new(aws_access_key_id=ENV['AMAZON_ACCESS_KEY_ID'],
-                            aws_secret_access_key=ENV['AMAZON_SECRET_ACCESS_KEY'],
+      s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
+                            aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
                             :logger => RightScraper::Logger.new)
       @bucket = s3.bucket(bucket_name, create=true)
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
