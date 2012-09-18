@@ -67,11 +67,11 @@ module RightScraper
       def do_update
         git = ::Git.open(basedir)
         do_fetch(git)
-        git.reset_hard
-        Dir.chdir(basedir) do
-          clean_output = `git clean -f`
-          unless $?.success?
-            @logger.operation(:updating, "failed to cleanup untracked files: #{clean_output}")
+        @logger.operation(:cleanup, "ensure no untracked files in #{basedir}") do
+          git.reset_hard
+          Dir.chdir(basedir) do
+            # ignore outcome; there is no way to record 'warnings'
+            system("git clean -f")
           end
         end
         do_checkout_revision(git)
