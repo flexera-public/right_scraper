@@ -69,8 +69,10 @@ module RightScraper
         do_fetch(git)
         git.reset_hard
         Dir.chdir(basedir) do
-          did_clean = system("git clean -f")
-          raise "Unable to 'clean -f' before checkout" unless did_clean
+          clean_output = `git clean -f`
+          unless $?.success?
+            @logger.operation(:updating, "failed to cleanup untracked files: #{clean_output}")
+          end
         end
         do_checkout_revision(git)
         do_update_tag(git)
