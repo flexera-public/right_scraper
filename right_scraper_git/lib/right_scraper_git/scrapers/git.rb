@@ -68,6 +68,10 @@ module RightScraper
         git = ::Git.open(basedir)
         do_fetch(git)
         git.reset_hard
+        Dir.chdir(basedir) do
+          did_clean = system("git clean -f")
+          raise "Unable to 'clean -f' before checkout" unless did_clean
+        end
         do_checkout_revision(git)
         do_update_tag(git)
       end
