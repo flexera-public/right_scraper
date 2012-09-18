@@ -95,7 +95,13 @@ module RightScraper
       def do_update
         git = ::Git.open(@repo_dir)
         do_fetch(git)
-        git.reset_hard
+        @logger.operation(:cleanup, "ensure no untracked files in #{@repo_dir}") do
+          git.reset_hard
+          Dir.chdir(@repo_dir) do
+            # ignore outcome; there is no way to record 'warnings'
+            system("git clean -f")
+          end
+        end
         do_checkout_revision(git)
         do_update_tag(git)
       end
