@@ -23,6 +23,25 @@
 
 require 'tmpdir'
 
+require 'git/lib'
+
+module Git
+  class Lib
+    # Monkey patch to blackwinter-git that strips ANSI escape sequences
+    # from command output to avoid confusing the parser.
+    def run_command_with_color_stripping(git_cmd, &block)
+      out = run_command_without_color_stripping(git_cmd, &block)
+      out.gsub!(/\e\[[^m]*m/, '')
+      out
+    end
+
+    unless self.methods.include?('run_command_without_color_stripping')
+      alias :run_command_without_color_stripping :run_command
+      alias :run_command :run_command_with_color_stripping
+    end
+  end
+end
+
 module RightScraper
   module Retrievers
     # Retriever for resources stored in a git repository.

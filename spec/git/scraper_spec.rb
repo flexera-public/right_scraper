@@ -33,6 +33,10 @@ describe RightScraper::Scraper do
   include RightScraper::SharedExamples
 
   before(:each) do
+    ulimit = `ulimit -a`.split("\n").detect { |l| l =~ /^open files.*$/ }.split(/\s+/).last.to_i
+    if ulimit < 512
+      raise "Cannot run this spec because ulimit -n is only #{ulimit}; need 512 minimum!"
+    end
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
     @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
