@@ -31,10 +31,6 @@ module Git
       out = run_command_without_color_stripping(git_cmd, &block)
       out.gsub!(/\e\[[^m]*m/, '')
       out
-    rescue Exception => e
-      require 'ruby-debug'
-      debugger
-      puts e.message
     end
 
     unless self.methods.include?('run_command_without_color_stripping')
