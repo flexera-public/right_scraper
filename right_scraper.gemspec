@@ -37,19 +37,19 @@ Gem::Specification.new do |spec|
   spec.rubyforge_project = %q{right_scraper}
   spec.require_path = 'lib'
 
-  spec.add_dependency('json', '>= 1.4.5')
-  spec.add_dependency('git', '>= 1.2.5')
-  spec.add_dependency('libarchive', '>= 0.1.1')
-  spec.add_dependency('right_aws', '>= 2.0')
+  spec.add_dependency('json', '~> 1.4')
+  spec.add_dependency('blackwinter-git', '~> 1.2.7')
+  spec.add_dependency('libarchive', '~> 0.1.1')
+  spec.add_dependency('right_aws', '~> 2.0')
   spec.add_dependency('process_watcher', '~> 0.3')
 
   spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'curl command line client'
   spec.requirements << 'Subversion command line client'
 
-  spec.add_development_dependency('rspec')
-  spec.add_development_dependency('flexmock')
-  spec.add_development_dependency('rtags')
+  spec.add_development_dependency('rspec', '~> 2.0')
+  spec.add_development_dependency('flexmock', '~> 0.9')
+  spec.add_development_dependency('rtags', '~> 0.97')
 
   spec.description = <<-EOF
   RightScraper provides a simple interface to download and keep local copies of remote
