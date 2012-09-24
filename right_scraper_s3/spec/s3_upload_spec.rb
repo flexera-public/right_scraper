@@ -119,7 +119,7 @@ describe RightScraper::Scanners::S3Upload do
       s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
                             :logger => RightScraper::Logger.new)
-      @bucket = s3.bucket(bucket_name, create=true)
+      @bucket = s3.bucket(bucket_name, create=false)
       FileUtils.rm_rf(RightScraper::Scrapers::ScraperBase.repo_dir(@repo_path, @repo))
     end
 

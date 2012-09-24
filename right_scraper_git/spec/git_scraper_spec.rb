@@ -41,6 +41,13 @@ describe RightScraper::Scrapers::Git do
     @ignore = ['.git']
   end
 
+  before(:each) do
+    ulimit = `ulimit -a`.split("\n").detect { |l| l =~ /^open files.*$/ }.split(/\s+/).last.to_i
+    if ulimit < 512
+      raise "Cannot run this spec because ulimit -n is only #{ulimit}; need 512 minimum!"
+    end
+  end
+
   context 'given a git repository' do
     before(:each) do
       @helper = RightScraper::GitScraperSpecHelper.new
@@ -213,7 +220,7 @@ describe RightScraper::Scrapers::Git do
       end
 
       after(:each) do
-        @scraper.close
+        @scraper.close if @scraper
         @scraper = nil
       end
 
