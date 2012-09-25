@@ -115,18 +115,28 @@ module RightScraper
       end
 
       def do_checkout_revision(git)
-        @logger.operation(:checkout_revision) do
+        @logger.operation(:checkout_revision, basedir) do
           case
           when tag?(git, repo_tag) && branch?(git, repo_tag) then
+            # Tag AND branch -- not a good idea!
             raise "Ambiguous reference: '#{repo_tag}' denotes both a branch and a tag"
           when branch = find_remote_branch(git, repo_tag) then
+            # Remote branch
             branch.checkout
           when branch = find_local_branch(git, repo_tag) then
+            # Local branch
             branch.checkout
           else
+            # Tag or sha
             git.checkout(repo_tag)
+
+            head_sha = git.gtree("HEAD").sha
+            # Paranoia: check that head commit is correct
+            if !tag?(git, repo_tag) && (repo_tag != head_sha)
+              raise "Checkout error; tried to checkout #{repo_tag}, ended up with #{head_sha}"
+            end
           end
-        end if repo_tag
+        end
       end
 
       def tag?(git, name)
