@@ -33,12 +33,23 @@ describe RightScraper::Scraper do
   include RightScraper::SharedExamples
 
   before(:each) do
-    ulimit = `ulimit -a`.split("\n").detect { |l| l =~ /^open files.*$/ }.split(/\s+/).last.to_i
+    # ulimit is a /usr/bin file on the Mac but only a shell command in Linux.
+    # invoking `sh -c ulimit -a` only returns the last token of output, in fact
+    # invoking 'ulimit -a' programmatically seems to omit the 'open files' field
+    # in which we are actually interested (whereas it is visible when run
+    # manually in bash). the more specific 'ulimit -n' appears to work as
+    # expected on mac and linux platforms *but* calling `sh -c ulimit -n`
+    # returns a nonsensical 'unlimited' token in ruby so we have to jump the
+    # additional hurdle of outputing to a temp file to get the right answer :@
+    @tmpdir = Dir.mktmpdir
+    output_file_path = File.join(@tmpdir, "ulimit_n.txt")
+    system('sh', '-c', "ulimit -n>#{output_file_path}")
+    ulimit = File.read(output_file_path).to_i
+    File.delete(output_file_path)
     if ulimit < 512
       raise "Cannot run this spec because ulimit -n is only #{ulimit}; need 512 minimum!"
     end
     @stream = StringIO.new()
-    @tmpdir = Dir.mktmpdir
     @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
   end
 
