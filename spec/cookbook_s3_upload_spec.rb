@@ -120,7 +120,11 @@ describe RightScraper::Scanners::CookbookS3Upload do
       s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
                             :logger => RightScraper::Logger.new)
-      @bucket = s3.bucket(bucket_name, create=true)
+
+      # create=true is prone to the too-many-buckets error even when the bucket
+      # already exists. since the bucket always exists for the test account
+      # there is no need to try creating it programmatically and fail specs.
+      @bucket = s3.bucket(bucket_name, create=false)
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
     end
 

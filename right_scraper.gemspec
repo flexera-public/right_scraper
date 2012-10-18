@@ -39,12 +39,11 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency('json', '~> 1.4')
   spec.add_dependency('blackwinter-git', '~> 1.2.7')
-  spec.add_dependency('libarchive', '~> 0.1.1')
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('process_watcher', '~> 0.4.1')
 
-  spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'curl command line client'
+  spec.requirements << 'git command line client'
   spec.requirements << 'Subversion command line client'
 
   spec.add_development_dependency('rspec', '~> 2.0')

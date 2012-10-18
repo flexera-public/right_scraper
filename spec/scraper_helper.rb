@@ -76,16 +76,6 @@ module RightScraper
 
   end
   module ScraperHelper
-    def archive_skeleton(archive)
-      files = Set.new
-      Archive.read_open_memory(archive) do |ar|
-        while entry = ar.next_header
-          files << [entry.pathname, ar.read_data]
-        end
-      end
-      files
-    end
-
     def check_resource(resource, params={})
       position = params[:position] || "."
       resource.should_not == nil
