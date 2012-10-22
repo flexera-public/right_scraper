@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:rightscale/process_watcher.git
-  revision: 155d562b17e99cebda819e7f336d2c5aefe1cf54
+  revision: 43efa6940e5c4e333862971e9c9799a916fd82b2
   branch: teal_12_12_14213_scraper_integration
   specs:
     process_watcher (0.4.1)
