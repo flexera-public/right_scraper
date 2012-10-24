@@ -24,7 +24,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name      = 'right_scraper'
-  spec.version   = '3.0.4'
+  spec.version   = '3.0.5'
   spec.authors   = ['Graham Hughes', 'Raphael Simon']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
@@ -39,12 +39,11 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency('json', '~> 1.4')
   spec.add_dependency('blackwinter-git', '~> 1.2.7')
-  spec.add_dependency('libarchive', '~> 0.1.1')
-  spec.add_dependency('right_aws', '~> 2.0')
-  spec.add_dependency('process_watcher', '~> 0.3')
+  spec.add_dependency('right_aws', '>= 2.0')
+  spec.add_dependency('process_watcher', '~> 0.4.1')
 
-  spec.requirements << 'libarchive, 2.8.4'
   spec.requirements << 'curl command line client'
+  spec.requirements << 'git command line client'
   spec.requirements << 'Subversion command line client'
 
   spec.add_development_dependency('rspec', '~> 2.0')
@@ -52,14 +51,14 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rtags', '~> 0.97')
 
   spec.description = <<-EOF
-  RightScraper provides a simple interface to download and keep local copies of remote
-  repositories up-to-date using the following protocols:
-    * git: RightScraper will clone then pull repos from git
-    * SVN: RightScraper will checkout then update SVN repositories
-    * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
-  On top of retrieving remote repositories, right_scraper also include "scrapers" that
-  will analyze the repository content and instantiate "resources" as a result. Currently
-  supported resources are Chef cookbooks and RightScale workflow definitions.
+RightScraper provides a simple interface to download and keep local copies of remote
+repositories up-to-date using the following protocols:
+  * git: RightScraper will clone then pull repos from git
+  * SVN: RightScraper will checkout then update SVN repositories
+  * tarballs: RightScraper will download, optionally uncompress and expand a given tar file
+On top of retrieving remote repositories, right_scraper also include "scrapers" that
+will analyze the repository content and instantiate "resources" as a result. Currently
+supported resources are Chef cookbooks and RightScale workflow definitions.
 EOF
 
   candidates = Dir.glob("{lib,spec}/**/*") +
