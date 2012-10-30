@@ -8,6 +8,6 @@ ruby do
   gemset   'right_scraper'
 end
 bundler do
-  version     '1.0.18'
+  version     '1.2.1'
   bundle_path File.join(ENV["HOME"], '.rightscale', 'right_scraper')
 end

@@ -23,7 +23,6 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'retriever_spec_helper'))
 require 'set'
-require 'libarchive_ruby'
 
 describe RightScraper::Retrievers::Git do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
