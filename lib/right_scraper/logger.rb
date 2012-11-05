@@ -53,8 +53,8 @@ module RightScraper
         result = yield
         note_phase(:commit, type, explanation)
         result
-      rescue
-        note_phase(:abort, type, explanation, $!)
+      rescue Exception => e
+        note_phase(:abort, type, explanation, e)
         raise
       end
     end

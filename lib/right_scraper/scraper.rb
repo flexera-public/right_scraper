@@ -98,7 +98,7 @@ module RightScraper
 
         # 3. Cleanup if temporary
         FileUtils.remove_entry_secure(@options[:basedir]) if @temporary
-      rescue
+      rescue Exception
         # logger handles communication with the end user and appending
         # to our error list, we just need to keep going.
       end
