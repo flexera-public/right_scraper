@@ -52,7 +52,7 @@ module RightScraper
       # === Parameters ===
       # relative_position(String):: relative pathname for file from root of resource
       def notice(relative_position)
-        @manifest[relative_position] = Digest::SHA1.hexdigest(yield)
+        @manifest[relative_position] = Digest::MD5.hexdigest(yield)
       end
     end
   end

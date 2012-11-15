@@ -73,7 +73,7 @@ module RightScraper
       # relative_position(String):: relative pathname for file from root of cookbook
       def notice(relative_position)
         contents = yield
-        name = Digest::SHA1.hexdigest(contents)
+        name = Digest::MD5.hexdigest(contents)
         path = File.join('Files', name)
         unless @bucket.key(path).exists?
           @bucket.put(path, contents)
