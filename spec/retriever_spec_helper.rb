@@ -63,7 +63,7 @@ module RightScraper
     def manifest
       hash = {}
       scan(@repo_content, hash, nil)
-      hash['metadata.json'] = Digest::SHA1.hexdigest(@repo_content.to_json + "\n")
+      hash['metadata.json'] = Digest::MD5.hexdigest(@repo_content.to_json + "\n")
       hash
     end
 
@@ -76,7 +76,7 @@ module RightScraper
           end
         else
           relative_position = position ? File.join(position, object) : object
-          hash[relative_position] = Digest::SHA1.hexdigest(object + "\n")
+          hash[relative_position] = Digest::MD5.hexdigest(object + "\n")
         end
       end
     end

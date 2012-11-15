@@ -170,11 +170,11 @@ module RightScraper
         @scraper.resources.should_not == []
         @scraper.resources.size.should == 1
         @scraper.resources[0].manifest.should == {
-                "folder1/file3"=>"1eb2267bae4e47cab81f8866bbc7e06764ea9be0",
-                "file1"=>"38be7d1b981f2fb6a4a0a052453f887373dc1fe8",
-                "folder2/folder3/file4"=>"a441d6d72884e442ef02692864eee99b4ad933f5",
-                "metadata.json"=>"c2901d21c81ba5a152a37a5cfae35a8e092f7b39",
-                "folder1/file2"=>"639daad06642a8eb86821ff7649e86f5f59c6139"}
+                "folder1/file3"=>"60b91f1875424d3b4322b0fdd0529d5d",
+                "file1"=>"5149d403009a139c7e085405ef762e1a",
+                "folder2/folder3/file4"=>"857c6673d7149465c8ced446769b523c",
+                "metadata.json"=>"7c72b234162002a96f4ba60f0db38601",
+                "folder1/file2"=>"3d709e89c8ce201e3c928eb917989aef"}
         @scraper.resources[0].metadata.should == [{"folder1"=>["file2", "file3"]},
                                                   {"folder2"=>[{"folder3"=>["file4"]}]},
                                                   "file1"]

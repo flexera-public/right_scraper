@@ -150,7 +150,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
         @cookbook.manifest.each do |key, value|
           file = @bucket.get(File.join('Files', value))
           file.should_not be_nil
-          Digest::SHA1.hexdigest(file).should == value
+          value.should == Digest::MD5.hexdigest(file)
         end
       end
     end
