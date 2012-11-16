@@ -3,7 +3,7 @@ source :rubygems
 gemspec
 
 gem 'process_watcher', :git => 'git@github.com:rightscale/process_watcher.git',
-                       :branch => "master"
+                       :branch => "release4.6"
 
 group :development do
   gem "rake", "0.8.7"
