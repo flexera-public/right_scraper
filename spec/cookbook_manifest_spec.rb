@@ -51,5 +51,43 @@ module RightScraper::Scanners
       manifest.notice("bar") { "fred" }
       manifest.end(resource)
     end
+    it 'should hash to the same value despite resource order' do
+      cookbook1 = RightScraper::Resources::Cookbook.new('<empty>', '')
+      cookbook2 = RightScraper::Resources::Cookbook.new('<empty>', '')
+
+      manifest = CookbookManifest.new
+
+      manifest.notice("foo") {"bar"}
+      manifest.notice("baz") {"quux"}
+      manifest.notice("bar/none") {"fred"}
+      manifest.notice("bar/all") {"fred"}
+      manifest.notice("a/really/deep/directory/fox") {"stray"}
+      manifest.end(cookbook1)
+
+      manifest.notice("bar/none") {"fred"}
+      manifest.notice("a/really/deep/directory/fox") {"stray"}
+      manifest.notice("foo") {"bar"}
+      manifest.notice("baz") {"quux"}
+      manifest.notice("bar/all") {"fred"}
+      manifest.end(cookbook2)
+
+      cookbook1.resource_hash.should == cookbook2.resource_hash
+    end
+    it 'should hash to the same value despite repository location' do
+      cookbook1 = RightScraper::Resources::Cookbook.new('git://github.com/somerepo', '')
+      cookbook2 = RightScraper::Resources::Cookbook.new('svn://mycompany/rss/myrepo', '')
+
+      manifest = CookbookManifest.new
+
+      manifest.notice("foo") {"bar"}
+      manifest.notice("baz") {"quux"}
+      manifest.end(cookbook1)
+
+      manifest.notice("foo") {"bar"}
+      manifest.notice("baz") {"quux"}
+      manifest.end(cookbook2)
+
+      cookbook1.resource_hash.should == cookbook2.resource_hash
+    end
   end
 end

@@ -124,9 +124,8 @@ describe RightScraper::Resources::Cookbook do
     end
 
     it 'should have a cookbook hash' do
-      repo_hash = Digest::SHA1.hexdigest("1\000git\000http://a.site/foo/bar/baz\000master")
       example_cookbook(@repository).resource_hash.should ==
-        Digest::SHA1.hexdigest("1\000#{repo_hash}\000")
+        Digest::MD5.hexdigest("{}")
     end
 
     it 'should have a cookbook hash invariant under credential changes' do
@@ -135,14 +134,14 @@ describe RightScraper::Resources::Cookbook do
       example_cookbook(@repository).resource_hash.should == old_hash
     end
 
-    it 'should have a cookbook hash that varies when the tag changes' do
+    it 'should have a cookbook hash invariant under tag changes' do
       old_hash = example_cookbook(@repository).resource_hash
       @repository.tag = "tag"
-      example_cookbook(@repository).resource_hash.should_not == old_hash
+      example_cookbook(@repository).resource_hash.should == old_hash
     end
 
-    it 'should have a cookbook hash that varies when the position changes' do
-      example_cookbook(@repository, "foo").resource_hash.should_not ==
+    it 'should have a cookbook hash invariant under position changes' do
+      example_cookbook(@repository, "foo").resource_hash.should ==
         example_cookbook(@repository, "bar").resource_hash
     end
   end
