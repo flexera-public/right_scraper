@@ -26,6 +26,9 @@ module RightScraper
   module Resources
 
     class Cookbook < Base
+      def resource_hash
+        Digest::MD5.hexdigest(manifest.is_a?(Hash) ? manifest.sort.to_json : '{}')
+      end
     end
 
   end
