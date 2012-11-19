@@ -56,11 +56,12 @@ module RightScraper
       # === Parameters
       # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
-        @bucket.put(File.join('Cooks', cookbook.resource_hash),
+        path = File.join('Cooks', cookbook.resource_hash)
+        @bucket.put(path,
                     {
                       :metadata => cookbook.metadata,
                       :manifest => cookbook.manifest
-                    }.to_json)
+                    }.to_json) unless @bucket.key(path).exists?
       end
 
       # Upload a file during scanning.
