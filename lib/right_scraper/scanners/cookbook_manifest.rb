@@ -22,7 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require 'digest/sha1'
+require 'digest/md5'
 
 module RightScraper
   module Scanners
