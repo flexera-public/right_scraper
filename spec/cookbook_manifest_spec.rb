@@ -29,8 +29,8 @@ module RightScraper::Scanners
   describe CookbookManifest do
     it 'should accumulate files' do
       resource = flexmock(:resource)
-      resource.should_receive(:manifest=).with({"foo" => Digest::SHA1.hexdigest("bar"),
-                                                 "baz" => Digest::SHA1.hexdigest("quux")
+      resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
+                                                 "baz" => Digest::MD5.hexdigest("quux")
                                                }).once
       manifest = CookbookManifest.new
       manifest.notice("foo") { "bar" }
@@ -39,10 +39,10 @@ module RightScraper::Scanners
     end
     it 'should keep different resources separated' do
       resource = flexmock(:resource)
-      resource.should_receive(:manifest=).with({"foo" => Digest::SHA1.hexdigest("bar"),
-                                                 "baz" => Digest::SHA1.hexdigest("quux")
+      resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
+                                                 "baz" => Digest::MD5.hexdigest("quux")
                                                }).once
-      resource.should_receive(:manifest=).with({"bar" => Digest::SHA1.hexdigest("fred")
+      resource.should_receive(:manifest=).with({"bar" => Digest::MD5.hexdigest("fred")
                                                }).once
       manifest = CookbookManifest.new
       manifest.notice("foo") { "bar" }

@@ -56,11 +56,12 @@ module RightScraper
       # === Parameters
       # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
-        @bucket.put(File.join('Cooks', cookbook.resource_hash),
+        path = File.join('Cooks', cookbook.resource_hash)
+        @bucket.put(path,
                     {
                       :metadata => cookbook.metadata,
                       :manifest => cookbook.manifest
-                    }.to_json)
+                    }.to_json) unless @bucket.key(path).exists?
       end
 
       # Upload a file during scanning.
@@ -73,7 +74,7 @@ module RightScraper
       # relative_position(String):: relative pathname for file from root of cookbook
       def notice(relative_position)
         contents = yield
-        name = Digest::SHA1.hexdigest(contents)
+        name = Digest::MD5.hexdigest(contents)
         path = File.join('Files', name)
         unless @bucket.key(path).exists?
           @bucket.put(path, contents)
