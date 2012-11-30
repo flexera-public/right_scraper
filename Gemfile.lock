@@ -15,7 +15,7 @@ GIT
 PATH
   remote: .
   specs:
-    right_scraper (3.0.5)
+    right_scraper (3.1.0)
       blackwinter-git (~> 1.2.7)
       json (~> 1.4)
       process_watcher (~> 0.4.1)
