@@ -5,6 +5,9 @@ gemspec
 gem 'process_watcher', :git => 'git@github.com:rightscale/process_watcher.git',
                        :branch => "release4.6"
 
+gem 'right_support', :git => 'git@github.com:rightscale/right_support.git',
+                     :branch => "teal_12_14_acu67135_hash_tools_deep_sorted_json"
+
 group :development do
   gem "rake", "0.8.7"
   gem "ruby-debug", :platform=>"ruby_18"

@@ -55,7 +55,7 @@ describe RightScraper::Resources::Cookbook do
 
     it 'should have a cookbook hash' do
       example_cookbook(@repository).resource_hash.should ==
-        Digest::MD5.hexdigest("{}")
+        Digest::MD5.hexdigest(RightScraper::Resources::Cookbook::EMPTY_MANIFEST_JSON)
     end
 
     it 'should have a cookbook hash invariant under credential changes' do
