@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('blackwinter-git', '~> 1.2.7')
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('process_watcher', '~> 0.4.1')
-  spec.add_dependency('right_support', '>= 2.6.6')
+  spec.add_dependency('right_support', '~> 2.6.6')
 
   spec.requirements << 'curl command line client'
   spec.requirements << 'git command line client'

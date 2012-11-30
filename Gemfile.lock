@@ -20,7 +20,7 @@ PATH
       json (~> 1.4)
       process_watcher (~> 0.4.1)
       right_aws (>= 2.0)
-      right_support (>= 2.6.6)
+      right_support (~> 2.6.6)
 
 GEM
   remote: http://rubygems.org/
