@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: git@github.com:rightscale/right_support.git
-  revision: 5a35a914741fbe515d50789d9c3e2d4852950226
+  revision: 4cc71ce6a36744ec717b3d97d3bf51a330ab1866
   branch: teal_12_14_acu67135_hash_tools_deep_sorted_json
   specs:
     right_support (2.6.6)
