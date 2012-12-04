@@ -1,7 +1,7 @@
 GIT
   remote: git@github.com:rightscale/process_watcher.git
   revision: c0d013d166f94819ddee6b9cb3e58e2f2427a8c2
-  branch: release4.6
+  branch: master
   specs:
     process_watcher (0.4.1)
 
