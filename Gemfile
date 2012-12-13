@@ -6,7 +6,7 @@ gem 'process_watcher', :git => 'git@github.com:rightscale/process_watcher.git',
                        :branch => "master"
 
 gem 'right_support', :git => 'git@github.com:rightscale/right_support.git',
-                     :branch => "teal_12_14_acu67135_hash_tools_deep_sorted_json"
+                     :branch => "master"
 
 group :development do
   gem "rake", "0.8.7"
