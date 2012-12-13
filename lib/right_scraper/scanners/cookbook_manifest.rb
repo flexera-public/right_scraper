@@ -22,7 +22,7 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
-require 'digest/sha1'
+require 'digest/md5'
 
 module RightScraper
   module Scanners
@@ -52,7 +52,7 @@ module RightScraper
       # === Parameters ===
       # relative_position(String):: relative pathname for file from root of resource
       def notice(relative_position)
-        @manifest[relative_position] = Digest::SHA1.hexdigest(yield)
+        @manifest[relative_position] = Digest::MD5.hexdigest(yield)
       end
     end
   end

@@ -205,8 +205,8 @@ describe RightScraper::Retrievers::Git do
 
       context 'with a subcookbook' do
         before(:each) do
-          subdir = File.join(@helper.repo_path, "cookbook")
-          secondary_cookbook(subdir)
+          @subdir = File.join(@helper.repo_path, "cookbook")
+          secondary_cookbook(@subdir)
           @helper.commit_content("subcookbook added")
         end
 
@@ -220,7 +220,8 @@ describe RightScraper::Retrievers::Git do
 
         it 'should have the subcookbook in the manifest' do
           cookbook = @scraper.next_resource
-          cookbook.manifest["cookbook/metadata.json"].should == "c2901d21c81ba5a152a37a5cfae35a8e092f7b39"
+          contents = ::File.read(::File.join(@subdir, "metadata.json"))
+          cookbook.manifest["cookbook/metadata.json"].should ==  ::Digest::MD5.hexdigest(contents)
         end
       end
 

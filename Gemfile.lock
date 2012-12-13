@@ -5,14 +5,22 @@ GIT
   specs:
     process_watcher (0.4.1)
 
+GIT
+  remote: git@github.com:rightscale/right_support.git
+  revision: 00c0e94e6d68c71c20942df774e742f05e9e0a0d
+  branch: master
+  specs:
+    right_support (2.6.7)
+
 PATH
   remote: .
   specs:
-    right_scraper (3.0.5)
+    right_scraper (3.1.0)
       blackwinter-git (~> 1.2.7)
       json (~> 1.4)
       process_watcher (~> 0.4.1)
       right_aws (>= 2.0)
+      right_support (~> 2.6.7)
 
 GEM
   remote: http://rubygems.org/
@@ -67,6 +75,7 @@ DEPENDENCIES
   rake (= 0.8.7)
   rdoc (~> 2.4)
   right_scraper!
+  right_support!
   rspec (~> 2.0)
   rtags (~> 0.97)
   ruby-debug

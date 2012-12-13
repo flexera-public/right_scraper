@@ -141,8 +141,9 @@ describe RightScraper::Scanners::CookbookS3Upload do
       it 'the cookbook should exist' do
         s3cookbook = @bucket.get(File.join('Cooks', @cookbook.resource_hash))
         s3cookbook.should_not be_nil
+        ::Digest::MD5.hexdigest(s3cookbook).should == @cookbook.resource_hash
+        s3cookbook.should_not == ::RightScraper::Resources::Cookbook::EMPTY_MANIFEST_JSON
         hash = JSON.parse(s3cookbook)
-        hash["metadata"].should == @cookbook.metadata
         hash["manifest"].should == @cookbook.manifest
       end
 
@@ -150,7 +151,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
         @cookbook.manifest.each do |key, value|
           file = @bucket.get(File.join('Files', value))
           file.should_not be_nil
-          Digest::SHA1.hexdigest(file).should == value
+          value.should == Digest::MD5.hexdigest(file)
         end
       end
     end

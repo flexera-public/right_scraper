@@ -95,12 +95,12 @@ module RightScraper
             @resources += scraper.scrape
           end
         end
-
-        # 3. Cleanup if temporary
-        FileUtils.remove_entry_secure(@options[:basedir]) if @temporary
       rescue Exception
         # logger handles communication with the end user and appending
         # to our error list, we just need to keep going.
+      ensure
+        # ensure basedir is always removed if temporary (even with errors).
+        ::FileUtils.remove_entry_secure(@options[:basedir]) rescue nil if @temporary
       end
       @logger.callback = nil
       errors.size == errorlen

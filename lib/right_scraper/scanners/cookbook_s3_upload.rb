@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2012 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,6 +22,7 @@
 #++
 require 'right_aws'
 require 'json'
+require 'digest/md5'
 
 module RightScraper
   module Scanners
@@ -56,11 +57,11 @@ module RightScraper
       # === Parameters
       # cookbook(RightScraper::Cookbook):: cookbook to scan
       def end(cookbook)
-        @bucket.put(File.join('Cooks', cookbook.resource_hash),
-                    {
-                      :metadata => cookbook.metadata,
-                      :manifest => cookbook.manifest
-                    }.to_json)
+        path = File.join('Cooks', cookbook.resource_hash)
+        unless @bucket.key(path).exists?
+          contents = cookbook.manifest_json
+          @bucket.put(path, contents)
+        end
       end
 
       # Upload a file during scanning.
@@ -73,7 +74,7 @@ module RightScraper
       # relative_position(String):: relative pathname for file from root of cookbook
       def notice(relative_position)
         contents = yield
-        name = Digest::SHA1.hexdigest(contents)
+        name = Digest::MD5.hexdigest(contents)
         path = File.join('Files', name)
         unless @bucket.key(path).exists?
           @bucket.put(path, contents)

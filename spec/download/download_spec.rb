@@ -54,10 +54,8 @@ describe RightScraper::Resources::Cookbook do
     it_should_behave_like 'a download repository'
 
     it 'should have a cookbook hash' do
-      checkout_hash =
-        Digest::SHA1.hexdigest("1\000download\000http://a.site/foo/bar/baz\000")
       example_cookbook(@repository).resource_hash.should ==
-        Digest::SHA1.hexdigest("1\000#{checkout_hash}\000")
+        Digest::MD5.hexdigest(RightScraper::Resources::Cookbook::EMPTY_MANIFEST_JSON)
     end
 
     it 'should have a cookbook hash invariant under credential changes' do
@@ -66,8 +64,8 @@ describe RightScraper::Resources::Cookbook do
       example_cookbook(@repository).resource_hash.should == old_hash
     end
 
-    it 'should have a cookbook hash that varies when the position changes' do
-      example_cookbook(@repository, "foo").resource_hash.should_not ==
+    it 'should have a cookbook hash invariant under position changes' do
+      example_cookbook(@repository, "foo").resource_hash.should ==
         example_cookbook(@repository, "bar").resource_hash
     end
   end
