@@ -17,7 +17,7 @@ cost of requiring some systems administration work external to Ruby.
  require 'rubygems'
  require 'right_scraper'
 
- scraper = RightScale::Scraper.new(:basedir => '/tmp', :kind => :cookbook)
+ scraper = RightScraper::Scraper.new(:basedir => '/tmp', :kind => :cookbook)
  scraper.scrape(:type => :git, :url => 'git://github.com/rightscale/right_scraper.git')
 
 == INSTALLATION
