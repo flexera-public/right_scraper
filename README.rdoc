@@ -10,6 +10,8 @@ may specify only the functionality (and required libraries and gems) you require
 This gem depends on all available RightScraper modules, enabling full support at the
 cost of requiring some systems administration work external to Ruby.
 
+Maintained by the RightScale Teal Team
+
 == USAGE
 
 === Simple Example
