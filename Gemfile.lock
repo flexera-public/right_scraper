@@ -7,10 +7,10 @@ GIT
 
 GIT
   remote: git@github.com:rightscale/right_support.git
-  revision: 00c0e94e6d68c71c20942df774e742f05e9e0a0d
+  revision: f209f459b965d5b082ae5872578bf61d7a124611
   branch: master
   specs:
-    right_support (2.6.7)
+    right_support (2.7.0)
 
 PATH
   remote: .
@@ -20,7 +20,7 @@ PATH
       json (~> 1.4)
       right_aws (>= 2.0)
       right_popen (~> 1.1.1)
-      right_support (~> 2.6.7)
+      right_support (~> 2.6)
 
 GEM
   remote: https://rubygems.org/
