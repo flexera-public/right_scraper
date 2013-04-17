@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -20,7 +20,9 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'process_watcher'
+
+require 'right_popen'
+require 'right_popen/safe_output_buffer'
 
 module RightScraper
   # Simplified interface to the process of creating SVN client
@@ -34,11 +36,22 @@ module RightScraper
   #     ...
   #   end
   module SvnClient
+
+    class SvnClientError < Exception; end
+
     def calculate_version
       unless @svn_version
-        out = ProcessWatcher.watch("svn", ["--version", "--quiet"],
-                                   repo_dir, @max_bytes || -1, @max_seconds || -1)
-        @svn_version = out.chomp.split(".").map {|e| e.to_i}
+        begin
+          cmd = 'svn --version --quiet'
+          out = `#{cmd}`
+          if $?.success?
+            @svn_version = out.chomp.split('.').map {|e| e.to_i}
+          else
+            raise SvnClientError, "Unable to determine svn version: #{cmd.inspect} exited with #{$?.exitstatus}"
+          end
+        rescue Errno::ENOENT => e
+          raise SvnClientError, "Unable to determine svn version: #{e.message}"
+        end
       end
       @svn_version
     end
@@ -74,16 +87,65 @@ module RightScraper
     end
 
     def run_svn_no_chdir(*args)
-      ProcessWatcher.watch("svn", [args, svn_arguments].flatten,
-                           repo_dir, @max_bytes || -1, @max_seconds || -1) do |phase, operation, exception|
-        #$stderr.puts "#{phase} #{operation} #{exception}"
-      end
+      run_svn_with(nil, :safe_output_svn_client, *args)
     end
 
     def run_svn(*args)
-      Dir.chdir(repo_dir) do
-        run_svn_no_chdir(*args)
+      run_svn_with(repo_dir, :safe_output_svn_client, *args)
+    end
+
+    def run_svn_with_buffered_output(*args)
+      run_svn_with(repo_dir, :unsafe_output_svn_client, *args)
+    end
+
+    # runs svn client with safe buffering (by default).
+    #
+    # === Parameters
+    # @param [Array] args for svn client command line
+    #
+    # === Return
+    # @return [Array] lines of output or empty
+    def run_svn_with(initial_directory, output_handler, *args)
+      @output = ::RightScale::RightPopen::SafeOutputBuffer.new
+      cmd = ['svn', args, svn_arguments].flatten
+      ::RightScale::RightPopen.popen3_sync(
+        cmd,
+        :target             => self,
+        :directory          => initial_directory,
+        :timeout_handler    => :timeout_svn_client,
+        :size_limit_handler => :size_limit_svn_client,
+        :exit_handler       => :exit_svn_client,
+        :stderr_handler     => output_handler,
+        :stdout_handler     => output_handler,
+        :inherit_io         => true,  # avoid killing any rails connection
+        :watch_directory    => repo_dir,
+        :size_limit_bytes   => @max_bytes,
+        :timeout_seconds    => @max_seconds)
+      @output.buffer
+    end
+
+    def safe_output_svn_client(data)
+      @output.safe_buffer_data(data)
+    end
+
+    def unsafe_output_svn_client(data)
+      @output.buffer << data.chomp
+    end
+
+    def timeout_svn_client
+      raise SvnClientError, "svn client timed out"
+    end
+
+    def size_limit_svn_client
+      raise SvnClientError, "svn client exceeded size limit"
+    end
+
+    def exit_svn_client(status)
+      unless status.success?
+        self.method(@output_handler).call("Exit code = #{status.exitstatus}")
+        raise SvnClientError, "svn client failed: #{@output.display_text}"
       end
+      true
     end
 
     # Fetch the tag from the repository, or nil if one doesn't

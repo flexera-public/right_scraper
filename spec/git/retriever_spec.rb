@@ -335,7 +335,7 @@ describe RightScraper::Retrievers::Git do
         end
 
         after(:each) do
-          @scraper.close
+          @scraper.close if @scraper
           @scraper = nil
         end
 

@@ -23,6 +23,9 @@
 
 require 'tmpdir'
 
+# TEAL FIX: figure out a way to do this monkey-patch without always rquiring the
+# blackwinter gem and/or create a rightscale-git fork with this fix.
+require 'git'
 require 'git/lib'
 
 module Git
@@ -52,7 +55,6 @@ module RightScraper
       def available?
         unless @@available
           begin
-            require 'git'
             # note that require 'git' does the same version check on load but
             # we don't want to assume any particular implementation.
             #
