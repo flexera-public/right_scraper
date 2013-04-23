@@ -20,15 +20,19 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require 'process_watcher'
+
 require 'tempfile'
 require 'digest/sha1'
+require 'right_popen'
+require 'right_popen/safe_output_buffer'
 
 module RightScraper
   module Retrievers
     # A retriever for resources stored in archives on a web server
     # somewhere.  Uses command line curl and command line tar.
     class Download < Base
+
+      class DownloadError < Exception; end
 
       @@available = false
 
@@ -71,15 +75,34 @@ module RightScraper
 
         @logger.operation(:downloading) do
           credential_command = if @repository.first_credential && @repository.second_credential
-            ["-u", "#{@repository.first_credential}:#{@repository.second_credential}"]
+            ['-u', "#{@repository.first_credential}:#{@repository.second_credential}"]
           else
             []
           end
-          ProcessWatcher.watch("curl", ["--silent", "--show-error", "--location", "--fail",
-                                        "--location-trusted", "-o", file,
-                                        credential_command, @repository.url].flatten,
-                               workdir, @max_bytes || -1, @max_seconds || -1) do |phase, command, exception|
-            @logger.note_phase(phase, :running_command, command, exception)
+          @output = []
+          @cmd = [
+            'curl',
+            '--silent', '--show-error', '--location', '--fail',
+            '--location-trusted', '-o', file, credential_command,
+            @repository.url
+          ].flatten
+          begin
+            ::RightScale::RightPopen.popen3_sync(
+              @cmd,
+              :target             => self,
+              :pid_handler        => :pid_download,
+              :timeout_handler    => :timeout_download,
+              :size_limit_handler => :size_limit_download,
+              :exit_handler       => :exit_download,
+              :stderr_handler     => :output_download,
+              :stdout_handler     => :output_download,
+              :inherit_io         => true,  # avoid killing any rails connection
+              :watch_directory    => workdir,
+              :size_limit_bytes   => @max_bytes,
+              :timeout_seconds    => @max_seconds)
+          rescue Exception => e
+            @logger.note_phase(:abort, :running_command, 'curl', e)
+            raise
           end
         end
 
@@ -95,13 +118,56 @@ module RightScraper
             extraction = "xf"
           end
           Dir.chdir(repo_dir) do
-            ProcessWatcher.watch("tar", [extraction, file], repo_dir,
-                                 @max_bytes || -1, @max_seconds || -1) do |phase, command, exception|
-              @logger.note_phase(phase, :running_command, command, exception)
+            @output = ::RightScale::RightPopen::SafeOutputBuffer.new
+            @cmd = ['tar', extraction, file]
+            begin
+              ::RightScale::RightPopen.popen3_sync(
+                @cmd,
+                :target             => self,
+                :pid_handler        => :pid_download,
+                :timeout_handler    => :timeout_download,
+                :size_limit_handler => :size_limit_download,
+                :exit_handler       => :exit_download,
+                :stderr_handler     => :output_download,
+                :stdout_handler     => :output_download,
+                :inherit_io         => true,  # avoid killing any rails connection
+                :watch_directory    => repo_dir,
+                :size_limit_bytes   => @max_bytes,
+                :timeout_seconds    => @max_seconds)
+            rescue Exception => e
+              @logger.note_phase(:abort, :running_command, @cmd.first, e)
+              raise
             end
           end
         end
       end
+
+      def pid_download(pid)
+        @logger.note_phase(:begin, :running_command, @cmd.first)
+        true
+      end
+
+      def output_download(data)
+        @output.safe_buffer_data(data)
+      end
+
+      def timeout_download
+        raise DownloadError, "Downloader timed out"
+      end
+
+      def size_limit_download
+        raise DownloadError, "Downloader exceeded size limit"
+      end
+
+      def exit_download(status)
+        unless status.success?
+          @output.safe_buffer_data("Exit code = #{status.exitstatus}")
+          raise DownloadError, "Downloader failed: #{@output.display_text}"
+        end
+        @logger.note_phase(:commit, :running_command, @cmd.first)
+        true
+      end
+
 
       # Amend @repository with the tag information from the downloaded
       # file.

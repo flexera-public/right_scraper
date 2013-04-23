@@ -148,11 +148,14 @@ FULLOUTPUT
     lambda {
       RightScraper::Processes::SSHAgent.with do |agent|
         pid = ENV['SSH_AGENT_PID'].to_i
+        pid.should_not == 0
         demofile = File.expand_path(File.join(File.dirname(__FILE__), 'password_key'))
         File.chmod(0600, demofile)
-        agent.add_keyfile(demofile)
+        agent.add_keyfile(demofile)  # will fail due to missing password
       end
-    }.should raise_exception(ProcessWatcher::NonzeroExitCode, /Attempted to use credentials that require passwords; bailing/)
+    }.should raise_exception(::RightScraper::Processes::SSHAgent::SSHAgentError, /Attempted to use credentials that require passwords; bailing/)
+
+    # the .with statement must ensure that the ssh-agent process terminates.
     lambda {
       Process.kill(0, pid)
     }.should raise_exception(Errno::ESRCH)
