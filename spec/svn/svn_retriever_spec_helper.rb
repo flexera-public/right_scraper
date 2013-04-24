@@ -22,7 +22,6 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'retriever_spec_helper'))
-require 'process_watcher'
 
 module RightScraper
 
@@ -44,7 +43,7 @@ module RightScraper
 
     def repo_url
       file_prefix = 'file://'
-      file_prefix += '/' if RUBY_PLATFORM =~ /mswin/
+      file_prefix += '/' if RUBY_PLATFORM =~ /mswin|mingw/
       url = "#{file_prefix}#{svn_repo_path}"
     end
 
@@ -57,8 +56,8 @@ module RightScraper
                                                  :display_name => 'test repo',
                                                  :repo_type    => :svn,
                                                  :url          => repo_url)
-      output, status = ProcessWatcher.run("svnadmin", "create", svn_repo_path)
-      raise "Can't create repo: #{output}" if status != 0
+      output = `svnadmin create #{svn_repo_path}`
+      raise "Can't create repo: #{output}" unless $?.success?
       run_svn_no_chdir "checkout", repo_url, repo_path
       make_cookbooks
       commit_content
@@ -78,9 +77,9 @@ module RightScraper
     end
 
     def commit_id(index_from_last=0)
-      output = run_svn "log", "-l", (index_from_last + 1).to_s, "-r", "HEAD:0"
+      lines = run_svn_with_buffered_output "log", "-l", (index_from_last + 1).to_s, "-r", "HEAD:0"
       id = nil
-      output.split(/\n/).each do |line|
+      lines.each do |line|
         if line =~ /^r(\d+)/
           id = $1
         end

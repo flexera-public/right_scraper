@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,8 +22,6 @@
 #++
 require File.join(File.dirname(__FILE__), '..', 'svn_client')
 
-require 'process_watcher'
-
 module RightScraper
   module Retrievers
     # Retriever for svn repositories
@@ -37,17 +35,10 @@ module RightScraper
       def available?
         unless @@available
           begin
-            # FIX: we might want to parse the result and require a minimum svn
-            # client version.
-            cmd = "svn --version"
-            `#{cmd}`
-            if $?.success?
-              @@available = true
-            else
-              raise RetrieverError, "\"#{cmd}\" exited with #{$?.exitstatus}"
-            end
-          rescue
-            @logger.note_error($!, :available, "svn retriever is unavailable")
+            calculate_version
+            @@available = true
+          rescue SvnClientError => e
+            @logger.note_error(e, :available, "svn retriever is unavailable")
           end
         end
         @@available
@@ -81,8 +72,8 @@ module RightScraper
       # pick out the first tag.
       def do_update_tag
         @repository = @repository.clone
-        log = run_svn("log", "-r", 'HEAD')
-        log.split(/\n/).each do |line|
+        lines = run_svn_with_buffered_output("log", "-r", 'HEAD')
+        lines.each do |line|
           if line =~ /^r(\d+)/
             @repository.tag = $1
             break

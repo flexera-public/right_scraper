@@ -1,9 +1,9 @@
-source :rubygems 
+source 'https://rubygems.org'
 
 gemspec
 
-gem 'process_watcher', :git => 'git@github.com:rightscale/process_watcher.git',
-                       :branch => "master"
+gem 'right_popen', :git => 'git@github.com:rightscale/right_popen.git',
+                   :branch => "master"
 
 gem 'right_support', :git => 'git@github.com:rightscale/right_support.git',
                      :branch => "master"

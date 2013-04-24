@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -20,14 +20,19 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+
 require 'tempfile'
-require 'process_watcher'
 require 'tmpdir'
+require 'right_popen'
+require 'right_popen/safe_output_buffer'
 
 module RightScraper
   module Processes
     # Manage a dedicated SSH agent.
     class SSHAgent
+
+      class SSHAgentError < Exception; end
+
       def initialize
         @display = ENV['DISPLAY']
         @askpass = ENV['SSH_ASKPASS']
@@ -46,26 +51,31 @@ module RightScraper
         ENV['HOME'] = "/dev/null"
         @dir = Dir.mktmpdir
         @socketfile = File.join(@dir, "agent")
-        @monitor = ProcessWatcher::ProcessMonitor.new
-        @pid = @monitor.spawn('ssh-agent', '-a', @socketfile, '-d') {}
-        timeout = 0
-        until File.exists?(@socketfile)
-          timeout += 1
-          sleep 0.1
-          if timeout > 100
-            raise "Couldn't find SSH agent control socket in time.  Timing out"
-          end
+        @process = nil
+        @interupted_to_close = false
+        @ssh_agent_output = ::RightScale::RightPopen::SafeOutputBuffer.new
+        cmd = ['ssh-agent', '-a', @socketfile, '-d']
+        ::RightScale::RightPopen.popen3_sync(
+          cmd,
+          :target          => self,
+          :inherit_io      => true,  # avoid killing any rails connection
+          :watch_handler   => :watch_ssh_agent,
+          :stderr_handler  => :output_ssh_agent,
+          :stdout_handler  => :output_ssh_agent,
+          :timeout_handler => :timeout_ssh_agent,
+          :exit_handler    => :exit_ssh_agent,
+          :timeout_seconds => 10)
+        if @process
+          ENV['SSH_AGENT_PID'] = @process.pid.to_s
+          ENV['SSH_AUTH_SOCK'] = @socketfile
         end
-        ENV['SSH_AGENT_PID'] = @pid.to_s
-        ENV['SSH_AUTH_SOCK'] = @socketfile
       end
 
       # Close the connection to the SSH agent, and restore +ENV+.
       def close
         begin
           FileUtils.remove_entry_secure @dir
-          lay_to_rest(@pid) if @pid
-          @monitor.cleanup if @monitor
+          lay_to_rest
         ensure
           setvar 'SSH_AGENT_PID', @agentpid
           setvar 'DISPLAY', @display
@@ -75,71 +85,35 @@ module RightScraper
         end
       end
 
-      # Kill +pid+.  Initially use SIGTERM to be kind and a good
-      # citizen.  If it doesn't die after +timeout+ seconds, use
-      # SIGKILL instead.  In any case, the process will die.  The
-      # status information is accessible in $?.
-      #
-      # === Parameters
-      # pid(Fixnum):: pid of process to kill
-      # timeout(Fixnum):: time in seconds to wait before forcing
-      #                   process to die.  Defaults to 10 seconds.
-      def lay_to_rest(pid, timeout=10)
-        #refuse to kill ourselves, or to pass a bad arg to Process.kill
-        return 0 unless pid.is_a?(Integer) && pid > 0
-
-        Process.kill('TERM', pid)
-        time_waited = 0
-        loop do
-          if time_waited >= timeout
-            Process.kill('KILL', pid)
-            # can't waitpid here, because the ssh-agent isn't our
-            # child.  Still, after SIGKILL it will die and init will
-            # reap it, so continue
-            return
-          end
-          # still can't waitpid here, so we see if it's still alive
-          return unless still_alive?(pid)
-          sleep 1
-          time_waited += 1
-        end
+      def output_ssh_agent(data)
+        @ssh_agent_output.safe_buffer_data(data)
       end
 
-      # Check to see if the process +pid+ is still alive, by sending
-      # the 0 signal and checking for an exception.
+      # abandons watch when socket file appears
       #
-      # === Parameters
-      # pid(Fixnum):: pid of process to check on
-      #
-      # === Return
-      # Boolean:: true if process is still alive
-      def still_alive?(pid)
-        begin
-          Process.kill(0, pid)
+      # @return [TrueClass|FalseClass] true to continue watch, false to abandon
+      def watch_ssh_agent(process)
+        if @interupted_to_close
           true
-        rescue Errno::ESRCH
-          false
+        else
+          @process = process
+          !::File.exists?(@socketfile)
         end
       end
 
-      # Set an environment variable to a value.  If +value+ is nil,
-      # delete the variable instead.
-      #
-      # === Parameters
-      # key(String):: environment variable name
-      # value(String or nil):: proposed new value
-      #
-      # === Return
-      # true
-      def setvar(key, value)
-        if value.nil?
-          ENV.delete(key)
-        else
-          ENV[key] = value
+      def timeout_ssh_agent
+        unless @interupted_to_close
+          raise SSHAgentError, 'Timed out waiting for ssh-agent control socket to appear'
+        end
+      end
+
+      def exit_ssh_agent(status)
+        unless @interupted_to_close || status.success?
+          @ssh_agent_output.safe_buffer_data("Exit code = #{status.exitstatus}")
+          raise SSHAgentError, "ssh-agent failed: #{@ssh_agent_output.display_text}"
         end
         true
       end
-      private :setvar
 
       # Add the given key data to the ssh agent.
       #
@@ -162,7 +136,33 @@ module RightScraper
       # === Parameters
       # file(String):: file containing key data
       def add_keyfile(file)
-        ProcessWatcher.watch("ssh-add", [file], nil, -1, 10)
+        @ssh_add_output = ::RightScale::RightPopen::SafeOutputBuffer.new
+        cmd = ['ssh-add', file]
+        ::RightScale::RightPopen.popen3_sync(
+          cmd,
+          :target          => self,
+          :inherit_io      => true,  # avoid killing any rails connection
+          :stderr_handler  => :output_ssh_add,
+          :stdout_handler  => :output_ssh_add,
+          :timeout_handler => :timeout_ssh_add,
+          :exit_handler    => :exit_ssh_add,
+          :timeout_seconds => 10)
+      end
+
+      def output_ssh_add(data)
+        @ssh_add_output.safe_buffer_data(data)
+      end
+
+      def timeout_ssh_add
+        raise SSHAgentError, 'ssh-add timed out'
+      end
+
+      def exit_ssh_add(status)
+        unless status.success?
+          @ssh_add_output.safe_buffer_data("Exit code = #{status.exitstatus}")
+          raise SSHAgentError, "ssh-add failed: #{@ssh_add_output.display_text}"
+        end
+        true
       end
 
       # Execute the block in a new ssh agent.
@@ -183,6 +183,38 @@ module RightScraper
           agent.close
         end
       end
+
+      private
+
+      def lay_to_rest
+        if @process
+          if @process.interrupt
+            @interupted_to_close = true
+            @process.sync_exit_with_target
+          else
+            @process.safe_close_io
+          end
+        end
+      end
+
+      # Set an environment variable to a value.  If +value+ is nil,
+      # delete the variable instead.
+      #
+      # === Parameters
+      # key(String):: environment variable name
+      # value(String or nil):: proposed new value
+      #
+      # === Return
+      # true
+      def setvar(key, value)
+        if value.nil?
+          ENV.delete(key)
+        else
+          ENV[key] = value
+        end
+        true
+      end
+
     end
   end
 end

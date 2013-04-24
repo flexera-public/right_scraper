@@ -76,7 +76,7 @@ describe RightScraper::Resources::Cookbook do
         ensure
           FileUtils.remove_entry_secure(@tmpdir)
         end
-      }.should raise_exception(ProcessWatcher::NonzeroExitCode)
+      }.should raise_exception(::RightScraper::Processes::SSHAgent::SSHAgentError, /Attempted to use credentials that require passwords; bailing/)
       ENV['SSH_AGENT_PID'].should == oldpid
     end
   end
