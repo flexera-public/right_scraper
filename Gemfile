@@ -3,10 +3,9 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'right_popen', :git => 'git@github.com:rightscale/right_popen.git',
-                   :branch => "master"
+                   :branch => "release4.8"
 
-gem 'right_support', :git => 'git@github.com:rightscale/right_support.git',
-                     :branch => "master"
+gem 'right_support', '2.7' 
 
 group :development do
   gem "rake", "0.8.7"
