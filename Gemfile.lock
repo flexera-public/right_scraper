@@ -8,7 +8,7 @@ GIT
 PATH
   remote: .
   specs:
-    right_scraper (3.2.1)
+    right_scraper (3.2.2)
       blackwinter-git (~> 1.2.7)
       json (~> 1.4)
       right_aws (>= 2.0)
