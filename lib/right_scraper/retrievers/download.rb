@@ -58,19 +58,16 @@ module RightScraper
 
       # Directory used to download tarballs
       def workdir
-        File.join(@basedir, @repository.repository_hash)
-      end
-
-      # Path to directory where files are retrieved
-      def repo_dir
-        File.join(workdir, "archive")
+        @workdir ||= ::File.join(::File.dirname(@repo_dir), 'download')
       end
 
       # Download tarball and unpack it
       def retrieve
         raise RetrieverError.new("download retriever is unavailable") unless available?
+        FileUtils.remove_entry_secure @repo_dir if File.exists?(@repo_dir)
         FileUtils.remove_entry_secure workdir if File.exists?(workdir)
-        FileUtils.mkdir_p repo_dir
+        FileUtils.mkdir_p @repo_dir
+        FileUtils.mkdir_p workdir
         file = File.join(workdir, "package")
 
         @logger.operation(:downloading) do
@@ -79,7 +76,7 @@ module RightScraper
           else
             []
           end
-          @output = []
+          @output = ::RightScale::RightPopen::SafeOutputBuffer.new
           @cmd = [
             'curl',
             '--silent', '--show-error', '--location', '--fail',
@@ -117,7 +114,7 @@ module RightScraper
           else
             extraction = "xf"
           end
-          Dir.chdir(repo_dir) do
+          Dir.chdir(@repo_dir) do
             @output = ::RightScale::RightPopen::SafeOutputBuffer.new
             @cmd = ['tar', extraction, file]
             begin
@@ -131,7 +128,7 @@ module RightScraper
                 :stderr_handler     => :output_download,
                 :stdout_handler     => :output_download,
                 :inherit_io         => true,  # avoid killing any rails connection
-                :watch_directory    => repo_dir,
+                :watch_directory    => @repo_dir,
                 :size_limit_bytes   => @max_bytes,
                 :timeout_seconds    => @max_seconds)
             rescue Exception => e
