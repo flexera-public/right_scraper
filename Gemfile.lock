@@ -1,7 +1,7 @@
 GIT
   remote: git@github.com:rightscale/right_popen.git
-  revision: ae34e5997ad2e7133400fffdc9681d1af6824008
-  branch: master
+  revision: 4a8113a3f8e282cc66e91000d98bf8dfbb414f72
+  tag: 1.1.2
   specs:
     right_popen (1.1.2)
 

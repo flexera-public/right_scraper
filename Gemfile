@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'right_popen', :git => 'git@github.com:rightscale/right_popen.git',
-                   :branch => "master"
+                   :tag => "1.1.2"
 
 gem 'right_support', '2.7' 
 
