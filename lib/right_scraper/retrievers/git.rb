@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -25,24 +25,31 @@ require 'tmpdir'
 
 # TEAL FIX: figure out a way to do this monkey-patch without always rquiring the
 # blackwinter gem and/or create a rightscale-git fork with this fix.
-require 'git'
-require 'git/lib'
+#
+# ADDENDUM: we can't unconditionally require the git gem because git is not
+# always available.
+begin
+  require 'git'
+  require 'git/lib'
 
-module Git
-  class Lib
-    # Monkey patch to blackwinter-git that strips ANSI escape sequences
-    # from command output to avoid confusing the parser.
-    def run_command_with_color_stripping(git_cmd, &block)
-      out = run_command_without_color_stripping(git_cmd, &block)
-      out.gsub!(/\e\[[^m]*m/, '')
-      out
-    end
+  module Git
+    class Lib
+      # Monkey patch to blackwinter-git that strips ANSI escape sequences
+      # from command output to avoid confusing the parser.
+      def run_command_with_color_stripping(git_cmd, &block)
+        out = run_command_without_color_stripping(git_cmd, &block)
+        out.gsub!(/\e\[[^m]*m/, '')
+        out
+      end
 
-    unless self.methods.include?('run_command_without_color_stripping')
-      alias :run_command_without_color_stripping :run_command
-      alias :run_command :run_command_with_color_stripping
+      unless self.methods.include?('run_command_without_color_stripping')
+        alias :run_command_without_color_stripping :run_command
+        alias :run_command :run_command_with_color_stripping
+      end
     end
   end
+rescue ::Git::GitExecuteError
+  # silently ignore git gem's failed attempt to execute git on load.
 end
 
 module RightScraper
