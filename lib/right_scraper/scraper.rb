@@ -122,6 +122,11 @@ module RightScraper
       @logger.errors
     end
 
+    # (Array):: Warnings or empty
+    def warnings
+      @logger.warnings
+    end
+
    # Was scraping successful?
     # Call errors to get error messages if false
     #
