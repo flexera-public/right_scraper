@@ -106,7 +106,7 @@ module RightScraper
         if size_limit_exceeded?
           message =
             "The size of the downloaded repository exceeded a soft limit of" +
-            " #{@max_bytes / (1024 * 1024)} MB. This will become a hard limit"
+            " #{@max_bytes / (1024 * 1024)} MB. This will become a hard limit" +
             " in an upcoming release. You may avoid retrieval failure by" +
             " moving some of your files to seperate repositories."
           @logger.note_warning(message)
@@ -114,7 +114,7 @@ module RightScraper
         if @max_seconds && (end_time >= start_time + @max_seconds)
           message =
             "The time to download the repository exceeded a soft limit of" +
-            " #{@max_seconds} seconds. This will become a hard limit"
+            " #{@max_seconds} seconds. This will become a hard limit" +
             " in an upcoming release. You may avoid retrieval failure by" +
             " moving some of your files to seperate repositories."
           @logger.note_warning(message)
