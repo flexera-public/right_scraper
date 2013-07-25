@@ -86,12 +86,61 @@ module RightScraper
       # fresh SSHAgent and add the credential to it.
       def retrieve
         raise RetrieverError.new("git retriever is unavailable") unless available?
+
+        start_time = nil
+        end_time = nil
         RightScraper::Processes::SSHAgent.with do |agent|
           unless @repository.first_credential.nil? || @repository.first_credential.empty?
             agent.add_key(@repository.first_credential)
           end
+          start_time = ::Time.now
           super
+          end_time = ::Time.now
         end
+
+        # TEAL FIX: the use of blackwinter-git has defeated the logic that
+        # ensured the max bytes was not exceeded during checkout. we will need
+        # to replace blackwinter-git in future but in the interim our only
+        # solution is to warn the user after the checkout has completed that we
+        # are going to restrict their repo size/time in an upcoming release.
+        if size_limit_exceeded?
+          message =
+            "The size of the downloaded repository exceeded a soft limit of" +
+            " #{@max_bytes / (1024 * 1024)} MB. This will become a hard limit" +
+            " in an upcoming release. You may avoid retrieval failure by" +
+            " moving some of your files to seperate repositories."
+          @logger.note_warning(message)
+        end
+        if @max_seconds && (end_time >= start_time + @max_seconds)
+          message =
+            "The time to download the repository exceeded a soft limit of" +
+            " #{@max_seconds} seconds. This will become a hard limit" +
+            " in an upcoming release. You may avoid retrieval failure by" +
+            " moving some of your files to seperate repositories."
+          @logger.note_warning(message)
+        end
+        true
+      end
+
+      # Determines if total size of files created by child process has exceeded
+      # the limit specified, if any.
+      #
+      # === Return
+      # @return [TrueClass|FalseClass] true if size limit exceeded
+      def size_limit_exceeded?
+        exceeded = false
+        if @max_bytes
+          globbie = ::File.join(@repo_dir, '**/*')
+          size = 0
+          ::Dir.glob(globbie) do |f|
+            size += ::File.stat(f).size rescue 0 if ::File.file?(f)
+            if size > @max_bytes
+              exceeded = true
+              break
+            end
+          end
+        end
+        exceeded
       end
 
       # Return true if a checkout exists.  Currently tests for .git in
