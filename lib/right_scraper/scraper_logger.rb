@@ -24,8 +24,7 @@
 module RightScraper
 
   class ScraperLogger < Logger
-    attr_accessor :errors
-    attr_accessor :callback
+    attr_accessor :callback, :errors, :warnings
 
     def add(severity, message=nil, progname=nil)
       if severity >= (self.level || Logger::WARN)
@@ -46,6 +45,7 @@ module RightScraper
 
     def initialize
       @errors = []
+      @warnings = []
     end
 
     def note_phase(phase, type, explanation, exception=nil)
@@ -56,6 +56,11 @@ module RightScraper
     def note_error(exception, type, explanation="")
       @errors << [exception, type, explanation]
     end
+
+    def note_warning(message)
+      @warnings << message
+    end
+
   end
 
 end
