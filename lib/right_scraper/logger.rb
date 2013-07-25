@@ -90,6 +90,10 @@ module RightScraper
       error("Saw #{exception} during #{type}#{maybe_explain(explanation)}")
     end
 
+    def note_warning(message)
+      warn(message)
+    end
+
     protected
     def maybe_explain(explanation)
       if explanation.nil? || explanation.empty?
