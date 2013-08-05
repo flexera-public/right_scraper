@@ -27,6 +27,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_s
 
 module RightScraper::Scanners
   describe CookbookManifest do
+    let(:repo_dir) { 'unused' }
+
     it 'should accumulate files' do
       resource = flexmock(:resource)
       resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
@@ -52,8 +54,8 @@ module RightScraper::Scanners
       manifest.end(resource)
     end
     it 'should hash to the same value despite resource order' do
-      cookbook1 = RightScraper::Resources::Cookbook.new('<empty>', '')
-      cookbook2 = RightScraper::Resources::Cookbook.new('<empty>', '')
+      cookbook1 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
+      cookbook2 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
 
       manifest = CookbookManifest.new
 
@@ -74,8 +76,8 @@ module RightScraper::Scanners
       cookbook1.resource_hash.should == cookbook2.resource_hash
     end
     it 'should hash to the same value despite repository location' do
-      cookbook1 = RightScraper::Resources::Cookbook.new('git://github.com/somerepo', '')
-      cookbook2 = RightScraper::Resources::Cookbook.new('svn://mycompany/rss/myrepo', '')
+      cookbook1 = RightScraper::Resources::Cookbook.new('git://github.com/somerepo', '', repo_dir)
+      cookbook2 = RightScraper::Resources::Cookbook.new('svn://mycompany/rss/myrepo', '', repo_dir)
 
       manifest = CookbookManifest.new
 

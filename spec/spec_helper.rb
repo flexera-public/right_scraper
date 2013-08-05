@@ -108,25 +108,28 @@ module RightScraper
     # File content is equal to filename
     #
     # === Parameters
-    # Path(String):: Path where layout should be created
-    # layout(Array):: Describe the file layout to be created
+    # @param [String] path where layout should be created
+    # @param [Array] layout to be created
     #
     # === Return
-    # true:: Always return true
+    # @return [Array] list of created file paths
     def create_file_layout(path, layout)
       FileUtils.mkdir_p(path)
+      result = []
       layout.each do |elem|
         if elem.is_a?(Hash)
           elem.each do |k, v|
             full_path = File.join(path, k)
             FileUtils.mkdir_p(full_path)
-            create_file_layout(full_path, v)
+            result += create_file_layout(full_path, v)
           end
         else
-          File.open(File.join(path, elem.to_s), 'w') { |f| f.puts elem.to_s }
+          fullpath = ::File.join(path, elem.to_s)
+          File.open(fullpath, 'w') { |f| f.puts elem.to_s }
+          result << fullpath
         end
       end
-      true
+      result
     end
 
     # Extract array representing file layout for given directory

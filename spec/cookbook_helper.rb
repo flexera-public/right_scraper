@@ -28,9 +28,9 @@ require 'cgi'
 module RightScraper
   module CookbookHelper
 
-   def example_cookbook(repository, position=nil)
+   def example_cookbook(repository, position = nil, repo_dir = 'unused')
       @helper = RightScraper::RetrieverSpecHelper.new if @helper.nil?
-      RightScraper::Resources::Cookbook.new(@repository, position)
+      RightScraper::Resources::Cookbook.new(@repository, position, repo_dir)
     end
 
     def parse_url(repository)
