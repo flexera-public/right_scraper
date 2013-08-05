@@ -1,14 +1,14 @@
 GIT
   remote: git@github.com:rightscale/right_popen.git
-  revision: 4a8113a3f8e282cc66e91000d98bf8dfbb414f72
-  tag: 1.1.2
+  revision: 5d945582d2757c77970dd19e79bcf7beed5e61b6
+  branch: master
   specs:
-    right_popen (1.1.2)
+    right_popen (1.1.3)
 
 PATH
   remote: .
   specs:
-    right_scraper (3.2.4)
+    right_scraper (3.2.5)
       blackwinter-git (~> 1.2.7)
       json (~> 1.4)
       right_aws (>= 2.0)
