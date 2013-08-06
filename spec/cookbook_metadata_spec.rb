@@ -97,9 +97,6 @@ describe RightScraper::Scanners::CookbookMetadata do
     let(:repo_metadata_rb_path) do
       ::File.join(repo_cookbook_dir, described_class::RUBY_METADATA)
     end
-    let(:repo_metadata_json_path) do
-      ::File.join(repo_cookbook_dir, described_class::JSON_METADATA)
-    end
     let(:jailed_repo_dir) do
       ::File.join(
         metadata_scripts_dir,
@@ -111,6 +108,9 @@ describe RightScraper::Scanners::CookbookMetadata do
     let(:jailed_metadata_json_path) do
       ::File.join(jailed_cookbook_dir, described_class::JSON_METADATA)
     end
+    let(:freed_metadata_json_path) do
+      ::File.join(metadata_scripts_dir, described_class::JSON_METADATA)
+    end
 
     before(:each) do
       ::FileUtils.mkdir_p(repo_dir)
@@ -120,11 +120,11 @@ describe RightScraper::Scanners::CookbookMetadata do
     context 'when source metadata meets size limit' do
 
       let(:copy_out) do
-        { jailed_metadata_json_path => repo_metadata_json_path }
+        { jailed_metadata_json_path => freed_metadata_json_path }
       end
 
       let(:generate_metadata_json) do
-        ::File.open(repo_metadata_json_path, 'w') do |f|
+        ::File.open(freed_metadata_json_path, 'w') do |f|
           f.puts metadata_json
         end
         true
@@ -199,13 +199,13 @@ describe RightScraper::Scanners::CookbookMetadata do
 
         context 'when generated metadata exceeds size limit' do
           let(:generate_metadata_json) do
-            ::File.open(repo_metadata_json_path, 'w') do |f|
+            ::File.open(freed_metadata_json_path, 'w') do |f|
               f.write '{"name":"exceeds generated metadata size limit"'
               key_count = described_class::FREED_FILE_SIZE_CONSTRAINT / 64
               key_count.times { |i| f.write ",\"k#{i}\":#{('v' * 64).inspect}" }
               f.puts '}'
             end
-            @generated_file_size = ::File.stat(repo_metadata_json_path).size
+            @generated_file_size = ::File.stat(freed_metadata_json_path).size
             true
           end
 

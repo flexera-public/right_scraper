@@ -166,11 +166,7 @@ module RightScraper
               freed_cookbook_dir = ::File.join(freed_cookbook_dir, @cookbook.pos)
             end
             jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
-            freed_metadata_json_path = ::File.join(freed_cookbook_dir, JSON_METADATA)
-            if ::File.file?(freed_metadata_json_path)
-              fail "Unexpected existing metadata JSON file:" +
-                   " #{freed_metadata_json_path.inspect}"
-            end
+            freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
 
             # prosecute
             create_knife_metadata_script(knife_metadata_script_path, jailed_cookbook_dir)
@@ -195,9 +191,7 @@ module RightScraper
                 # parole for good behavior
                 return ::File.read(freed_metadata_json_path)
               else
-                # lethal injection: don't keep junk around in case the user is
-                # intentionally trying to exhaust our disk space.
-                ::File.unlink(freed_metadata_json_path)
+                # life imprisonment.
                 raise MetadataError,
                       "Generated metadata size of" +
                       " #{freed_metadata_json_size / 1024} KB" +
