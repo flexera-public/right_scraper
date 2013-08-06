@@ -188,10 +188,12 @@ describe RightScraper::Scanners::CookbookMetadata do
             copy_in.merge!(repo_small_file_path => jailed_small_file_path)
             subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
             subject.end(cookbook)
+
             message =
-              "Omitted source file due to size constraint" +
+              'Ignored a repository file during metadata' +
+              ' generation due to exceeding size constraint of' +
               " #{described_class::JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
-              " #{repo_big_file_path.inspect}"
+              " \"big.txt\""
             logged_warnings.should == [message]
             @parsed_metadata.should == metadata
           end
@@ -315,10 +317,10 @@ describe RightScraper::Scanners::CookbookMetadata do
 
       it 'should fail before invoking warden' do
         subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
-        message =
-          "Metadata source file exceeded size constraint of" +
-          " #{described_class::JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
-          " #{repo_metadata_rb_path.inspect}"
+        message = 'Metadata source file' +
+                  " #{described_class::RUBY_METADATA.inspect}" +
+                  ' in repository exceeded size constraint of' +
+                  " #{described_class::JAILED_FILE_SIZE_CONSTRAINT / 1024} KB"
         expect { subject.end(cookbook) }.
           to raise_error(described_class::MetadataError, message)
       end

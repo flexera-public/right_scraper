@@ -307,13 +307,15 @@ EOS
             else
               if ::File.basename(item) == RUBY_METADATA
                 raise MetadataError,
-                      "Metadata source file exceeded size constraint of" +
-                      " #{JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
-                      " #{item.inspect}"
+                      'Metadata source file' +
+                      " #{relative_to_repo_dir(item).inspect}" +
+                      ' in repository exceeded size constraint of' +
+                      " #{JAILED_FILE_SIZE_CONSTRAINT / 1024} KB"
               else
-                message = "Omitted source file due to size constraint" +
+                message = 'Ignored a repository file during metadata' +
+                          ' generation due to exceeding size constraint of' +
                           " #{JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
-                          " #{item.inspect}"
+                          " #{relative_to_repo_dir(item).inspect}"
                 @logger.note_warning(message)
               end
             end
@@ -335,7 +337,7 @@ EOS
 
       # converts the given absolute path to be relative to repo_dir.
       def relative_to_repo_dir(path)
-        path[@cookbook.repo_dir.length+1..-1]
+        path[(@cookbook.repo_dir.length + 1)..-1]
       end
 
       # factory method for an object capable of running command in jail
