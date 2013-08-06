@@ -25,7 +25,6 @@ require 'fileutils'
 require 'right_popen'
 require 'right_popen/safe_output_buffer'
 require 'tmpdir'
-require 'yaml'
 
 module RightScraper
   module Processes
@@ -252,22 +251,54 @@ EOS
               :timeout_seconds => WARDEN_COMMAND_TIMEOUT)
             if @process
               @process = nil
-              result = @stdout_buffer.join.strip
-              if result.empty?
+              warden_output = @stdout_buffer.join
+              if warden_output.empty?
                 result = {}
               else
-                begin
-                  result = ::YAML.load(result)
-                rescue Exception => e
-                  raise WardenError,
-                        "Unable to parse warden output:\n#{result.inspect}"
-                end
+                result = parse_warden_output(warden_output)
               end
               return result
             else
               raise WardenError, 'Unable to execute warden.'
             end
           end
+        end
+      end
+
+      # Warden outputs something that looks like YAML but also somewhat like a
+      # Java configuration file. in any case, the output is ambiguous because it
+      # does not escape characters and it is possible to spawn a process that
+      # prints output text that appears to be the start of a new key. *sigh*
+      #
+      # all we can do here is attempt to parse the output by some simple rules
+      # and hope for the best.
+      #
+      # example:
+      #   exit_status : 0
+      #   stdout : a
+      #   b
+      #   c
+      #
+      #   stderr :
+      #   info.state : active
+      #   ...
+      def parse_warden_output(warden_output)
+        parsed_lines = {}
+        current_key = nil
+        regex = /^([a-z._]+) \: (.*)$/
+        warden_output.lines.each do |line|
+          if parts = regex.match(line)
+            current_key = parts[1]
+            parsed_lines[current_key] = [parts[2]]
+          elsif current_key
+            parsed_lines[current_key] << line.chomp
+          else
+            raise WardenError, "Unable to parse warden output:\n#{warden_output.inspect}"
+          end
+        end
+        parsed_lines.inject({}) do |result, (key, value)|
+          result[key] = value.join("\n")
+          result
         end
       end
 

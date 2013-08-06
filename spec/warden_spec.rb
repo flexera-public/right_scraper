@@ -34,8 +34,6 @@ class WardenSpecHelper
   MOCK_WARDEN_SCRIPT = <<EOS
 #!#{`which ruby`.strip}
 
-require 'yaml'
-
 MOCK_WARDEN_HANDLE = '172dmrjrk7q'
 
 MOCK_JOB_ID = 42
@@ -95,7 +93,9 @@ when 'link'
       'stdout' => ::File.read('mock_stdout.txt'),
       'stderr' => ::File.read('mock_stderr.txt')
     }
-    STDOUT.puts YAML.dump(mock_link_result)
+    STDOUT.puts \"exit_status : \#\{mock_link_result['exit_status']\}\"
+    STDOUT.puts \"stdout : \#\{mock_link_result['stdout']\}\"
+    STDOUT.puts \"stderr : \#\{mock_link_result['stderr']\}\"
   end
   ::FileUtils.rm_rf(MOCK_JOB_DIR)
 else
