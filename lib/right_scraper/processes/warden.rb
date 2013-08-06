@@ -224,7 +224,7 @@ EOS
         shell_script = <<EOS
 #!/bin/bash
 source #{@scripts_rvm_path} 1>/dev/null &&
-rvm use #{@rvm_ruby_version} 1>/dev/null &&
+rvm use #{@rvm_ruby_version}@global 1>/dev/null &&
 cd #{@warden_server_dir} 1>/dev/null &&
 #{warden_cmds.join(" &&\n")}
 EOS
