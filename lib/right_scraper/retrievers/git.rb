@@ -34,6 +34,17 @@ begin
 
   module Git
     class Lib
+      # Monkey patch to prevent screw up any subsequent shell out to git
+      def command_with_preserved_env(cmd, opts = [], chdir = true, redirect = '', &block)
+        variables_to_preserve = ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']
+        preserved_env = Hash[variables_to_preserve.map { |var| [var, ENV[var]] }]
+        begin
+          command_without_preserved_env(cmd, opts, chdir, redirect, &block)
+        ensure
+          preserved_env.each { |var, value| ENV[var] = value }
+        end
+      end
+
       # Monkey patch to blackwinter-git that strips ANSI escape sequences
       # from command output to avoid confusing the parser.
       def run_command_with_color_stripping(git_cmd, &block)
@@ -45,6 +56,11 @@ begin
       unless self.methods.include?('run_command_without_color_stripping')
         alias :run_command_without_color_stripping :run_command
         alias :run_command :run_command_with_color_stripping
+      end
+
+      unless self.methods.include?('command_without_preserved_env')
+        alias :command_without_preserved_env :command
+        alias :command :command_with_preserved_env
       end
     end
   end
