@@ -41,9 +41,8 @@ module RightScraper
               do_update
             end
           rescue Exception => e
-            @logger.note_error(e, :updating, "switching to using checkout")
-            FileUtils.remove_entry_secure basedir
-            @logger.operation(:checkout) do
+            FileUtils.remove_entry_secure @basedir
+            @logger.operation(:checkout, "switching to using checkout") do
               do_checkout
             end
           end
