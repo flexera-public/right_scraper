@@ -107,6 +107,7 @@ module RightScraper
     # @return [Array] lines of output or empty
     def run_svn_with(initial_directory, output_handler, *args)
       @output = ::RightScale::RightPopen::SafeOutputBuffer.new
+      @output_handler = output_handler
       cmd = ['svn', args, svn_arguments].flatten
       ::RightScale::RightPopen.popen3_sync(
         cmd,
