@@ -187,15 +187,19 @@ module RightScraper
 rm $0  # this script will self-destruct
 #{mkdir_cmds.join(" &&\n")}
 EOS
-
         mkdir_script_name = "mkdir_script_#{create_uuid}.sh"
-        mkdir_script_path = ::File.join(::Dir.tmpdir, mkdir_script_name)
-        ::File.open(mkdir_script_path, 'w') { |f| f.puts shell_script }
-        create_parent_dir_cmds = [
-          "copy_in --handle #{@handle} --src_path #{mkdir_script_path} --dst_path #{mkdir_script_path}",
-          "spawn --handle #{@handle} --script '/bin/bash #{mkdir_script_path}'"
-        ]
-        job_id = send(create_parent_dir_cmds)['job_id']
+
+        job_id = nil
+        ::Dir.mktmpdir do |tmpdir|
+          mkdir_script_path = ::File.join(tmpdir, mkdir_script_name)
+          ::File.open(mkdir_script_path, 'w') { |f| f.puts shell_script }
+          create_parent_dir_cmds = [
+            "copy_in --handle #{@handle} --src_path #{mkdir_script_path} --dst_path /tmp/mkdirs.sh",
+            "spawn --handle #{@handle} --script '/bin/bash /tmp/mkdirs.sh'",
+          ]
+          job_id = send(create_parent_dir_cmds)['job_id']
+        end
+
         link_result = LinkResult.new(send("link --handle #{@handle} --job_id #{job_id}"))
         if link_result.succeeded?
           copy_in_cmds = copy_in.inject([]) do |result, (src_path, dst_path)|
