@@ -33,6 +33,14 @@ module RightScraper
 
       EMPTY_MANIFEST_JSON = ::JSON.dump(:manifest => {}).freeze
 
+      # @return [String] repo_dir as local repo root dir (sans relative cookbook pos path)
+      attr_reader :repo_dir
+
+      def initialize(repo, pos, repo_dir)
+        super(repo, pos)
+        @repo_dir = repo_dir
+      end
+
       def manifest=(value)
         @manifest_json = nil
         @resource_hash = nil

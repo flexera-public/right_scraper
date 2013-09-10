@@ -28,6 +28,7 @@ module RightScraper
 
     # Chef cookbook scraper
     class Cookbook < Base
+      COOKBOOK_SENTINELS = ['metadata.json', 'metadata.rb']
 
       # Find the next cookbook, starting in dir.
       #
@@ -35,9 +36,12 @@ module RightScraper
       # dir(Dir):: directory to begin search in
       def find_next(dir)
         @logger.operation(:finding_next_cookbook, "in #{dir.path}") do
-          if File.exists?(File.join(dir.path, 'metadata.json'))
+          if COOKBOOK_SENTINELS.any? { |f| File.exists?(File.join(dir.path, f)) }
             @logger.operation(:reading_cookbook, "from #{dir.path}") do
-              cookbook = RightScraper::Resources::Cookbook.new(@repository, strip_repo_dir(dir.path))
+              cookbook = RightScraper::Resources::Cookbook.new(
+                @repository,
+                strip_repo_dir(dir.path),
+                repo_dir)
               @builder.go(dir.path, cookbook)
               cookbook
             end

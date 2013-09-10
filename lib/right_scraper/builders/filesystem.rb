@@ -85,9 +85,10 @@ module RightScraper
           if File.directory?(fullpath)
             maybe_scan(Dir.new(fullpath), relative_position)
           else
-            @scanner.notice(relative_position) do
-              open(fullpath) {|f| f.read}
-            end
+            # bind the temporary parameters to the callback in case it is not
+            # invoked immediately.
+            bind_now = lambda{|file| lambda{ open(file) {|f| f.read} } }.call(fullpath)
+            @scanner.notice(relative_position, &bind_now)
           end
         end
       end
