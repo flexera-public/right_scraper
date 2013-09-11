@@ -82,6 +82,12 @@ module RightScraper
         retriever = nil
         @logger.operation(:retrieving, "from #{repo}") do
           retriever = repo.retriever(@options)
+
+          # TEAL FIX: retrieve will now return true iff there has been a change
+          # to the last scraped repository directory for efficiency reasons.
+          # need a mechanism to communicate back that no additional update is
+          # required. this method already returns true for success. in the
+          # meantime, still need to accumulate scraped resources.
           retriever.retrieve if retriever.available?
         end
 

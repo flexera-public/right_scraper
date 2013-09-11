@@ -35,11 +35,20 @@ module RightScraper
   #   client.with_context do |ctx|
   #     ...
   #   end
-  module SvnClient
+  class SvnClient
 
-    class SvnClientError < Exception; end
+    class SvnClientError < StandardError; end
 
-    def calculate_version
+    attr_reader :repository, :shell
+
+    # @param [RightScraper::Repositories::Base] repository to associate
+    # @param [Object] shell for execution
+    def initialize(repository, shell)
+      @repository = repository
+      @shell = shell
+    end
+
+    def self.calculate_version
       unless @svn_version
         begin
           cmd = 'svn --version --quiet'
@@ -56,109 +65,45 @@ module RightScraper
       @svn_version
     end
 
-    def svn_arguments
-      version = calculate_version
-      case
-      when version[0] != 1
-        raise "SVN major revision is not 1, cannot be sure it will run properly."
-      when version[1] < 4
-        raise "SVN minor revision < 4; cannot be sure it will run properly."
-      when version[1] < 6
-        # --trust-server-cert is a 1.6ism
-        args = ["--no-auth-cache", "--non-interactive"]
-      else
-        args = ["--no-auth-cache", "--non-interactive", "--trust-server-cert"]
-      end
-      if repository.first_credential && repository.second_credential
-        args << "--username"
-        args << repository.first_credential
-        args << "--password"
-        args << repository.second_credential
-      end
-      args
-    end
-
-    def get_tag_argument
-      if repository.tag
-        tag_cmd = ["-r", get_tag.to_s]
-      else
-        tag_cmd = ["-r", "HEAD"]
-      end
-    end
-
-    def run_svn_no_chdir(*args)
-      run_svn_with(nil, :safe_output_svn_client, *args)
-    end
-
-    def run_svn(*args)
-      run_svn_with(repo_dir, :safe_output_svn_client, *args)
-    end
-
-    def run_svn_with_buffered_output(*args)
-      run_svn_with(repo_dir, :unsafe_output_svn_client, *args)
-    end
-
-    # runs svn client with safe buffering (by default).
+    # Executes svn using the given arguments.
     #
-    # === Parameters
-    # @param [Array] args for svn client command line
+    # @param [Array] args for svn
     #
-    # === Return
-    # @return [Array] lines of output or empty
-    def run_svn_with(initial_directory, output_handler, *args)
-      @output = ::RightScale::RightPopen::SafeOutputBuffer.new
-      @output_handler = output_handler
-      cmd = ['svn', args, svn_arguments].flatten
-      ::RightScale::RightPopen.popen3_sync(
-        cmd,
-        :target             => self,
-        :directory          => initial_directory,
-        :timeout_handler    => :timeout_svn_client,
-        :size_limit_handler => :size_limit_svn_client,
-        :exit_handler       => :exit_svn_client,
-        :stderr_handler     => output_handler,
-        :stdout_handler     => output_handler,
-        :inherit_io         => true,  # avoid killing any rails connection
-        :watch_directory    => repo_dir,
-        :size_limit_bytes   => @max_bytes,
-        :timeout_seconds    => @max_seconds)
-      @output.buffer
-    end
-
-    def safe_output_svn_client(data)
-      @output.safe_buffer_data(data)
-    end
-
-    def unsafe_output_svn_client(data)
-      @output.buffer << data.chomp
-    end
-
-    def timeout_svn_client
-      raise SvnClientError, "svn client timed out"
-    end
-
-    def size_limit_svn_client
-      raise SvnClientError, "svn client exceeded size limit"
-    end
-
-    def exit_svn_client(status)
-      unless status.success?
-        self.method(@output_handler).call("Exit code = #{status.exitstatus}")
-        raise SvnClientError, "svn client failed: #{@output.display_text}"
-      end
+    # @return [TrueClass] always true
+    def svn_execute(*args)
+      shell.execute(svn_command_for(args))
       true
     end
 
-    # Fetch the tag from the repository, or nil if one doesn't
-    # exist.  This is a separate method because the repo tag should
-    # be a number but is a string in the database.
-    def get_tag
-      case repository.tag
-      when Fixnum then repository.tag
-      when /^\d+$/ then repository.tag.to_i
+    # Executes and returns output for svn using the given arguments.
+    #
+    # @param [Array] args for svn
+    #
+    # @return [String] output text
+    def svn_output_for(*args)
+      shell.output_for(svn_command_for(args))
+    end
+
+    private
+
+    def svn_command_for(*args)
+      version = self.calculate_version
+      svn_args = ['svn', args, '--no-auth-cache', '--non-interactive']
+      case
+      when (version[0] != 1 || version[1] < 4)
+        raise SvnClientError, 'SVN client version is unsupported (~> 1.4)'
+      when version[1] < 6
+        # --trust-server-cert is a 1.6ism
       else
-        repository.tag
+        svn_args << '--trust-server-cert'
       end
+      if @repository.first_credential && @repository.second_credential
+        svn_args << "--username"
+        svn_args << @repository.first_credential
+        svn_args << "--password"
+        svn_args << @repository.second_credential
+      end
+      svn_args.flatten.join(' ')
     end
   end
 end

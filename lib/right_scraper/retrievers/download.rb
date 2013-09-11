@@ -70,6 +70,10 @@ module RightScraper
         FileUtils.mkdir_p workdir
         file = File.join(workdir, "package")
 
+        # TEAL FIX: we have to always-download the tarball before we can
+        # determine if contents have changed, but afterward we can compare the
+        # previous download against the latest downloaded and short-circuit the
+        # remaining flow for the no-difference case.
         @logger.operation(:downloading) do
           credential_command = if @repository.first_credential && @repository.second_credential
             ['-u', "#{@repository.first_credential}:#{@repository.second_credential}"]
@@ -137,6 +141,7 @@ module RightScraper
             end
           end
         end
+        true
       end
 
       def pid_download(pid)

@@ -2,11 +2,12 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem "rake", "0.8.7"
-
+gem 'right_git',   :git => 'git@github.com:rightscale/right_git.git',
+                   :branch => "master"
 gem 'right_popen', :git => 'git@github.com:rightscale/right_popen.git',
                    :branch => "master"
 
+gem 'rake',          '0.8.7'
 gem 'right_support', '2.7'
 
 group :test do

@@ -24,7 +24,7 @@ require 'rubygems'
 
 Gem::Specification.new do |spec|
   spec.name      = 'right_scraper'
-  spec.version   = '3.3.0'
+  spec.version   = '3.4.0'
   spec.authors   = ['Graham Hughes', 'Raphael Simon', 'Scott Messier']
   spec.email     = 'raphael@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
@@ -38,8 +38,8 @@ Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_dependency('json', '~> 1.4')
-  spec.add_dependency('blackwinter-git', '~> 1.2.7')
   spec.add_dependency('right_aws', '>= 2.0')
+  spec.add_dependency('right_git')
   spec.add_dependency('right_popen', '~> 1.1.1')
   spec.add_dependency('right_support', '~> 2.6')
 

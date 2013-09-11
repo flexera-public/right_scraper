@@ -27,18 +27,16 @@ module RightScraper
     # Retriever for svn repositories
     class Svn < CheckoutBasedRetriever
 
-      include RightScraper::SvnClient
-
       @@available = false
 
       # Determines if svn is available.
       def available?
         unless @@available
           begin
-            calculate_version
+            ::RightScraper::SvnClient.calculate_version
             @@available = true
-          rescue SvnClientError => e
-            @logger.note_error(e, :available, "svn retriever is unavailable")
+          rescue ::RightScraper::SvnClient::SvnClientError => e
+            @logger.note_error(e, :available, 'svn retriever is unavailable')
           end
         end
         @@available
@@ -51,7 +49,25 @@ module RightScraper
       # Boolean:: true if the checkout already exists (and thus
       #           incremental updating can occur).
       def exists?
-        File.exists?(File.join(@repo_dir, '.svn'))
+        ::File.exists?(::File.join(@repo_dir, '.svn'))
+      end
+
+      # Ignore .svn directories.
+      def ignorable_paths
+        ['.svn']
+      end
+
+      # Check out the remote repository.  The operations are as follows:
+      # * checkout repository at #tag to @repo_dir
+      def do_checkout
+        @logger.operation(:checkout_revision) do
+          revision = resolve_revision
+          svn_args = ['checkout', @repository.url, @repo_dir]
+          svn_args += ['--revision', revision] if revision
+          svn_args << '--force'
+          svn_client.execute(svn_args)
+          do_update_tag
+        end
       end
 
       # Incrementally update the checkout.  The operations are as follows:
@@ -61,40 +77,49 @@ module RightScraper
       # are bright enough to notice this.
       def do_update
         @logger.operation(:update) do
-          run_svn("update", get_tag_argument)
+          svn_client.execute('update', revision_argument)
+          do_update_tag
         end
-        do_update_tag
       end
 
-      # Update our idea of what the head of the repository is.  We
-      # would like to use svn info, but that doesn't do the right
-      # thing all the time; the right thing to do is to run log and
-      # pick out the first tag.
       def do_update_tag
         @repository = @repository.clone
-        lines = run_svn_with_buffered_output("log", "-r", 'HEAD')
-        lines.each do |line|
-          if line =~ /^r(\d+)/
-            @repository.tag = $1
+        # note that 'svn info' does not appear to always give correct revision.
+        svn_args += ['log', '--revision', 'HEAD']
+        svn_client.output_for(svn_args).lines.each do |line|
+          if matched = SVN_LOG_REGEX.match(line)
+            @repository.tag = matched[1]
             break
           end
         end
       end
 
-      # Check out the remote repository.  The operations are as follows:
-      # * checkout repository at #tag to @repo_dir
-      def do_checkout
-        super
-        @logger.operation(:checkout_revision) do
-          run_svn_no_chdir("checkout", @repository.url, @repo_dir, get_tag_argument)
+      private
+
+      # http://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html#svn.tour.revs.keywords
+      # Example: HEAD | <revision number> | {<datetime>}
+      SVN_REVISION_REGEX = /^(HEAD|\d+|\{[0-9:-T+-]+\})$/
+
+      # Example:
+      # r12 | ira | 2006-11-27 12:31:51 -0600 (Mon, 27 Nov 2006) | 6 lines
+      SVN_LOG_REGEX = /^r(\d+)/  # ignoring additional info after revision
+
+      def resolve_revision
+        revision = @repository.tag.to_s.strip
+        if revision.empty?
+          revision = nil
+        elsif (revision =~ SVN_REVISION_REGEX).nil?
+          raise RetrieverError, "Revision reference contained illegal characters: #{revision.inspect}"
         end
-        do_update_tag
+        revision
       end
 
-      # Ignore .svn directories.
-      def ignorable_paths
-        ['.svn']
+      def svn_client
+        @svn_client ||= ::RightScraper::SvnClient.new(
+          @repository,
+          ::RightScraper::Processes::Shell.new(self))
       end
+
     end
   end
 end

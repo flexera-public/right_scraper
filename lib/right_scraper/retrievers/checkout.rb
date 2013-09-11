@@ -31,26 +31,65 @@ module RightScraper
     # Retrievers::Base#ignorable_paths.
     class CheckoutBasedRetriever < Base
 
-      # Check out repository into the directory.  Occurs between
-      # variable initialization and beginning scraping.
+      # Attempts to update and then resorts to clean checkout for repository.
       def retrieve
         raise RetrieverError.new("retriever is unavailable") unless available?
+        updated = false
+        explanation = ''
         if exists?
-          begin
-            @logger.operation(:updating) do
-              do_update
+          @logger.operation(:updating) do
+            # a retriever may be able to determine that the repo directory is
+            # already pointing to the same commit as the revision. in that case
+            # we can return quickly.
+            if remote_differs?
+              # there is no point in updating and failing the size check when the
+              # directory on disk already exceeds size limit; fall back to a clean
+              # checkout in hopes that the latest revision corrects the issue.
+              if size_limit_exceeded?
+                explanation = 'switching to checkout due to existing directory exceeding size limimt'
+              else
+                # attempt update.
+                begin
+                  do_update
+                  updated = true
+                rescue ::RightScraper::Processes::LimitError
+                  # update exceeded a limitation; requires user intervention
+                  raise
+                rescue Exception => e
+                  # retry with clean checkout after discarding repo dir.
+                  explanation = 'switching to checkout after unsuccessful update'
+                end
+              end
+            else
+              # no retrieval needed.
+              @logger.note_warning('Skipped update due to same commit SHA on local and remote repositories.')
+              return false
             end
-          rescue Exception => e
-            FileUtils.remove_entry_secure @basedir
-            @logger.operation(:checkout, "switching to using checkout") do
-              do_checkout
-            end
-          end
-        else
-          @logger.operation(:checkout) do
-            do_checkout
           end
         end
+
+        # Clean checkout only if not updated.
+        unless updated
+          @logger.operation(:checkout, explanation) do
+            # remove any full or partial directory before attempting a clean
+            # checkout in case repo_dir is in a bad state.
+            if exists?
+              ::FileUtils.remove_entry_secure(@repo_dir)
+            end
+            ::FileUtils.mkdir_p(@repo_dir)
+            begin
+              do_checkout
+            rescue Exception
+              # clean checkout failed; repo directory is in an undetermined
+              # state and must be deleted to prevent a future update attempt.
+              if exists?
+                ::FileUtils.remove_entry_secure(@repo_dir) rescue nil
+              end
+              raise
+            end
+          end
+        end
+        true
       end
 
       # Return true if a checkout exists.
@@ -62,16 +101,48 @@ module RightScraper
         false
       end
 
+      # Determines if the remote SHA/tag/branch referenced by the repostory
+      # differs from what appears on disk, if possible. Not all retrievers will
+      # have this capability. If not, the retriever should default to returning
+      # true to indicate that the remote is changed.
+      #
+      # @return [TrueClass|FalseClass] true if changed
+      def remote_differs?
+        true
+      end
+
+      # Determines if total size of files in repo_dir has exceeded size limit.
+      #
+      # === Return
+      # @return [TrueClass|FalseClass] true if size limit exceeded
+      def size_limit_exceeded?
+        if @max_bytes
+          # note that Dir.glob ignores hidden directories (e.g. ".git") so the
+          # size total correctly excludes those hidden contents that are not to
+          # be uploaded after scrape. this may cause the on-disk directory size
+          # to far exceed the upload size.
+          globbie = ::File.join(@repo_dir, '**/*')
+          size = 0
+          ::Dir.glob(globbie) do |f|
+            size += ::File.stat(f).size rescue 0 if ::File.file?(f)
+            break if size > @max_bytes
+          end
+          size > @max_bytes
+        else
+          false
+        end
+      end
+
       # Perform an incremental update of the checkout.  Subclasses that
       # want to handle incremental updating need to override this.
       def do_update
-        do_checkout
+        raise NotImplementedError
       end
 
       # Perform a de novo full checkout of the repository.  Subclasses
       # must override this to do anything useful.
       def do_checkout
-        FileUtils.mkdir_p(@repo_dir)
+        raise NotImplementedError
       end
 
     end
