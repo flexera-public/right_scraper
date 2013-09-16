@@ -21,6 +21,10 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/processes'
+
+require 'right_git'
 require 'right_popen'
 require 'right_popen/safe_output_buffer'
 
@@ -33,38 +37,38 @@ module RightScraper
       include ::RightGit::Shell::Interface
 
       # exceptions.
-      class LimitError < ShellError; end
+      class LimitError < ::RightGit::Shell::ShellError; end
 
       class SizeLimitError < LimitError; end
       class TimeLimitError < LimitError; end
 
       MAX_SAFE_BUFFER_LINE_COUNT  = 10
-      MAX_SAFE_BUFFER_LINE_LENGTH = 80
+      MAX_SAFE_BUFFER_LINE_LENGTH = 128
 
-      attr_reader :retriever
-
-      attr_accessor :initial_directory, :stop_timestamp
+      attr_accessor :initial_directory, :max_seconds, :max_bytes
+      attr_accessor :stop_timestamp, :watch_directory
 
       # @param [RightScraper::Repositories::Base] retriever associated with shell
       # @param [Hash] options for shell
-      # @option options [Integer] :stop_timestamp for interruption (Default = max_seconds from retriever)
-      def initialize(retriever)
+      # @option options [Integer] :initial_directory for child process (Default = use current directory)
+      # @option options [Integer] :max_bytes for interruption (Default = no byte limit)
+      # @option options [Integer] :max_seconds for interruption (Default = no time limit)
+      # @option options [Integer] :watch_directory for interruption (Default = no byte limit)
+      def initialize(options = {})
         options = {
-          :stop_timestamp    => nil,
           :initial_directory => nil,
+          :max_bytes         => nil,
+          :max_seconds       => nil,
+          :watch_directory   => nil,
         }.merge(options)
-        unless @retriever = retriever
-          raise ::ArgumentError.new('retriever is required')
-        end
+
+        @initial_directory = options[:initial_directory]
+        @max_bytes = options[:max_bytes]
+        @max_seconds = options[:max_seconds]
+        @watch_directory = options[:watch_directory]
 
         # set stop time once for the lifetime of this shell object.
-        @stop_timestamp = options[:stop_timestamp]
-        if @stop_timestamp.nil? && @retriever.max_seconds
-          @stop_timestamp = (::Time.now + @retriever.max_seconds).to_i
-        end
-        unless @initial_directory = options[:initial_directory]
-          @initial_directory = @retriever.repo_dir
-        end
+        @stop_timestamp = (::Time.now + @max_seconds).to_i if @max_seconds
       end
 
       # Implements execute interface.
@@ -76,7 +80,7 @@ module RightScraper
       #
       # @raise [ShellError] on failure only if :raise_on_failure is true
       def execute(cmd, options = {})
-        inner_execute(cmd, safe_output_handler, options)
+        inner_execute(cmd, :safe_output_handler, options)
         true
       ensure
         @output = nil
@@ -91,7 +95,7 @@ module RightScraper
       #
       # @raise [ShellError] on failure only if :raise_on_failure is true
       def output_for(cmd, options = {})
-        inner_execute(cmd, unsafe_output_handler, options)
+        inner_execute(cmd, :unsafe_output_handler, options)
         @output.display_text
       ensure
         @output = nil
@@ -141,7 +145,7 @@ module RightScraper
       def exit_handler(status)
         unless status.success?
           @output.buffer << "Exit code = #{status.exitstatus}"
-          raise ShellError, "Execution failed: #{@output.display_text}"
+          raise ::RightGit::Shell::ShellError, "Execution failed: #{@output.display_text}"
         end
         true
       end
@@ -151,46 +155,49 @@ module RightScraper
       def inner_execute(cmd, output_handler, options)
         # max seconds decreases over lifetime of shell until no more commands
         # can be executed due to initial time constraint.
-        max_seconds = @stop_timestamp - ::Time.now.to_i
-        min_seconds = 5  # process start, a network gesture, etc.
-        timeout_handler if max_seconds < min_seconds
+        if @stop_timestamp
+          remaining_seconds = @stop_timestamp - ::Time.now.to_i
+          min_seconds = 5  # process start, a network gesture, etc.
+          timeout_handler if remaining_seconds < min_seconds
+        else
+          remaining_seconds = nil
+        end
 
-        # use safe buffer (allows both safe and unsafe buffering) with
-        # limited buffering for output that is only seen on error.
+        # set/clear env vars, if requested.
+        environment = {}
+        if cev = options[:clear_env_vars]
+          cev.each { |k| environment[k] = nil }
+        end
+        if sev = options[:set_env_vars]
+          environment.merge!(sev)
+        end
+        environment = nil if environment.empty?
+
+        # use safe buffer (allows both safe and unsafe buffering) with limited
+        # buffering for output that is only seen on error.
         @output = ::RightScale::RightPopen::SafeOutputBuffer.new(
           buffer          = [],
           max_line_count  = MAX_SAFE_BUFFER_LINE_COUNT,
           max_line_length = MAX_SAFE_BUFFER_LINE_LENGTH)
 
-        # initial checkout (i.e. clone) is to a specified non-existing
-        # directory; no initial directory only in that case.
-        working_directory =
-          (@initial_directory && ::File.directory?(@initial_directory)) ?
-          @initial_directory :
-          nil
-
-        # always watch the repo directory regardless of working directory so
-        # so that submodules are treated as part of parent repo for size and
-        # time limit purposes.
-        #
-        # note that the watch_directory logic does effectively nothing until the
-        # directory appears on disk.
-        watch_directory = @retriever.repo_dir
-
         # synchronous popen with watchers, etc.
+        if logger = options[:logger]
+          logger.info(cmd)
+        end
         ::RightScale::RightPopen.popen3_sync(
           cmd,
           :target             => self,
-          :directory          => working_directory,
+          :directory          => @initial_directory,
+          :environment        => environment,
           :timeout_handler    => :timeout_handler,
           :size_limit_handler => :size_limit_handler,
           :exit_handler       => :exit_handler,
           :stderr_handler     => output_handler,
           :stdout_handler     => output_handler,
           :inherit_io         => true,  # avoid killing any rails connection
-          :watch_directory    => watch_directory,
-          :size_limit_bytes   => @retriever.max_bytes,
-          :timeout_seconds    => max_seconds)
+          :watch_directory    => @watch_directory,
+          :size_limit_bytes   => @max_bytes,
+          :timeout_seconds    => remaining_seconds)
         true
       end
 

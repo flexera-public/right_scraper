@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -20,18 +20,26 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-require File.expand_path(File.join(File.dirname(__FILE__), 'logger'))
+
+# ancestor
+require 'right_scraper'
+
+require 'fileutils'
 
 module RightScraper
 
   # Library main entry point. Instantiate this class and call the scrape
   # method to download or update a remote repository to the local disk and
   # run a scraper on the resulting files.
-  class Scraper
+  #
+  # Note that this class was known as Scraper in v1-3 but the name was confusing
+  # due to the Scrapers module performing only a subset of the main Scraper
+  # class functionality.
+  class Main
 
-    # (Array):: Scraped resources 
+    # (Array):: Scraped resources
     attr_reader :resources
- 
+
     # Initialize scrape destination directory
     #
     # === Options
@@ -40,11 +48,27 @@ module RightScraper
     # <tt>:max_bytes</tt>:: Maximum number of bytes to read from remote repo, unlimited if nil
     # <tt>:max_seconds</tt>:: Maximum number of seconds to spend reading from remote repo, unlimited if nil
     def initialize(options={})
+      options = {
+        :kind        => nil,
+        :basedir     => nil,
+        :max_bytes   => nil,
+        :max_seconds => nil,
+        :callback    => nil,
+        :logger      => nil,
+        :s3_key      => nil,
+        :s3_secret   => nil,
+        :s3_bucket   => nil,
+        :errors      => nil,
+        :warnings    => nil,
+        :scanners    => nil,
+        :builders    => nil,
+      }.merge(options)
       @temporary = !options.has_key?(:basedir)
       options[:basedir] ||= Dir.mktmpdir
-      @logger = ScraperLogger.new
-      @options = options.merge({:logger => @logger})
+      options[:logger] ||= ::RightScraper::Loggers::Default.new
+      @logger = options[:logger]
       @resources = []
+      @options = options
     end
 
     # Scrape given repository, depositing files into the scrape
@@ -80,16 +104,31 @@ module RightScraper
       begin
         # 1. Retrieve the files
         retriever = nil
+        repo_dir_changed = false
         @logger.operation(:retrieving, "from #{repo}") do
+          # note that the retriever type may be unavailable but allow the
+          # retrieve method to raise any such error.
           retriever = repo.retriever(@options)
-
-          # TEAL FIX: retrieve will now return true iff there has been a change
-          # to the last scraped repository directory for efficiency reasons.
-          # need a mechanism to communicate back that no additional update is
-          # required. this method already returns true for success. in the
-          # meantime, still need to accumulate scraped resources.
-          retriever.retrieve if retriever.available?
+          repo_dir_changed = retriever.retrieve
         end
+
+        # TEAL FIX: Note that retrieve will now return true iff there has been
+        # a change to the last scraped repository directory for efficiency
+        # reasons and only for retreiver types that support this behavior.
+        #
+        # Even if the retrieval is skipped due to already having the data on
+        # disk we still need to scrape its resources only because of the case
+        # of the metadata scraper daemon, which updates multiple repositories
+        # of similar criteria.
+        #
+        # The issue is that a new repo can appear later with the same criteria
+        # as an already-scraped repo and will need it's own copy of the
+        # scraped resources. The easiest (but not most efficient) way to
+        # deliver these is to rescrape the already-seen resources. This
+        # becomes more expensive as we rely on generating "metadata.json" from
+        # "metadata.rb" for cookbooks but is likely not expensive enough to
+        # need to improve this logic.
+
 
         # 2. Now scrape if there is a scraper in the options
         @logger.operation(:scraping, retriever.repo_dir) do
@@ -145,4 +184,3 @@ module RightScraper
 
   end
 end
-

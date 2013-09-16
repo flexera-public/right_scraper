@@ -24,7 +24,8 @@
 require 'right_popen'
 require 'right_popen/safe_output_buffer'
 
-module RightScraper
+module RightScraper::Processes
+
   # Simplified interface to the process of creating SVN client
   # contexts.
   #
@@ -43,9 +44,16 @@ module RightScraper
 
     # @param [RightScraper::Repositories::Base] repository to associate
     # @param [Object] shell for execution
-    def initialize(repository, shell)
-      @repository = repository
-      @shell = shell
+    def initialize(repository, logger, shell)
+      unless @repository = repository
+        raise ::ArgumentError, 'repository is required'
+      end
+      unless @logger = logger
+        raise ::ArgumentError, 'logger is required'
+      end
+      unless @shell = shell
+        raise ::ArgumentError, 'shell is required'
+      end
     end
 
     def self.calculate_version
@@ -70,8 +78,8 @@ module RightScraper
     # @param [Array] args for svn
     #
     # @return [TrueClass] always true
-    def svn_execute(*args)
-      shell.execute(svn_command_for(args))
+    def execute(*args)
+      shell.execute(svn_command_for(args), :logger => @logger)
       true
     end
 
@@ -80,14 +88,14 @@ module RightScraper
     # @param [Array] args for svn
     #
     # @return [String] output text
-    def svn_output_for(*args)
-      shell.output_for(svn_command_for(args))
+    def output_for(*args)
+      shell.output_for(svn_command_for(args), :logger => @logger)
     end
 
     private
 
     def svn_command_for(*args)
-      version = self.calculate_version
+      version = self.class.calculate_version
       svn_args = ['svn', args, '--no-auth-cache', '--non-interactive']
       case
       when (version[0] != 1 || version[1] < 4)

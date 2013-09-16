@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -45,6 +45,8 @@ describe RightScraper::Repositories::Svn do
   end
 
   context 'in production mode' do
+    let(:error_class) { ::RightScraper::Repositories::Base::RepositoryError }
+
     before(:each) do
       ENV.delete('DEVELOPMENT')
     end
@@ -64,45 +66,45 @@ describe RightScraper::Repositories::Svn do
     it 'should refuse to create repositories for hosts that don\'t exist' do
       lambda do
         make_repo "http://nonexistent.invalid/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
     end
 
     it 'should refuse to create repositories for private networks' do
       ["10.0.2.43", "172.18.3.42", "192.168.4.2"].each do |ip|
         lambda do
           make_repo "http://#{ip}/%20CBLAH"
-        end.should raise_exception(RuntimeError, /Invalid URI/)
+        end.should raise_exception(error_class, /Invalid URI/)
       end
     end
 
     it 'should refuse to create repositories for loopback addresses' do
       lambda do
         make_repo "http://localhost/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
       lambda do
         make_repo "http://127.0.0.1/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
       lambda do
         make_repo "http://127.3.2.1/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
     end
 
     it 'should refuse to create repositories for file:/// URIs' do
       lambda do
         make_repo "file://var/run/something/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
     end
 
     it 'should refuse to create repositories for our EC2 metadata server' do
       lambda do
         make_repo "http://169.254.169.254/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
     end
 
     it 'should refuse to create repositories for even valid IPv6 addresses' do
       lambda do
         make_repo "http://[::ffff:128.111.1.1]/%20CBLAH"
-      end.should raise_exception(RuntimeError, /Invalid URI/)
+      end.should raise_exception(error_class, /Invalid URI/)
     end
   end
 

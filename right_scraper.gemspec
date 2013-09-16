@@ -21,12 +21,13 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'rubygems'
+require ::File.expand_path(::File.join(::File.dirname(__FILE__), 'lib/right_scraper/version'))
 
 Gem::Specification.new do |spec|
   spec.name      = 'right_scraper'
-  spec.version   = '3.4.0'
-  spec.authors   = ['Graham Hughes', 'Raphael Simon', 'Scott Messier']
-  spec.email     = 'raphael@rightscale.com'
+  spec.version   = ::RightScraper::GEM_VERSION
+  spec.authors   = ['Raphael Simon', 'Tony Spataro', 'Scott Messier']
+  spec.email     = 'support@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
   spec.platform  = Gem::Platform::RUBY
   spec.summary   = 'Download and update remote repositories'
@@ -40,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('json', '~> 1.4')
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('right_git')
-  spec.add_dependency('right_popen', '~> 1.1.1')
+  spec.add_dependency('right_popen', '~> 2.0')
   spec.add_dependency('right_support', '~> 2.6')
 
   spec.requirements << 'curl command line client'

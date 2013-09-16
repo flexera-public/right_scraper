@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,10 +21,13 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/repositories'
+
 module RightScraper
   module Repositories
     # A Git repository.
-    class Git < Base
+    class Git < ::RightScraper::Repositories::Base
 
       # (String) Optional, tag or branch of repository that should be downloaded
       attr_accessor :tag
@@ -80,13 +83,9 @@ module RightScraper
         RightScraper::Retrievers::Git.new(self, options)
       end
 
-      # Add this repository to the list of available types.
-      @@types[:git] = RightScraper::Repositories::Git
-
-      # Add git URL schemas to the list of okay schemas.
-      @@okay_schemes << "git"
-      @@okay_schemes << "git+ssh"
-      @@okay_schemes << "ssh"
+      # self-register
+      register_self
+      register_url_schemas('git', 'git+ssh', 'ssh')
     end
   end
 end

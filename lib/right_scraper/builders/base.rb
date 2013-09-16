@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,43 +21,42 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'logger'))
+# ancestor
+require 'right_scraper/builders'
 
 module RightScraper
   module Builders
+
     # Base class for building additional metadata from filesystem
-    # based checkouts.  Subclasses should override #go, and possibly
+    # based checkouts. Subclasses should override #go, and possibly
     # #new if they require additional arguments.
     #
     # The lifecycle for a builder is as follows:
     # - builder = Builder.new (once)
     # - builder.go(dir, resource) (many times)
     # - builder.finish (once)
-    class Builder
-      # Create a new Builder.  Recognizes options as given.  Some
-      # options may be required, others optional.  This class recognizes
-      # only :logger.
-      #
-      # === Options
-      # <tt>:logger</tt>:: Optional.  Logger currently being used
-      #
-      # === Parameters
-      # options(Hash):: builder options
-      def initialize(options={})
-        @logger = options.fetch(:logger, Logger.new)
+    class Base
+      # @param [Hash] options for builder
+      # @option options [Logger] :logger for builder
+      def initialize(options = {})
+        @logger = options[:logger] || ::RightScraper::Loggers::Default.new
       end
 
       # Run builder for this resource.
       #
-      # === Parameters
-      # dir(String):: directory resource exists at
-      # resource(Object):: resource instance being built
+      # @param [String] dir for resource
+      # @param [Object] resource to build
+      #
+      # @return [TrueClass] always true
       def go(dir, resource)
+        raise NotImplementedError
       end
 
-      # Notification that all scans for this repository have
-      # completed.
+      # Notification that all scans for this repository have completed.
+      #
+      # @return [TrueClass] always true
       def finish
+        true
       end
     end
   end

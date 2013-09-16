@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,21 +21,24 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'stringio'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_retriever_spec_helper'))
+
+require 'fileutils'
+require 'stringio'
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScraper::Scraper do
+describe RightScraper::Main do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::SharedExamples
+  include RightScraper::SpecHelpers
 
   before(:each) do
     @stream = StringIO.new()
     @tmpdir = Dir.mktmpdir
-    @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
+    @scraper = RightScraper::Main.new(:basedir => @tmpdir, :kind => :cookbook)
   end
 
   after(:each) do
@@ -49,7 +52,7 @@ describe RightScraper::Scraper do
     end
 
     after(:each) do
-      @helper.close
+      @helper.close if @helper
     end
 
     it_should_behave_like "a normal repository"
@@ -80,8 +83,21 @@ describe RightScraper::Scraper do
       callback.should_receive(:call).with(:begin, :next, "", nil).once.ordered
       callback.should_receive(:call).with(:commit, :next, "", nil).once.ordered
       callback.should_receive(:call).with(:commit, :scraping, String, nil).once.ordered
+      first_abort = nil
       @scraper.scrape(@repo) do |phase, operation, explanation, exception|
+        if phase == :abort && first_abort.nil?
+          first_abort = [phase, operation, explanation, exception]
+        end
         callback.call(phase, operation, explanation, exception)
+      end
+      if first_abort
+        message = ["Unexpected abort: #{first_abort.inspect}"]
+        if e = first_abort.last
+          message << e.class.name
+          message << e.message
+          message += e.backtrace
+        end
+        fail message.join("\n")
       end
       @scraper.errors.should == []
       @scraper.succeeded?.should be_true

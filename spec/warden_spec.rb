@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'fileutils'
 require 'tmpdir'
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))

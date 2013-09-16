@@ -21,6 +21,10 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/processes'
+
+require 'fileutils'
 require 'tempfile'
 require 'tmpdir'
 require 'right_popen'

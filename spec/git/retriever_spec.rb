@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,12 +22,15 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'retriever_spec_helper'))
+
+require 'fileutils'
 require 'set'
 
 describe RightScraper::Retrievers::Git do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
+  include RightScraper::SpecHelpers
 
   def secondary_cookbook(where)
     FileUtils.mkdir_p(where)
@@ -42,15 +45,9 @@ describe RightScraper::Retrievers::Git do
   end
 
   def get_scraper(repo, basedir)
-    @retriever = @retriever_class.new(repo,
-                                      :basedir     => basedir,
-                                      :max_bytes   => 1024**2,
-                                      :max_seconds => 20)
+    @retriever = make_retriever(repo, basedir)
     @retriever.retrieve
-    @scraper = RightScraper::Scrapers::Base.scraper(:repo_dir        => @retriever.repo_dir,
-                                                    :kind            => :cookbook,
-                                                    :repository      => @retriever.repository,
-                                                    :ignorable_paths => @retriever.ignorable_paths)
+    @scraper = make_scraper(@retriever)
   end
 
   before(:all) do
@@ -268,9 +265,11 @@ describe RightScraper::Retrievers::Git do
       end
 
       context 'and a branch and a tag that are named the same' do
+        let(:branch_name) { 'test_branch' }
+
         before(:each) do
-          @helper.setup_branch('test_branch')
-          @helper.setup_tag('test_branch')
+          @helper.setup_branch(branch_name)
+          @helper.setup_tag(branch_name)
           @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                              :repo_type    => :git,
                                                              :url          => @helper.repo_path,
@@ -278,11 +277,13 @@ describe RightScraper::Retrievers::Git do
         end
 
         it 'should fail to scrape' do
-          lambda {
+          expect {
             @scraper = get_scraper(@repo, @helper.scraper_path)
             @scraper.next_resource
             @scraper.close
-          }.should raise_exception(/Ambiguous reference/)
+          }.to raise_exception(
+            ::RightScraper::Retrievers::Base::RetrieverError,
+            "Ambiguous name is both a remote branch and a tag: #{branch_name.inspect}")
         end
       end
 
@@ -528,13 +529,16 @@ describe RightScraper::Retrievers::Git do
 
     context :without_host_key_checking do
       before(:each) do
-        @retriever = RightScraper::Retrievers::Git.new(@repo, :basedir=>@helper.scraper_path)
+        @retriever = @retriever_class.new(
+          @repo,
+          :basedir => @helper.scraper_path,
+          :logger  => make_scraper_logger)
       end
 
 
       it 'should override the git-SSH command' do
         ENV['GIT_SSH'] = nil
-        @retriever.without_host_key_checking do
+        @retriever.method(:without_host_key_checking).call do
           ENV['GIT_SSH'].should =~ /ssh/
           # Run the git-ssh command, make sure it invokes the SSH client
           `#{ENV['GIT_SSH']} -V 2>&1`.should =~ /OpenSSH_[0-9]+\.[0-9]+/
@@ -543,7 +547,7 @@ describe RightScraper::Retrievers::Git do
 
       it 'should clean up after itself' do
         ENV['GIT_SSH'] = 'banana'
-        @retriever.without_host_key_checking do
+        @retriever.method(:without_host_key_checking).call do
           ENV['GIT_SSH'].should =~ /ssh/
         end
         ENV['GIT_SSH'].should == 'banana'

@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -33,11 +33,12 @@ module RightScraper
     attr_reader :download_file
 
     def repo
-      RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
-                                       :repo_type    => :download,
-                                       :url          => "file://#{@download_file}",
-                                       :first_credential => ENV['REMOTE_USER'],
-                                       :second_credential => ENV['REMOTE_PASSWORD'])
+      RightScraper::Repositories::Base.from_hash(
+        :display_name      => 'test repo',
+        :repo_type         => :download,
+        :url               => "file://#{@download_file}",
+        :first_credential  => ENV['REMOTE_USER'],
+        :second_credential => ENV['REMOTE_PASSWORD'])
     end
 
     # Create download repository following given layout

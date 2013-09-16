@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,6 +24,8 @@
 require 'rubygems'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper'))
 
+require 'logger'
+require 'fileutils'
 require 'flexmock'
 require 'rspec'
 require 'find'
@@ -101,6 +103,42 @@ module RightScraper
     def create_workflow(path, name, definition, metadata)
       File.open(File.join(path, "#{name}#{RightScraper::Resources::Workflow::DEFINITION_EXT}"), 'w') { |f| f.puts definition }
       File.open(File.join(path, "#{name}#{RightScraper::Resources::Workflow::METADATA_EXT}"), 'w') { |f| f.puts metadata.to_json }
+    end
+
+    class SpecHelperLoggerFormatter < ::Logger::Formatter
+      def call(severity, time, progname, msg)
+        "#{severity}: #{msg2str(msg)}\n"
+      end
+    end
+
+    def make_scraper_logger
+      # use a verbose logger for debugging when manually running rspec but
+      # suppress output (in the normal scraper fashion) when running rake spec.
+      if ENV[VERBOSE]
+        logger = ::RightScraper::Loggers::Default.new(STDOUT)
+        logger.formatter = SpecHelperLoggerFormatter.new
+        logger.level = ::Logger::INFO
+      else
+        logger = ::RightScraper::Loggers::Default.new
+      end
+      logger
+    end
+
+    def make_retriever(repo, basedir)
+      repo.retriever(
+        :max_bytes   => 1024**2,
+        :max_seconds => 20,
+        :basedir     => basedir,
+        :logger      => make_scraper_logger)
+    end
+
+    def make_scraper(retriever, kind = :cookbook)
+      ::RightScraper::Scrapers::Base.scraper(
+        :kind            => kind,
+        :ignorable_paths => retriever.ignorable_paths,
+        :repo_dir        => retriever.repo_dir,
+        :repository      => retriever.repository,
+        :logger          => retriever.logger)
     end
 
     # Create file layout from given array

@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,35 +21,34 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScraper
+# ancestor
+require 'right_scraper/resources'
 
-  module Resources
+module RightScraper::Resources
 
-    class Workflow < Base
+  class Workflow < ::RightScraper::Resources::Base
 
-      METADATA_EXT = '.meta'
-      DEFINITION_EXT = '.def'
- 
-      # Relative path to definition file
-      # @pos must be set before this can be called
-      #
-      # === Return
-      # path(String):: Path to definition file
-      def definition_path
-        path = @pos
-      end
+    METADATA_EXT = '.meta'
+    DEFINITION_EXT = '.def'
 
-      # Relative path to metadata file
-      # @pos must be set before this can be called
-      #
-      # === Return
-      # path(String):: Path to metadata file
-      def metadata_path
-        path = @pos.chomp(File.extname(@pos)) + METADATA_EXT if @pos
-      end
+    # Relative path to definition file
+    # @pos must be set before this can be called
+    #
+    # === Return
+    # path(String):: Path to definition file
+    def definition_path
+      path = @pos
+    end
 
+    # Relative path to metadata file
+    # @pos must be set before this can be called
+    #
+    # === Return
+    # path(String):: Path to metadata file
+    def metadata_path
+      path = @pos.chomp(File.extname(@pos)) + METADATA_EXT if @pos
     end
 
   end
-end
 
+end
