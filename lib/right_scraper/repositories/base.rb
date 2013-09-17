@@ -90,7 +90,7 @@ module RightScraper::Repositories
     #
     # @return [RightScraper::Repositories::Base] repository created
     def self.from_hash(repo_hash)
-      repo_type = repo_hash[:repo_type].to_sym
+      repo_type = repo_hash[:repo_type].to_s
       raise ::ArgumentError, ':repo_type is required' if repo_type.empty?
       repo_class = query_registered_type(repo_type)
       repo = repo_class.new
