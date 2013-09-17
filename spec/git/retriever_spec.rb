@@ -277,11 +277,11 @@ describe RightScraper::Retrievers::Git do
         end
 
         it 'should fail to scrape' do
-          expect {
+          expect do
             @scraper = get_scraper(@repo, @helper.scraper_path)
             @scraper.next_resource
             @scraper.close
-          }.to raise_exception(
+          end.to raise_exception(
             ::RightScraper::Retrievers::Base::RetrieverError,
             "Ambiguous name is both a remote branch and a tag: #{branch_name.inspect}")
         end

@@ -1,13 +1,13 @@
 GIT
   remote: git@github.com:rightscale/right_git.git
-  revision: 955d273cfa90d655fdfedcc042b3d4bd3a27debb
+  revision: 69814a78d191755991cc8983283b86be723cfa6f
   branch: master
   specs:
     right_git (0.0.1)
 
 GIT
   remote: git@github.com:rightscale/right_popen.git
-  revision: 9a75fb516fe873c299e69ddaeb053f0045732a15
+  revision: 48675b6ded66548882b4abfddc1700fbc84524b0
   branch: teal_13_13_acu115916_fixes_for_linux_process_etc
   specs:
     right_popen (2.0.0)
@@ -27,7 +27,6 @@ GEM
   remote: https://rubygems.org/
   specs:
     archive-tar-minitar (0.5.2)
-    blackwinter-git (1.2.7)
     columnize (0.3.6)
     diff-lcs (1.1.3)
     flexmock (0.9.0)
@@ -72,7 +71,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  blackwinter-git
   flexmock (~> 0.9)
   rake (= 0.8.7)
   rdoc (~> 2.4)

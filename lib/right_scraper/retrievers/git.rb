@@ -188,7 +188,7 @@ module RightScraper::Retrievers
       @logger.operation(:fetch) do
         # delete local tags, which may or may not still exist on remote.
         git_repo.tags.each do |tag|
-          git_args = ['tag', '-d', tag]
+          git_args = ['tag', '-d', tag.name]
           git_repo.spit_output(git_args)
         end
         git_repo.fetch_all(:prune => true)
@@ -250,11 +250,11 @@ module RightScraper::Retrievers
       branches = git_repo.branches(:all => true)
       local_branches = branches.local
       remote_branches = branches.remote
-      by_name = lambda { |branch| branch.name == revision }
+      by_name = lambda { |item| item.name == revision }
 
       # determine if revision is a tag.
       remote_name = nil
-      if git_repo.tags.include?(revision)
+      if git_repo.tags.any?(&by_name)
         if remote_branches.any?(&by_name)
           # note that git has some resolution scheme for ambiguous SHA, tag,
           # branch names but we do not support ambiguity.
