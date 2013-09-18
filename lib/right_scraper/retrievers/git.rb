@@ -64,12 +64,21 @@ module RightScraper::Retrievers
     # fresh SSHAgent and add the credential to it.
     def retrieve
       raise RetrieverError.new("git retriever is unavailable") unless available?
-
-      ::RightScraper::Processes::SSHAgent.with do |agent|
-        unless @repository.first_credential.nil? || @repository.first_credential.empty?
-          agent.add_key(@repository.first_credential)
+      private_key = @repository.first_credential
+      private_key = nil if private_key && private_key.empty?
+      if is_windows?
+        if private_key
+          with_private_key_windows(private_key) { super }
+        else
+          super
         end
-        super
+      else
+        # always start the ssh agent in Linux so we can disable strict host name
+        # checking, regardless of credentials.
+        ::RightScraper::Processes::SSHAgent.with do |agent|
+          agent.add_key(private_key) if private_key
+          super
+        end
       end
       true
     end
@@ -319,17 +328,19 @@ module RightScraper::Retrievers
     # block that is passed to this method.
     #
     # @yield after disabling strict host key checking, yields to caller
-    def without_host_key_checking
-      # TEAL FIX: this methodology can't work for Windows (i.e. the "ssh.exe"
-      # that comes with msysgit doesn't appear to configure things properly)
-      # but we could temporarily create/insert the following lines at the top
-      # of "%USERPROFILE%\.ssh\config":
-      #
-      # Host <hostname|*>
-      #   StrictHostKeyChecking no
-      #   IdentityFile <full path to private key file>
-      #
-      # and then remember to clean it up afterward.
+    def without_host_key_checking(&callback)
+      if is_windows?
+        without_host_key_checking_windows(&callback)
+      else
+        without_host_key_checking_linux(&callback)
+      end
+    end
+
+    # Temporarily disable SSH host-key checking for SSH clients invoked by Git, for the duration of the
+    # block that is passed to this method.
+    #
+    # @yield after disabling strict host key checking, yields to caller
+    def without_host_key_checking_linux
       tmpdir = ::Dir.mktmpdir
       ssh_cmd = ::File.join(tmpdir, 'ssh')
 
@@ -341,11 +352,76 @@ module RightScraper::Retrievers
 
       old_env = ::ENV['GIT_SSH']
       ::ENV['GIT_SSH'] = ssh_cmd
-
       yield
     ensure
       ::FileUtils.rm_rf(tmpdir)
       ::ENV['GIT_SSH'] = old_env
+    end
+
+    # The "ssh.exe" that comes with msysgit doesn't appear to configure things
+    # properly under Windows (or it does for SYSTEM account but not user
+    # accounts) when disabling strict hostname checking. We can instead
+    # temporarily create/replace the "%USERPROFILE%\.ssh\config" file to disable
+    # checking for all hostnames.
+    #
+    # @yield after disabling strict host key checking, yields to caller
+    def without_host_key_checking_windows(&callback)
+      config_path = ::File.expand_path(::File.join(home_dir_windows, '.ssh', 'config'))
+      config_text = <<EOF
+Host *
+  StrictHostKeyChecking no
+EOF
+      with_replaced_file(config_path, config_text, &callback)
+    end
+
+    def with_private_key_windows(private_key, &callback)
+      private_key_path = ::File.expand_path(::File.join(home_dir_windows, '.ssh', 'id_rsa'))
+      with_replaced_file(private_key_path, private_key, &callback)
+    end
+
+    # Utility for replacing a file temporarily within a scope and ensuring it is
+    # restored afterward.
+    #
+    # @param [String] filepath to replace
+    # @param [String] contents to substitute
+    #
+    # @yield after replacing file
+    def with_replaced_file(filepath, contents)
+      ::Dir.mktmpdir do |temp_dir|
+        begin
+          temp_path = ::File.join(temp_dir, ::File.basename(filepath))
+          ::FileUtils.mkdir_p(::File.dirname(filepath))
+          if ::File.file?(filepath)
+            ::FileUtils.mv(filepath, temp_path, :force => true)
+          end
+          ::File.open(filepath, 'w') { |f| f.write(contents) }
+          yield
+        ensure
+          begin
+            if ::File.file?(temp_path)
+              ::FileUtils.mv(temp_path, filepath, :force => true)
+            elsif ::File.file?(filepath)
+              ::File.unlink(filepath)
+            end
+          rescue ::Exception => e
+            @logger.note_warning("Failed to restore #{filepath.inspect}: #{e.message}")
+          end
+        end
+      end
+    end
+
+    # @return default location for git-related configuration files.
+    def home_dir_windows
+      home_dir = ::ENV['USERPROFILE']
+      unless home_dir && ::File.directory?(home_dir)
+        raise RetrieverError, "Invalid USERPROFILE directory: #{home_dir.inspect}"
+      end
+      home_dir
+    end
+
+    # @return [TrueClass|FalseClass] true if running on Windows
+    def is_windows?
+      !!(RUBY_PLATFORM =~ /mswin|win32|dos|mingw|cygwin/)
     end
   end
 end
