@@ -31,7 +31,7 @@ describe RightScraper::Loggers::Default do
 
   subject { described_class.new(stream) }
 
-  it 'should log warning severity to the stream by default' do
+  it 'should log ERROR severity to the stream by default' do
     logger = subject
     logger.debug('Debug')
     logger.info('Info')
@@ -42,11 +42,11 @@ describe RightScraper::Loggers::Default do
     output = stream.read
     output.should_not include("Debug\n")
     output.should_not include("Info\n")
-    output.should include("Warn\n")
+    output.should_not include("Warn\n")
     output.should include("Error\n")
     output.should include("Fatal\n")
     logger.errors.should == [[nil, :log, 'Error'], [nil, :log, 'Fatal']]
-    logger.warnings.should == ['Warn']
+    logger.warnings.should == []
   end
 
   it 'should allow most inclusive severity' do
@@ -92,16 +92,20 @@ describe RightScraper::Loggers::Default do
 
   it 'should note warnings' do
     logger = subject
-    logger.note_warning('Warning')
+    logger.note_warning('Warning 1')
+    logger.level = ::Logger::WARN
+    logger.note_warning('Warning 2')
     stream.rewind
     output = stream.read
-    output.should include("Warning\n")
+    output.should_not include("Warning 1\n")  # not logged by default
+    output.should include("Warning 2\n")      # but logged when enabled
     logger.errors.should == []
-    logger.warnings.should == ['Warning']
+    logger.warnings.should == ['Warning 1', 'Warning 2']
   end
 
   it 'should interrupt and resume base logger recording errors and warnings' do
     logger = subject
+    logger.level = ::Logger::WARN
     logger.warn('logger warning 1')
     logger.note_warning('noted warning 1')
     logger.warn('logger warning 2')

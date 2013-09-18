@@ -37,7 +37,7 @@ module RightScraper::Loggers
       else
         super(*args)
       end
-      self.level = ::Logger::WARN
+      self.level = ::Logger::ERROR
       @recording_messages = true
     end
 
