@@ -66,7 +66,7 @@ module RightScraper::Retrievers
             end
           else
             # no retrieval needed.
-            @logger.note_warning('Skipped update due to same commit SHA on local and remote repositories.')
+            @logger.note_warning('Skipped updating local directory due to the HEAD commit SHA on local matching the remote repository reference.')
             return false
           end
         end
