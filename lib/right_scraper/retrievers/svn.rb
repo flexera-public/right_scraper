@@ -61,8 +61,7 @@ module RightScraper::Retrievers
       ['.svn']
     end
 
-    # Check out the remote repository.  The operations are as follows:
-    # * checkout repository at #tag to @repo_dir
+    # Implements CheckoutBase#do_checkout
     def do_checkout
       @logger.operation(:checkout_revision) do
         revision = resolve_revision
@@ -74,11 +73,7 @@ module RightScraper::Retrievers
       end
     end
 
-    # Incrementally update the checkout.  The operations are as follows:
-    # * update to #tag
-    # In theory if #tag is a revision number that already exists no
-    # update is necessary.  It's not clear if the SVN client libraries
-    # are bright enough to notice this.
+    # Implements CheckoutBase#do_update
     def do_update
       @logger.operation(:update) do
         svn_client.execute('update', revision_argument)
@@ -86,6 +81,7 @@ module RightScraper::Retrievers
       end
     end
 
+    # Implements CheckoutBase#do_update_tag
     def do_update_tag
       @repository = @repository.clone
       # note that 'svn info' does not appear to always give correct revision.

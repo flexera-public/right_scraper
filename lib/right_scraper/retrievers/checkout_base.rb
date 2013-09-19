@@ -65,8 +65,21 @@ module RightScraper::Retrievers
               end
             end
           else
-            # no retrieval needed.
-            @logger.note_warning('Skipped updating local directory due to the HEAD commit SHA on local matching the remote repository reference.')
+            # no retrieval needed but warn exactly why we didn't do full
+            # checkout to avoid being challenged about it.
+            repo_ref = @repository.tag
+            do_update_tag
+            full_head_ref = @repository.tag
+            abbreviated_head_ref = full_head_ref[0..6]
+            if repo_ref == full_head_ref || repo_ref == abbreviated_head_ref
+              detail = abbreviated_head_ref
+            else
+              detail = "#{repo_ref} = #{abbreviated_head_ref}"
+            end
+            message =
+              "Skipped updating local directory due to the HEAD commit SHA " +
+              "on local matching the remote repository reference (#{detail})."
+            @logger.note_warning(message)
             return false
           end
         end
@@ -137,15 +150,27 @@ module RightScraper::Retrievers
       end
     end
 
+    # Perform a de novo full checkout of the repository.  Subclasses
+    # must override this to do anything useful.
+    #
+    # @return [TrueClass] always true
+    def do_checkout
+      raise NotImplementedError
+    end
+
     # Perform an incremental update of the checkout.  Subclasses that
     # want to handle incremental updating need to override this.
+    #
+    # @return [TrueClass] always true
     def do_update
       raise NotImplementedError
     end
 
-    # Perform a de novo full checkout of the repository.  Subclasses
-    # must override this to do anything useful.
-    def do_checkout
+    # Updates the tag of the repository associated with this retriever to refer
+    # to the HEAD commit (SHA) on disk after retrieval.
+    #
+    # @return [TrueClass] always true
+    def do_update_tag
       raise NotImplementedError
     end
 

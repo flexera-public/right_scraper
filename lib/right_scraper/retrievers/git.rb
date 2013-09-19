@@ -108,10 +108,7 @@ module RightScraper::Retrievers
       current_sha != remote_sha
     end
 
-    # Implements base retriever interface to clone a remote repository to the
-    # expected repo_dir.
-    #
-    # @return [TrueClass] always true
+    # Implements CheckoutBase#do_checkout
     def do_checkout
       git_repo = @logger.operation(:cloning, "to #{@repo_dir}") do
         without_host_key_checking do
@@ -124,11 +121,11 @@ module RightScraper::Retrievers
       end
       do_fetch(git_repo)
       do_checkout_revision(git_repo)
-      do_update_tag(git_repo)
+      internal_update_tag(git_repo)
       true
     end
 
-    # Updates the existing local repository directory from remote origin.
+    # Implements CheckoutBase#do_update
     def do_update
       # note that a recent fetch was performed by remote_differs? and even if
       # remotes have changed again in the brief interim it would invalidate
@@ -140,7 +137,15 @@ module RightScraper::Retrievers
       end
       do_checkout_revision(git_repo)
       do_clean_all(git_repo)  # clean again once we are on requested revision
-      do_update_tag(git_repo)
+      internal_update_tag(git_repo)
+      true
+    end
+
+    # Implements CheckoutBase#do_update_tag
+    def do_update_tag
+      git_repo = git_repo_for(@repo_dir)
+      internal_update_tag(git_repo)
+      true
     end
 
     private
@@ -172,9 +177,10 @@ module RightScraper::Retrievers
         :watch_directory   => repo_dir)
     end
 
-    def do_update_tag(git_repo)
+    def internal_update_tag(git_repo)
       @repository = @repository.clone
       @repository.tag = git_repo.sha_for(nil)
+      true
     end
 
     def do_checkout_revision(git_repo)
