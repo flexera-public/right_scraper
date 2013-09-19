@@ -81,7 +81,6 @@ module RightScraper
       # @raise [ShellError] on failure only if :raise_on_failure is true
       def execute(cmd, options = {})
         inner_execute(cmd, :safe_output_handler, options)
-        true
       ensure
         @output = nil
       end
@@ -147,8 +146,9 @@ module RightScraper
       #
       # @raise [ShellError] on execution failure
       def exit_handler(status)
-        unless status.success?
-          @output.buffer << "Exit code = #{status.exitstatus}"
+        @exit_code = status.exitstatus
+        if @raise_on_failure && !status.success?
+          @output.buffer << "Exit code = #{@exit_code}"
           raise ::RightGit::Shell::ShellError, "Execution failed: #{@output.display_text}"
         end
         true
@@ -157,6 +157,19 @@ module RightScraper
       private
 
       def inner_execute(cmd, output_handler, options)
+        options = {
+          :directory        => nil,
+          :logger           => nil,
+          :outstream        => nil,
+          :raise_on_failure => true,
+          :set_env_vars     => nil,
+          :clear_env_vars   => nil,
+        }.merge(options)
+        if options[:outstream]
+          raise ::ArgumentError, ':outstream is not currently supported'
+        end
+        @raise_on_failure = options[:raise_on_failure]
+
         # max seconds decreases over lifetime of shell until no more commands
         # can be executed due to initial time constraint.
         if @stop_timestamp
@@ -184,14 +197,18 @@ module RightScraper
           max_line_count  = MAX_SAFE_BUFFER_LINE_COUNT,
           max_line_length = MAX_SAFE_BUFFER_LINE_LENGTH)
 
+        # directory may be provided, else use initial directory.
+        working_directory = options[:directory] || @initial_directory
+
         # synchronous popen with watchers, etc.
         if logger = options[:logger]
-          logger.info(cmd)
+          logger.info("+ #{cmd}")
         end
+        @exit_code = nil
         ::RightScale::RightPopen.popen3_sync(
           cmd,
           :target             => self,
-          :directory          => @initial_directory,
+          :directory          => working_directory,
           :environment        => environment,
           :timeout_handler    => :timeout_handler,
           :size_limit_handler => :size_limit_handler,
@@ -202,7 +219,7 @@ module RightScraper
           :watch_directory    => @watch_directory,
           :size_limit_bytes   => @max_bytes,
           :timeout_seconds    => remaining_seconds)
-        true
+        @exit_code
       end
 
     end
