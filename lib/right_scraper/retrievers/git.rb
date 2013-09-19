@@ -98,13 +98,16 @@ module RightScraper::Retrievers
     #
     # @return [TrueClass|FalseClass] true if changed
     def remote_differs?
+      remote_sha = nil
+      current_sha = nil
       git_repo = git_repo_for(@repo_dir)
-      do_fetch(git_repo)
-
-      revision = resolve_revision
-      remote_name = validate_revision(git_repo, revision)
-      remote_sha = git_repo.sha_for(remote_name ? remote_name : revision)
-      current_sha = git_repo.sha_for(nil)
+      without_size_limit(git_repo) do
+        do_fetch(git_repo)
+        revision = resolve_revision
+        remote_name = validate_revision(git_repo, revision)
+        remote_sha = git_repo.sha_for(remote_name ? remote_name : revision)
+        current_sha = git_repo.sha_for(nil)
+      end
       current_sha != remote_sha
     end
 
@@ -144,7 +147,9 @@ module RightScraper::Retrievers
     # Implements CheckoutBase#do_update_tag
     def do_update_tag
       git_repo = git_repo_for(@repo_dir)
-      internal_update_tag(git_repo)
+      without_size_limit(git_repo) do
+        internal_update_tag(git_repo)
+      end
       true
     end
 
@@ -328,6 +333,22 @@ module RightScraper::Retrievers
         end # else a full or partial SHA or unknown revision
       end
       remote_name
+    end
+
+    # Temporarily disables checking the size of the repo_dir against the
+    # configured size limit. This permits performing git queries against a repo
+    # on disk that would normally exceed the size limit if it hadn't already
+    # been fully checked out in the past. If a repo has been scraped in the past
+    # and does not have any new commits, then it is acceptable even if it
+    # would exceed the current size limit.
+    def without_size_limit(git_repo)
+      old_max_bytes = git_repo.shell.max_bytes
+      begin
+        git_repo.shell.max_bytes = nil
+        yield
+      ensure
+        git_repo.shell.max_bytes = old_max_bytes
+      end
     end
 
     # Temporarily disable SSH host-key checking for SSH clients invoked by Git, for the duration of the
