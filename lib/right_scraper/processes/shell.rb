@@ -125,14 +125,18 @@ module RightScraper
       #
       # @raise [SizeLimitError] always
       def size_limit_handler
-        raise SizeLimitError, "Exceeded size limit on repository directory: #{@retriever.repo_dir}"
+        message =
+          "Exceeded size limit of #{@max_bytes / (1024 * 1024)} MB on " +
+          "repository directory. Hidden file and directory sizes are not " +
+          "included in the total."
+        raise SizeLimitError, message
       end
 
       # Raises timeout error.
       #
       # @raise [TimeLimitError] always
       def timeout_handler
-        raise TimeLimitError, "Timed-out after #{@retriever.max_seconds} seconds"
+        raise TimeLimitError, "Timed-out after #{@max_seconds} seconds"
       end
 
       # Handles exit status.
