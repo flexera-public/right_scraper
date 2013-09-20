@@ -77,16 +77,21 @@ module RightScraper::Retrievers
     def do_update
       @logger.operation(:update) do
         revision = resolve_revision
-        svn_client.execute('update', revision)
+        svn_client.execute('update', '--revision', revision, '--force')
         do_update_tag
       end
     end
 
     # Implements CheckoutBase#do_update_tag
     def do_update_tag
+      # query latest count=1 log entry for latest revision; don't attempt to
+      # specify revision on the assumption that the requested revision is
+      # already checked out. the --revision argument appears to expect a
+      # revision from-to range or else a start date or date range or else a
+      # specific revision number. it prints nothing when HEAD is specified by
+      # itself.
       @repository = @repository.clone
-      # note that 'svn info' does not appear to always give correct revision.
-      svn_args = ['log', '--revision', 'HEAD']
+      svn_args = ['log', '--limit', '1']
       svn_client.output_for(svn_args).lines.each do |line|
         if matched = SVN_LOG_REGEX.match(line)
           @repository.tag = matched[1]
@@ -98,8 +103,11 @@ module RightScraper::Retrievers
     private
 
     # http://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html#svn.tour.revs.keywords
+    #
     # Example: HEAD | <revision number> | {<datetime>}
-    SVN_REVISION_REGEX = /^(HEAD|\d+|\{[0-9:-T+-]+\})$/
+    #
+    # {2010-12-06T19:11:25} === {2010-12-06 19:11:25 +0000}
+    SVN_REVISION_REGEX = /^(HEAD|\d+|\{[0-9: T+\-]+\})$/
 
     # Example:
     # r12 | ira | 2006-11-27 12:31:51 -0600 (Mon, 27 Nov 2006) | 6 lines
@@ -112,6 +120,8 @@ module RightScraper::Retrievers
       elsif (revision =~ SVN_REVISION_REGEX).nil?
         raise RetrieverError, "Revision reference contained illegal characters: #{revision.inspect}"
       end
+      # timestamps can contain spaces; surround them with double quotes.
+      revision = revision.inspect if revision.index(' ')
       revision
     end
 
