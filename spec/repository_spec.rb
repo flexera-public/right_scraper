@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,12 +22,13 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'repositories', 'mock'))
 
 describe RightScraper::Repositories::Base do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   context 'with a repository type that doesn\'t exist' do
+    let(:unknown_type) { :nonexistent }
+
     it 'should throw a comprehensible error when you try to create it' do
       lambda {
         RightScraper::Repositories::Base.from_hash(:display_name      => 'display_name',
@@ -36,38 +37,9 @@ describe RightScraper::Repositories::Base do
                                            :tag               => 'tag',
                                            :first_credential  => 'first_credential',
                                            :second_credential => 'second_credential')
-      }.should raise_error(/Can't understand how to make nonexistent repos/)
-    end
-  end
-
-  context 'with a mock repository' do
-    before(:each) do
-      @repo = RightScraper::Repositories::Base.from_hash(:display_name      => 'display_name',
-                                                 :repo_type         => :mock,
-                                                 :url               => 'url',
-                                                 :tag               => 'tag',
-                                                 :first_credential  => 'first_credential',
-                                                 :second_credential => 'second_credential')
-    end
-
-    it 'should be initializable from a hash' do
-      @repo.should be_kind_of(RightScraper::Repositories::Base)
-      @repo.display_name.should      == 'display_name'
-      @repo.repo_type.should         == :mock
-      @repo.url.should               == 'url'
-      @repo.tag.should               == 'tag'
-      @repo.first_credential.should  == 'first_credential'
-      @repo.second_credential.should == 'second_credential'
-    end
-
-    it 'should know the SHA-1 of its root location' do
-      @repo.repository_hash.should ==
-        Digest::SHA1.hexdigest("1\000mock\000url")
-    end
-
-    it 'should know the SHA-1 of the identifier for this specific checkout' do
-      @repo.checkout_hash.should ==
-        Digest::SHA1.hexdigest("1\000mock\000url")
+      }.should raise_error(
+        ::RightScraper::RegisteredBase::RegisteredTypeError,
+        "Unknown registered type: #{unknown_type.to_s.inspect}")
     end
   end
 end

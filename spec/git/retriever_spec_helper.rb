@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,24 +24,25 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'retriever_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
-require 'git'
 
-module Git
-  class Lib
-    def public_command(*args, &block)
-      command(*args, &block)
-    end
-  end
-end
+require 'fileutils'
+require 'right_git'
+
 module RightScraper
 
   # Git implementation of scraper spec helper
   # See parent class for methods headers comments
   class GitRetrieverSpecHelper < RetrieverSpecHelper
+    include RightScraper::SpecHelpers
+
     def initialize
       super()
-      FileUtils.mkdir(scraper_path)
-      @git = Git.init(repo_path)
+      FileUtils.mkdir_p(scraper_path)
+      FileUtils.mkdir_p(repo_path)
+      @git_repo = ::RightGit::Git::Repository.new(
+        repo_path,
+        :logger => make_scraper_logger)
+      @git_repo.spit_output('init', repo_path)
     end
 
     def repo
@@ -65,12 +66,16 @@ module RightScraper
     end
 
     def commit_content(commit_message='commit')
-      @git.add('.')
-      @git.commit_all(commit_message)
+      @git_repo.spit_output('add', '--', '.')
+      @git_repo.spit_output('commit', "--message=#{commit_message.inspect}", '--all')
     end
 
     def setup_branch(branch, new_content=nil)
-      @git.branch(branch).checkout
+      if @git_repo.branches(:all => false).find { |b| b.name == branch }
+        @git_repo.checkout_to(branch)
+      else
+        @git_repo.spit_output('checkout', '-b', branch)
+      end
       unless new_content.nil?
         create_file_layout(repo_path, new_content)
         @repo_content += new_content
@@ -82,31 +87,42 @@ module RightScraper
     end
 
     def setup_tag(tag)
-      @git.add_tag(tag)
+      @git_repo.spit_output('tag', tag)
+      true
     end
 
     def delete_tag(tag)
-      @git.lib.tag(['-d', tag])
+      @git_repo.tag_for(tag).delete
     end
 
     def branch?(branch)
-      Git.open(RightScraper::Retrievers::Base.repo_dir(scraper_path, repo)).branches.find {|b| b.name == branch}
+      @git_repo.branches(:all => false).any? { |b| b.name == branch }
     end
 
     def tag?(tag)
-      Git.open(RightScraper::Retrievers::Base.repo_dir(scraper_path, repo)).tags.find {|t| t.name == tag}
+      @git_repo.tags.any? { |t| t.name == tag }
     end
 
     def delete_branch(branch)
-      @git.branch(branch).delete
+      @git_repo.branch_for(branch).delete
     end
 
     def force_rebase(upstream, newbase)
-      @git.lib.public_command("rebase", ["--onto", newbase, upstream])
+      @git_repo.spit_output('rebase', '--onto', newbase, upstream)
     end
 
     def commit_id(index_from_last=0)
-      @git.log.skip(1).first.sha
+      if index_from_last > 0
+        commits = @git_repo.log(
+          nil,
+          :tail        => 1,
+          :skip        => index_from_last,
+          :full_hashes => true)
+        fail 'Invalid commit index' if commits.empty?
+        commits.first.hash
+      else
+        @git_repo.sha_for(nil)
+      end
     end
   end
 end

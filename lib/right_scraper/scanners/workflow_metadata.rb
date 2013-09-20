@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,50 +21,52 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/scanners'
+
 require 'json'
 
-module RightScraper
-  module Scanners
-    # Load workflow metadata from a filesystem.
-    class WorkflowMetadata < Base
-      # Begin a scan for the given workflow.
-      #
-      # === Parameters
-      # workflow(RightScraper::Resources::Workflow):: workflow to scan
-      def begin(workflow)
-        @workflow = workflow
-        @metadata_filename = File.basename(workflow.metadata_path)
-      end
+module RightScraper::Scanners
 
-      # Notice a file during scanning.
-      #
-      # === Block
-      # Return the data for this file.  We use a block because it may
-      # not always be necessary to read the data.
-      #
-      # === Parameters
-      # relative_position(String):: relative pathname for the file from root of workflow
-      def notice(relative_position)
-        if relative_position == @metadata_filename
-          @logger.operation(:metadata_parsing) do
-            @workflow.metadata = JSON.parse(yield)
-          end
+  # Load workflow metadata from a filesystem.
+  class WorkflowMetadata < ::RightScraper::Scanners::Base
+    # Begin a scan for the given workflow.
+    #
+    # === Parameters
+    # workflow(RightScraper::Resources::Workflow):: workflow to scan
+    def begin(workflow)
+      @workflow = workflow
+      @metadata_filename = File.basename(workflow.metadata_path)
+    end
+
+    # Notice a file during scanning.
+    #
+    # === Block
+    # Return the data for this file.  We use a block because it may
+    # not always be necessary to read the data.
+    #
+    # === Parameters
+    # relative_position(String):: relative pathname for the file from root of workflow
+    def notice(relative_position)
+      if relative_position == @metadata_filename
+        @logger.operation(:metadata_parsing) do
+          @workflow.metadata = JSON.parse(yield)
         end
       end
+    end
 
-      # Notice a directory during scanning.  Since the workflow definition and
-      # metadata live in the root directory we don't need to recurse,
-      # but we do need to go into the first directory (identified by
-      # +relative_position+ being +nil+).
-      #
-      # === Parameters
-      # relative_position(String):: relative pathname for the directory from root of workflow
-      #
-      # === Returns
-      # Boolean:: should the scanning recurse into the directory
-      def notice_dir(relative_position)
-        relative_position == nil
-      end
+    # Notice a directory during scanning.  Since the workflow definition and
+    # metadata live in the root directory we don't need to recurse,
+    # but we do need to go into the first directory (identified by
+    # +relative_position+ being +nil+).
+    #
+    # === Parameters
+    # relative_position(String):: relative pathname for the directory from root of workflow
+    #
+    # === Returns
+    # Boolean:: should the scanning recurse into the directory
+    def notice_dir(relative_position)
+      relative_position == nil
     end
   end
 end

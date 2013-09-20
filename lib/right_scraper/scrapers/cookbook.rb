@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,57 +21,55 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
+# ancestor
+require 'right_scraper/scrapers'
 
-module RightScraper
-  module Scrapers
+module RightScraper::Scrapers
 
-    # Chef cookbook scraper
-    class Cookbook < Base
-      COOKBOOK_SENTINELS = ['metadata.json', 'metadata.rb']
+  # Chef cookbook scraper
+  class Cookbook < ::RightScraper::Scrapers::Base
+    COOKBOOK_SENTINELS = ['metadata.json', 'metadata.rb']
 
-      # Find the next cookbook, starting in dir.
-      #
-      # === Parameters
-      # dir(Dir):: directory to begin search in
-      def find_next(dir)
-        @logger.operation(:finding_next_cookbook, "in #{dir.path}") do
-          if COOKBOOK_SENTINELS.any? { |f| File.exists?(File.join(dir.path, f)) }
-            @logger.operation(:reading_cookbook, "from #{dir.path}") do
-              cookbook = RightScraper::Resources::Cookbook.new(
-                @repository,
-                strip_repo_dir(dir.path),
-                repo_dir)
-              @builder.go(dir.path, cookbook)
-              cookbook
-            end
-          else
-            @stack << dir
-            search_dirs
+    # Find the next cookbook, starting in dir.
+    #
+    # === Parameters
+    # dir(Dir):: directory to begin search in
+    def find_next(dir)
+      @logger.operation(:finding_next_cookbook, "in #{dir.path}") do
+        if COOKBOOK_SENTINELS.any? { |f| File.exists?(File.join(dir.path, f)) }
+          @logger.operation(:reading_cookbook, "from #{dir.path}") do
+            cookbook = RightScraper::Resources::Cookbook.new(
+              @repository,
+              strip_repo_dir(dir.path),
+              repo_dir)
+            @builder.go(dir.path, cookbook)
+            cookbook
           end
+        else
+          @stack << dir
+          search_dirs
         end
       end
-
-      # List of default scanners for this scaper
-      #
-      # === Return
-      # Array<Scanner>:: Default scanners
-      def default_scanners
-        [RightScraper::Scanners::CookbookMetadata,
-          RightScraper::Scanners::CookbookManifest]
-      end
-
-      # List of default builders for this scaper
-      #
-      # === Return
-      # Array<Builder>:: Default builders
-      def default_builders
-        [RightScraper::Builders::Filesystem]
-      end
-
-      # Add this scraper to the list of available types.
-      @@types[:cookbook] = RightScraper::Scrapers::Cookbook
- 
     end
+
+    # List of default scanners for this scaper
+    #
+    # === Return
+    # Array<Scanner>:: Default scanners
+    def default_scanners
+      [RightScraper::Scanners::CookbookMetadata,
+        RightScraper::Scanners::CookbookManifest]
+    end
+
+    # List of default builders for this scaper
+    #
+    # === Return
+    # Array<Builder>:: Default builders
+    def default_builders
+      [RightScraper::Builders::Filesystem]
+    end
+
+    # self-register
+    register_self
   end
 end

@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -33,7 +33,7 @@ describe RightScraper::Retrievers::Download do
   before(:each) do
     @helper = RightScraper::DownloadRetrieverSpecHelper.new
     @repo = @helper.repo
-    @retriever = @repo.retriever(:max_bytes => 1024**2, :max_seconds => 20, :basedir => @helper.download_repo_path)
+    @retriever = make_retriever(@repo, @helper.download_repo_path)
   end
 
   after(:each) do
@@ -55,10 +55,7 @@ describe RightScraper::Retrievers::Download do
 
     it 'should scrape' do
       @retriever.retrieve
-      scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                     :ignorable_paths => @retriever.ignorable_paths,
-                                                     :repo_dir        => @retriever.repo_dir,
-                                                     :repository      => @retriever.repository)
+      scraper = make_scraper(@retriever)
       cookbook = scraper.next_resource
       cookbook.should_not be_nil
       cookbook.metadata.should_not be_nil
@@ -74,10 +71,7 @@ describe RightScraper::Retrievers::Download do
 
     def get_scraper
       @retriever.retrieve
-      RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                           :ignorable_paths => @retriever.ignorable_paths,
-                                           :repo_dir        => @retriever.repo_dir,
-                                           :repository      => @retriever.repository)
+      make_scraper(@retriever)
     end
 
     it 'should only return one cookbook' do
