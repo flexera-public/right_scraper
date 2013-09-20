@@ -92,7 +92,7 @@ module RightScraper::Loggers
       @recording_messages = false
       yield
     ensure
-      @recording_messages = true
+      @recording_messages = old_recording_messages
     end
   end
 end
