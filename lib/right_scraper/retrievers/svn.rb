@@ -76,7 +76,8 @@ module RightScraper::Retrievers
     # Implements CheckoutBase#do_update
     def do_update
       @logger.operation(:update) do
-        svn_client.execute('update', revision_argument)
+        revision = resolve_revision
+        svn_client.execute('update', revision)
         do_update_tag
       end
     end
