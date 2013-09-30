@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,13 +21,15 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'stringio'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'retriever_spec_helper'))
+
+require 'fileutils'
+require 'stringio'
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScraper::Scraper do
+describe RightScraper::Main do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::SharedExamples
@@ -50,7 +52,7 @@ describe RightScraper::Scraper do
       raise "Cannot run this spec because ulimit -n is only #{ulimit}; need 512 minimum!"
     end
     @stream = StringIO.new()
-    @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
+    @scraper = RightScraper::Main.new(:basedir => @tmpdir, :kind => :cookbook)
   end
 
   after(:each) do

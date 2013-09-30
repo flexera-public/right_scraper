@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,6 +22,8 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
+
+require 'fileutils'
 require 'tmpdir'
 
 module RightScraper
@@ -31,10 +33,7 @@ module RightScraper
         mod.module_eval do
           before(:each) do
             @basedir = Dir.mktmpdir
-            @retriever = @retriever_class.new(@repo,
-                                         :basedir => @basedir,
-                                         :max_bytes => 1024**2,
-                                         :max_seconds => 20)
+            @retriever = make_retriever(@repo, @basedir)
             @retriever.retrieve
           end
 
@@ -52,10 +51,7 @@ module RightScraper
       def CookbookScraping.included(mod)
         mod.module_eval do
           before(:each) do
-            @scraper = RightScraper::Scrapers::Base.scraper(:repo_dir        => @retriever.repo_dir,
-                                                            :kind            => :cookbook,
-                                                            :repository      => @retriever.repository,
-                                                            :ignorable_paths => @retriever.ignorable_paths)
+            @scraper = make_scraper(@retriever, kind = :cookbook)
           end
         end
       end
@@ -65,10 +61,7 @@ module RightScraper
       def WorkflowScraping.included(mod)
         mod.module_eval do
           before(:each) do
-            @scraper = RightScraper::Scrapers::Base.scraper(:repo_dir        => @retriever.repo_dir,
-                                                            :kind            => :workflow,
-                                                            :repository      => @retriever.repository,
-                                                            :ignorable_paths => @retriever.ignorable_paths)
+            @scraper = make_scraper(@retriever, kind = :workflow)
           end
         end
       end

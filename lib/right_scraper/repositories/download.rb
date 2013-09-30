@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,12 +21,16 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/repositories'
+
 module RightScraper
   module Repositories
+
     # A repository that is just an archive file hanging off a
     # web server somewhere.  This version uses a command line curl to
     # download the archive, and command line tar to extract it.
-    class Download < Base
+    class Download < ::RightScraper::Repositories::Base
       # (String) Type of the repository, here 'download'.
       def repo_type
         :download
@@ -81,10 +85,8 @@ module RightScraper
         RightScraper::Retrievers::Download.new(self, options)
       end
 
-
-      # Add this repository to the list of available types.
-      @@types[:download] = RightScraper::Repositories::Download
-
+      # self-register
+      register_self
     end
   end
 end

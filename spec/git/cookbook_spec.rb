@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -20,63 +20,81 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
+
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'cookbook_helper'))
+
+require 'fileutils'
+require 'right_git'
 
 describe RightScraper::Resources::Cookbook do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::CookbookHelper
+  include RightScraper::SpecHelpers
 
   shared_examples_for 'a git repository' do
     it_should_behave_like 'a generic repository'
   end
 
+  let(:scraper_logger) { make_scraper_logger }
+  let(:bad_hostname)   { 'a.site' }
+  let(:bad_url)        { "http://#{bad_hostname}/foo/bar/baz" }
+
   context 'with an invalid git repository' do
     before(:each) do
-      @repository = RightScraper::Repositories::Git.from_hash(:display_name => 'test repo',
-                                                               :repo_type   => :git,
-                                                               :url         => "http://a.site/foo/bar/baz")
+      @repository = ::RightScraper::Repositories::Git.from_hash(
+        :display_name => 'test repo',
+        :repo_type    => :git,
+        :url          => bad_url)
     end
 
     it_should_behave_like 'a git repository'
 
     it 'should fail to scrape' do
-      lambda {
-      begin
-        @tmpdir = Dir.mktmpdir
-        retriever = @repository.retriever(:basedir => @tmpdir)
-        retriever.retrieve
-      ensure
-        FileUtils.remove_entry_secure(@tmpdir)
-      end
-      }.should raise_exception(Git::GitExecuteError)
+      expect do
+        begin
+          @tmpdir = Dir.mktmpdir
+          retriever = @repository.retriever(
+            :basedir => @tmpdir,
+            :logger  => scraper_logger)
+          retriever.retrieve
+        ensure
+          FileUtils.remove_entry_secure(@tmpdir)
+        end
+      end.to raise_exception(
+        ::RightGit::RightGitError,
+        /#{::Regexp.escape(bad_hostname)}/)
     end
   end
 
   context 'with a git repository with a credential that requires a password' do
     before(:each) do
       passwd_key = File.open(File.join(File.dirname(__FILE__), 'password_key')).read
-      @repository = RightScraper::Repositories::Git.from_hash(
-                                                     :display_name     => 'test repo',
-                                                     :repo_type        => :git,
-                                                     :url              => "http://a.site/foo/bar/baz",
-                                                     :first_credential => passwd_key)
+      @repository = ::RightScraper::Repositories::Git.from_hash(
+        :display_name     => 'test repo',
+        :repo_type        => :git,
+        :url              => bad_url,
+        :first_credential => passwd_key)
     end
 
     it_should_behave_like 'a git repository'
 
     it 'should close the connection to the agent' do
       oldpid = ENV['SSH_AGENT_PID']
-      lambda {
+      expect do
         begin
           @tmpdir = Dir.mktmpdir
-          retriever = @repository.retriever(:basedir => @tmpdir)
+          retriever = @repository.retriever(
+            :basedir => @tmpdir,
+            :logger  => scraper_logger)
           retriever.retrieve
         ensure
           FileUtils.remove_entry_secure(@tmpdir)
         end
-      }.should raise_exception(::RightScraper::Processes::SSHAgent::SSHAgentError, /Attempted to use credentials that require passwords; bailing/)
+      end.to raise_exception(
+        ::RightScraper::Processes::SSHAgent::SSHAgentError,
+        /Attempted to use credentials that require passwords; bailing/)
       ENV['SSH_AGENT_PID'].should == oldpid
     end
   end
@@ -84,37 +102,41 @@ describe RightScraper::Resources::Cookbook do
   context 'with an invalid git repository with a real credential' do
     before(:each) do
       passwd_key = File.open(File.join(File.dirname(__FILE__), 'demokey')).read
-      @repository = RightScraper::Repositories::Git.from_hash(
-                                                     :display_name     => 'test repo',
-                                                     :repo_type        => :git,
-                                                     :url              => "http://example.example/foo/bar/baz",
-                                                     :first_credential => passwd_key)
+      @repository = ::RightScraper::Repositories::Git.from_hash(
+        :display_name     => 'test repo',
+        :repo_type        => :git,
+        :url              => bad_url,
+        :first_credential => passwd_key)
     end
 
     it_should_behave_like 'a git repository'
 
     it 'should close the connection to the agent' do
       oldpid = ENV['SSH_AGENT_PID']
-      lambda {
+      expect do
         begin
           @tmpdir = Dir.mktmpdir
-          retriever = @repository.retriever(:basedir => @tmpdir)
+          retriever = @repository.retriever(
+            :basedir => @tmpdir,
+            :logger  => scraper_logger)
           retriever.retrieve
         ensure
           FileUtils.remove_entry_secure(@tmpdir)
         end
-      }.should raise_exception(Git::GitExecuteError)
+      end.to raise_exception(
+        ::RightGit::RightGitError,
+        /#{::Regexp.escape(bad_hostname)}/)
       ENV['SSH_AGENT_PID'].should == oldpid
     end
   end
 
   context 'with a git repository' do
     before(:each) do
-      @repository = RightScraper::Repositories::Git.from_hash(
-                                                     :display_name     => 'test repo',
-                                                     :repo_type        => :git,
-                                                     :url              => "http://a.site/foo/bar/baz",
-                                                     :first_credential => "a-key")
+      @repository = ::RightScraper::Repositories::Git.from_hash(
+        :display_name     => 'test repo',
+        :repo_type        => :git,
+        :url              => bad_url,
+        :first_credential => "a-key")
     end
 
     it_should_behave_like 'a git repository'
@@ -147,12 +169,12 @@ describe RightScraper::Resources::Cookbook do
   end
   context 'with a git repository with a tag' do
     before(:each) do
-      @repository = RightScraper::Repositories::Git.from_hash(
-                                                     :display_name     => 'test repo',
-                                                     :repo_type        => :git,
-                                                     :url              => "http://a.site/foo/bar/baz",
-                                                     :tag              => "DEADBEEF",
-                                                     :first_credential => "a-key")
+      @repository = ::RightScraper::Repositories::Git.from_hash(
+        :display_name     => 'test repo',
+        :repo_type        => :git,
+        :url              => bad_url,
+        :tag              => "DEADBEEF",
+        :first_credential => "a-key")
     end
 
     it_should_behave_like 'a git repository'

@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,7 +22,6 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib', 'right_scraper', 'repositories', 'mock'))
 
 describe RightScraper::Repositories::Git do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment

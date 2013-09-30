@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,6 +22,8 @@
 #++
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
+
+require 'fileutils'
 require 'tmpdir'
 require 'digest/sha1'
 
@@ -51,6 +53,8 @@ describe RightScraper::Scanners::CookbookS3Upload do
     FileUtils.remove_entry_secure @tmpdir unless @tmpdir.nil?
   end
 
+  let(:scraper_logger) { make_scraper_logger }
+
   before(:all) do
     @scraperclass = RightScraper::Scrapers::Cookbook
   end
@@ -75,7 +79,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                                :url          => "file:///#{@download_file}")
       @s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
-                            :logger => RightScraper::Logger.new)
+                            :logger => ::RightScraper::Loggers::Default.new)
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
     end
 
@@ -84,6 +88,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @s3.bucket(bucket_name).should be_nil
       lambda {
       @scraper = @scraperclass.new(:repository => @repo,
+                                   :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
@@ -108,6 +113,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                                :url          => "file:///#{@download_file}")
       bucket_name = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(:repository => @repo,
+                                   :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
@@ -119,7 +125,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                    :max_seconds => 20)
       s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
-                            :logger => RightScraper::Logger.new)
+                            :logger => ::RightScraper::Loggers::Default.new)
 
       # create=true is prone to the too-many-buckets error even when the bucket
       # already exists. since the bucket always exists for the test account

@@ -21,6 +21,9 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+# ancestor
+require 'right_scraper/processes'
+
 require 'fileutils'
 require 'right_popen'
 require 'right_popen/safe_output_buffer'

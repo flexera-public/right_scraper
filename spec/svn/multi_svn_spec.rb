@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -29,6 +29,7 @@ describe RightScraper::Retrievers::Svn do
     include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
     include RightScraper::ScraperHelper
+    include RightScraper::SpecHelpers
 
     before(:all) do
       @retriever_class = RightScraper::Retrievers::Svn

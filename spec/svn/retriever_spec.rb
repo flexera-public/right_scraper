@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,12 +24,15 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'svn_retriever_spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'scraper_helper'))
+
+require 'fileutils'
 require 'set'
 
 describe RightScraper::Retrievers::Svn do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::ScraperHelper
+  include RightScraper::SpecHelpers
 
   before(:all) do
     @retriever_class = RightScraper::Retrievers::Svn
@@ -46,17 +49,12 @@ describe RightScraper::Retrievers::Svn do
                                                :url          => url,
                                                :first_credential => ENV['REMOTE_USER'],
                                                :second_credential => ENV['REMOTE_PASSWORD'])
-      @retriever = @retriever_class.new(@repo, :max_bytes => 1024**2,
-                                               :basedir     => @helper.scraper_path,
-                                               :max_seconds => 20)
+      @retriever = make_retriever(@repo, @helper.scraper_path)
     end
 
     it 'should scrape' do
       @retriever.retrieve
-      @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                      :ignorable_paths => @retriever.ignorable_paths,
-                                                      :repo_dir        => @retriever.repo_dir,
-                                                      :repository      => @retriever.repository)
+      @scraper = make_scraper(@retriever)
       first = @scraper.next_resource
       first.should_not == nil
     end
@@ -64,10 +62,7 @@ describe RightScraper::Retrievers::Svn do
     # quick_start not actually being a cookbook
     it 'should scrape 5 repositories' do
       @retriever.retrieve
-      @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                      :ignorable_paths => @retriever.ignorable_paths,
-                                                      :repo_dir        => @retriever.repo_dir,
-                                                      :repository      => @retriever.repository)
+      @scraper = make_scraper(@retriever)
       locations = Set.new
       (1..5).each {|n|
         cookbook = @scraper.next_resource
@@ -162,15 +157,9 @@ describe RightScraper::Retrievers::Svn do
 
     context 'and an incremental scraper' do
       before(:each) do
-        @retriever = @retriever_class.new(@repo,
-                                          :max_bytes   => 1024**2,
-                                          :basedir     => @helper.scraper_path,
-                                          :max_seconds => 20)
+        @retriever = make_retriever(@repo, @helper.scraper_path)
         @retriever.retrieve
-        @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                        :ignorable_paths => @retriever.ignorable_paths,
-                                                        :repo_dir        => @retriever.repo_dir,
-                                                        :repository      => @retriever.repository)
+        @scraper = make_scraper(@retriever)
       end
 
       after(:each) do
@@ -200,10 +189,7 @@ describe RightScraper::Retrievers::Svn do
         context 'a new scraper' do
           before(:each) do
             @olddir = @retriever.repo_dir
-            @retriever = @retriever_class.new(@repo,
-                                             :basedir     => @helper.scraper_path,
-                                             :max_bytes   => 1024**2,
-                                             :max_seconds => 20)
+            @retriever = make_retriever(@repo, @helper.scraper_path)
             @retriever.retrieve
           end
 
@@ -240,15 +226,9 @@ describe RightScraper::Retrievers::Svn do
         context 'a new scraper' do
           before(:each) do
             @olddir = @retriever.repo_dir
-            @retriever = @retriever_class.new(@repo,
-                                              :basedir => @helper.scraper_path,
-                                              :max_bytes => 1024**2,
-                                              :max_seconds => 20)
+            @retriever = make_retriever(@repo, @helper.scraper_path)
             @retriever.retrieve
-            @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                            :ignorable_paths => @retriever.ignorable_paths,
-                                                            :repo_dir        => @retriever.repo_dir,
-                                                            :repository      => @retriever.repository)
+            @scraper = make_scraper(@retriever)
           end
 
           it 'should notice the new revision' do

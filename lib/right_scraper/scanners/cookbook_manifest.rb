@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,39 +21,40 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
+# ancestor
+require 'right_scraper/scanners'
+
 require 'digest/md5'
 
-module RightScraper
-  module Scanners
-    # Build manifests from a filesystem.
-    class CookbookManifest < Base
-      # Create a new manifest scanner.  Does not accept any new arguments.
-      def initialize(*args)
-        super
-        @manifest = {}
-      end
+module RightScraper::Scanners
 
-      # Complete a scan for the given resource.
-      #
-      # === Parameters ===
-      # resource(RightScraper::Resources::Base):: resource to scan
-      def end(resource)
-        resource.manifest = @manifest
-        @manifest = {}
-      end
+  # Build manifests from a filesystem.
+  class CookbookManifest < ::RightScraper::Scanners::Base
+    # Create a new manifest scanner.  Does not accept any new arguments.
+    def initialize(*args)
+      super
+      @manifest = {}
+    end
 
-      # Notice a file during scanning.
-      #
-      # === Block ===
-      # Return the data for this file.  We use a block because it may
-      # not always be necessary to read the data.
-      #
-      # === Parameters ===
-      # relative_position(String):: relative pathname for file from root of resource
-      def notice(relative_position)
-        @manifest[relative_position] = Digest::MD5.hexdigest(yield)
-      end
+    # Complete a scan for the given resource.
+    #
+    # === Parameters ===
+    # resource(RightScraper::Resources::Base):: resource to scan
+    def end(resource)
+      resource.manifest = @manifest
+      @manifest = {}
+    end
+
+    # Notice a file during scanning.
+    #
+    # === Block ===
+    # Return the data for this file.  We use a block because it may
+    # not always be necessary to read the data.
+    #
+    # === Parameters ===
+    # relative_position(String):: relative pathname for file from root of resource
+    def notice(relative_position)
+      @manifest[relative_position] = Digest::MD5.hexdigest(yield)
     end
   end
 end

@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,12 +21,13 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'base'))
+# ancestor
+require 'right_scraper/builders'
 
 module RightScraper
   module Builders
     # Build metadata by scanning the filesystem.
-    class Filesystem < Builder
+    class Filesystem < ::RightScraper::Builders::Base
 
       # Create a new filesystem scanner.  In addition to the options
       # recognized by Builder, this class recognizes <tt>:retriever</tt> and

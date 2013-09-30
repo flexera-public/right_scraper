@@ -24,72 +24,75 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper'))
 
+describe RightScraper::Scanners::CookbookManifest do
+  include ::RightScraper::SpecHelpers
 
-module RightScraper::Scanners
-  describe CookbookManifest do
-    let(:repo_dir) { 'unused' }
+  let(:repo_dir) { 'unused' }
 
-    it 'should accumulate files' do
-      resource = flexmock(:resource)
-      resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
-                                                 "baz" => Digest::MD5.hexdigest("quux")
-                                               }).once
-      manifest = CookbookManifest.new
-      manifest.notice("foo") { "bar" }
-      manifest.notice("baz") { "quux" }
-      manifest.end(resource)
-    end
-    it 'should keep different resources separated' do
-      resource = flexmock(:resource)
-      resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
-                                                 "baz" => Digest::MD5.hexdigest("quux")
-                                               }).once
-      resource.should_receive(:manifest=).with({"bar" => Digest::MD5.hexdigest("fred")
-                                               }).once
-      manifest = CookbookManifest.new
-      manifest.notice("foo") { "bar" }
-      manifest.notice("baz") { "quux" }
-      manifest.end(resource)
-      manifest.notice("bar") { "fred" }
-      manifest.end(resource)
-    end
-    it 'should hash to the same value despite resource order' do
-      cookbook1 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
-      cookbook2 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
+  def subject
+    described_class.new(:logger => make_scraper_logger)
+  end
 
-      manifest = CookbookManifest.new
+  it 'should accumulate files' do
+    resource = flexmock(:resource)
+    resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
+                                               "baz" => Digest::MD5.hexdigest("quux")
+                                             }).once
+    manifest = subject
+    manifest.notice("foo") { "bar" }
+    manifest.notice("baz") { "quux" }
+    manifest.end(resource)
+  end
+  it 'should keep different resources separated' do
+    resource = flexmock(:resource)
+    resource.should_receive(:manifest=).with({"foo" => Digest::MD5.hexdigest("bar"),
+                                               "baz" => Digest::MD5.hexdigest("quux")
+                                             }).once
+    resource.should_receive(:manifest=).with({"bar" => Digest::MD5.hexdigest("fred")
+                                             }).once
+    manifest = subject
+    manifest.notice("foo") { "bar" }
+    manifest.notice("baz") { "quux" }
+    manifest.end(resource)
+    manifest.notice("bar") { "fred" }
+    manifest.end(resource)
+  end
+  it 'should hash to the same value despite resource order' do
+    cookbook1 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
+    cookbook2 = RightScraper::Resources::Cookbook.new('<empty>', '', repo_dir)
 
-      manifest.notice("foo") {"bar"}
-      manifest.notice("baz") {"quux"}
-      manifest.notice("bar/none") {"fred"}
-      manifest.notice("bar/all") {"fred"}
-      manifest.notice("a/really/deep/directory/fox") {"stray"}
-      manifest.end(cookbook1)
+    manifest = subject
 
-      manifest.notice("bar/none") {"fred"}
-      manifest.notice("a/really/deep/directory/fox") {"stray"}
-      manifest.notice("foo") {"bar"}
-      manifest.notice("baz") {"quux"}
-      manifest.notice("bar/all") {"fred"}
-      manifest.end(cookbook2)
+    manifest.notice("foo") {"bar"}
+    manifest.notice("baz") {"quux"}
+    manifest.notice("bar/none") {"fred"}
+    manifest.notice("bar/all") {"fred"}
+    manifest.notice("a/really/deep/directory/fox") {"stray"}
+    manifest.end(cookbook1)
 
-      cookbook1.resource_hash.should == cookbook2.resource_hash
-    end
-    it 'should hash to the same value despite repository location' do
-      cookbook1 = RightScraper::Resources::Cookbook.new('git://github.com/somerepo', '', repo_dir)
-      cookbook2 = RightScraper::Resources::Cookbook.new('svn://mycompany/rss/myrepo', '', repo_dir)
+    manifest.notice("bar/none") {"fred"}
+    manifest.notice("a/really/deep/directory/fox") {"stray"}
+    manifest.notice("foo") {"bar"}
+    manifest.notice("baz") {"quux"}
+    manifest.notice("bar/all") {"fred"}
+    manifest.end(cookbook2)
 
-      manifest = CookbookManifest.new
+    cookbook1.resource_hash.should == cookbook2.resource_hash
+  end
+  it 'should hash to the same value despite repository location' do
+    cookbook1 = RightScraper::Resources::Cookbook.new('git://github.com/somerepo', '', repo_dir)
+    cookbook2 = RightScraper::Resources::Cookbook.new('svn://mycompany/rss/myrepo', '', repo_dir)
 
-      manifest.notice("foo") {"bar"}
-      manifest.notice("baz") {"quux"}
-      manifest.end(cookbook1)
+    manifest = subject
 
-      manifest.notice("foo") {"bar"}
-      manifest.notice("baz") {"quux"}
-      manifest.end(cookbook2)
+    manifest.notice("foo") {"bar"}
+    manifest.notice("baz") {"quux"}
+    manifest.end(cookbook1)
 
-      cookbook1.resource_hash.should == cookbook2.resource_hash
-    end
+    manifest.notice("foo") {"bar"}
+    manifest.notice("baz") {"quux"}
+    manifest.end(cookbook2)
+
+    cookbook1.resource_hash.should == cookbook2.resource_hash
   end
 end

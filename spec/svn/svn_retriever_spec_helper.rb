@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -23,13 +23,13 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'retriever_spec_helper'))
 
+require 'fileutils'
+
 module RightScraper
 
   # SVN implementation of retriever spec helper
   # See parent class for methods headers comments
   class SvnRetrieverSpecHelper < RetrieverSpecHelper
-    include RightScraper::SvnClient
-
     def svn_repo_path
       File.join(@tmpdir, "svn")
     end
@@ -58,26 +58,35 @@ module RightScraper
                                                  :url          => repo_url)
       output = `svnadmin create #{svn_repo_path}`
       raise "Can't create repo: #{output}" unless $?.success?
-      run_svn_no_chdir "checkout", repo_url, repo_path
+      svn_client.execute('checkout', repo_url, repo_dir, '-r', 'HEAD')
       make_cookbooks
       commit_content
     end
 
+    def svn_client
+      @svn_client ||= ::RightScraper::Processes::SvnClient.new(
+        repository,
+        make_scraper_logger,
+        ::RightScraper::Processes::Shell.new(
+          :initial_directory => self.repo_dir))
+    end
+
     def make_cookbooks
-      create_cookbook(repo_path, repo_content)
+      create_cookbook(repo_dir, repo_content)
     end
 
-    def delete(location, log="")
-      run_svn "delete", location
+    def delete(location, log = '')
+      svn_client.execute('delete', location)
     end
 
-    def commit_content(commit_message='commit message')
-      run_svn "add", Dir.glob(File.join(repo_path, '**/*'))
-      run_svn "commit", "--message", commit_message
+    def commit_content(commit_message = 'commit message')
+      svn_client.execute('add', Dir.glob(File.join(repo_dir, '**/*')))
+      svn_client.execute("commit --message #{commit_message.inspect}")
     end
 
     def commit_id(index_from_last=0)
-      lines = run_svn_with_buffered_output "log", "-l", (index_from_last + 1).to_s, "-r", "HEAD:0"
+      lines = svn_client.output_for(
+        'log', '-l', (index_from_last + 1).to_s, '-r', 'HEAD:0').lines
       id = nil
       lines.each do |line|
         if line =~ /^r(\d+)/

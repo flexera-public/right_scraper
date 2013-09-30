@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -23,17 +23,19 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'download', 'download_retriever_spec_helper'))
+
+require 'fileutils'
 require 'tmpdir'
 require 'flexmock'
 
-describe RightScraper::Scraper do
+describe RightScraper::Main do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
 
   include RightScraper::SharedExamples
 
   shared_examples_for 'scrapes to given base dir' do
     before(:each) do
-      @scraper = RightScraper::Scraper.new(:basedir => @tmpdir, :kind => :cookbook)
+      @scraper = described_class.new(:basedir => @tmpdir, :kind => :cookbook)
     end
 
     after(:each) do
@@ -123,9 +125,7 @@ describe RightScraper::Scraper do
       logger.info("foo")
       logger.error("foo")
       @scraper.succeeded?.should be_false
-      @scraper.errors.should == [[nil, :log, {:severity => Logger::ERROR,
-                                       :message => "foo",
-                                       :progname => nil}]]
+      @scraper.errors.should == [[nil, :log, 'foo']]
     end
   end
 

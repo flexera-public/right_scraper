@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -43,13 +43,9 @@ describe RightScraper::Retrievers::Download do
 
     context 'given a download repository' do
       before(:each) do
-      @retriever = @repo.retriever(:max_bytes => 1024**2, :max_seconds => 20, :basedir => @helper.download_repo_path)
-      @retriever.retrieve
-      @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                      :ignorable_paths => @retriever.ignorable_paths,
-                                                      :repo_dir        => @retriever.repo_dir,
-                                                      :repository      => @retriever.repository)
-
+        @retriever = make_retriever(@repo, @helper.download_repo_path)
+        @retriever.retrieve
+        @scraper = make_scraper(@retriever)
         @download_file = @helper.download_file
       end
 
@@ -71,12 +67,9 @@ describe RightScraper::Retrievers::Download do
       raise "Failed to gzip tarball: #{res}" unless status.success?
       begin
         @repo.url += ".gz"
-        @retriever = @repo.retriever(:max_bytes => 1024**2, :max_seconds => 20, :basedir => @helper.download_repo_path)
+        @retriever = make_retriever(@repo, @helper.download_repo_path)
         @retriever.retrieve
-        @scraper = RightScraper::Scrapers::Base.scraper(:kind            => :cookbook,
-                                                        :ignorable_paths => @retriever.ignorable_paths,
-                                                        :repo_dir        => @retriever.repo_dir,
-                                                        :repository      => @retriever.repository)
+        @scraper = make_scraper(@retriever)
         @helper.check_resource(@scraper.next_resource, @download_file + ".gz", @repo, "subdir1")
         @helper.check_resource(@scraper.next_resource, @download_file + ".gz", @repo, "subdir2")
       ensure
@@ -90,12 +83,9 @@ describe RightScraper::Retrievers::Download do
       raise "Failed to bzip tarball: #{res}" unless status.success?
       begin
         @repo.url += ".bz2"
-        @retriever = @repo.retriever(:max_bytes => 1024**2, :max_seconds => 20, :basedir => @helper.download_repo_path)
+        @retriever = make_retriever(@repo, @helper.download_repo_path)
         @retriever.retrieve
-        @scraper = RightScraper::Scrapers::Base.scraper(:kind           => :cookbook,
-                                                        :ignorable_paths => @retriever.ignorable_paths,
-                                                        :repo_dir        => @retriever.repo_dir,
-                                                        :repository      => @retriever.repository)
+        @scraper = make_scraper(@retriever)
         @helper.check_resource(@scraper.next_resource, @download_file + ".bz2", @repo, "subdir1")
         @helper.check_resource(@scraper.next_resource, @download_file + ".bz2", @repo, "subdir2")
       ensure
