@@ -179,7 +179,7 @@ module RightScraper
       # warden doesn't create directories on copy_in (or _out) so we need to
       # generate a script and execute it before invoking copy_in.
       def send_copy_in_cmds(copy_in)
-        mkdir_cmds = copy_in.values.
+        mkdir_cmds = copy_in.
           map { |dst_path| ::File.dirname(dst_path) }.uniq.sort.
           map { |parent_dir| "mkdir -p #{parent_dir}" }
         shell_script = <<EOS
@@ -202,8 +202,8 @@ EOS
 
         link_result = LinkResult.new(send("link --handle #{@handle} --job_id #{job_id}"))
         if link_result.succeeded?
-          copy_in_cmds = copy_in.inject([]) do |result, (src_path, dst_path)|
-            result << "copy_in --handle #{@handle} --src_path #{src_path.inspect} --dst_path #{dst_path.inspect}"
+          copy_in_cmds = copy_in.inject([]) do |result, src_path|
+            result << "copy_in --handle #{@handle} --src_path #{src_path.inspect} --dst_path #{src_path.inspect}"
             result
           end
           send(copy_in_cmds)
