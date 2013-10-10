@@ -245,8 +245,6 @@ module RightScraper
             contents
           ]
 
-          ::File.open('/tmp/tar.log', 'a') { |f| f.puts tarball_cmd }
-
           @stdout_buffer = []
           @stderr_buffer = ::RightScale::RightPopen::SafeOutputBuffer.new
           begin
