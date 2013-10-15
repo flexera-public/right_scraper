@@ -162,8 +162,8 @@ module RightScraper
             # arrest
             knife_metadata_script_path = ::File.join(tmpdir, KNIFE_METADATA_SCRIPT_NAME)
             cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
-            jailed_cookbook_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
-            jailed_cookbook_dir = ::File.join(jailed_cookbook_dir, @cookbook.pos) unless @cookbook.pos == '.'
+            jailed_repo_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
+            jailed_cookbook_dir = (@cookbook.pos == '.' && jailed_repo_dir) || ::File.join(jailed_repo_dir, @cookbook.pos)
             jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
             freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
 
@@ -174,13 +174,13 @@ module RightScraper
             copy_out = { jailed_metadata_json_path => freed_metadata_json_path }
 
             # prosecute
-            create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_cookbook_dir)
+            create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
 
             # jail
             warden = create_warden
             begin
               # Deploy our cookbook
-              cmd = "tar -Pxf #{cookbook_tarball_path}"
+              cmd = "tar -Pxf #{cookbook_tarball_path.inspect}"
               warden.run_command_in_jail(cmd, cookbook_tarball_path, nil)
 
               # Generate the metadata
