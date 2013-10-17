@@ -37,8 +37,11 @@ module RightScraper::Scanners
     UNDEFINED_COOKBOOK_NAME = 'undefined'
     KNIFE_METADATA_SCRIPT_NAME = 'knife_metadata.rb'
 
-    JAILED_FILE_SIZE_CONSTRAINT = 16 * 1024  # 16 KB
+    JAILED_FILE_SIZE_CONSTRAINT = 128 * 1024  # 128 KB
     FREED_FILE_SIZE_CONSTRAINT = 64 * 1024  # 64 KB
+
+    TARBALL_CREATE_TIMEOUT = 30 # ..to create the tarball
+    TARBALL_ARCHIVE_NAME = 'cookbook.tar'
 
     # exceptions
     class MetadataError < Exception; end
@@ -133,7 +136,7 @@ module RightScraper::Scanners
     # any) into the container. we will try and restrict copying to what might
     # plausibly be referenced by 'metadata.rb' but this could be anything like
     # a LICENSE, README, etc. the best heuristic seems to be to copy any file
-    # whose size is small (less than 16K) because 'metadata.rb' should not be
+    # whose size is small (less than 128K) because 'metadata.rb' should not be
     # executing binaries and should only consume text files of a reasonable
     # size. if these restrictions cause a problem then the user is free to
     # pre-knife his own 'metadata.json' file and check it into the repo.
@@ -159,27 +162,31 @@ module RightScraper::Scanners
 
           # arrest
           knife_metadata_script_path = ::File.join(tmpdir, KNIFE_METADATA_SCRIPT_NAME)
+          cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
           jailed_repo_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
-          jailed_cookbook_dir = jailed_repo_dir
-          freed_cookbook_dir = @cookbook.repo_dir
-          unless @cookbook.pos == '.'
-            jailed_cookbook_dir = ::File.join(jailed_cookbook_dir, @cookbook.pos)
-            freed_cookbook_dir = ::File.join(freed_cookbook_dir, @cookbook.pos)
-          end
+          jailed_cookbook_dir = (@cookbook.pos == '.' && jailed_repo_dir) || ::File.join(jailed_repo_dir, @cookbook.pos)
           jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
           freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
 
-          # prosecute
+          # police brutality
           create_knife_metadata_script(knife_metadata_script_path, jailed_cookbook_dir)
-          copy_in = generate_copy_in(jailed_repo_dir)
-          copy_in[knife_metadata_script_path] = knife_metadata_script_path
+          copy_in = generate_copy_in
+          copy_in << knife_metadata_script_path
           copy_out = { jailed_metadata_json_path => freed_metadata_json_path }
+
+          # prosecute
+          create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
 
           # jail
           warden = create_warden
           begin
+            # Deploy our cookbook
+            cmd = "tar -Pxf #{cookbook_tarball_path.inspect}"
+            warden.run_command_in_jail(cmd, cookbook_tarball_path, nil)
+
+            # Generate the metadata
             cmd = "ruby #{knife_metadata_script_path.inspect}"
-            warden.run_command_in_jail(cmd, copy_in, copy_out)
+            warden.run_command_in_jail(cmd, nil, copy_out)
 
             # constraining the generate file size is debatable, but our UI
             # attempts to load metadata JSON into memory far too often to be
@@ -211,6 +218,50 @@ module RightScraper::Scanners
               @logger.note_warning(e.message)
             end
           end
+        end
+      end
+    end
+
+    def stdout_tarball(data)
+      @stdout_buffer << data
+    end
+
+    def stderr_tarball(data)
+      @stderr_buffer.safe_buffer_data(data)
+    end
+
+    def timeout_tarball
+      raise MetadataError,
+        "Timed out waiting for tarball to build.\n" +
+        "stdout: #{@stdout_buffer.join}\n" +
+        "stderr: #{@stderr_buffer.display_text}"
+    end
+
+    def create_cookbook_tarball(dest_file, contents, dest_path)
+      @logger.operation(:tarball_generation) do
+        tarball_cmd = [
+          'tar',
+          "-Pcf #{dest_file}",
+          "--transform='s,#{@cookbook.repo_dir},#{dest_path},'",
+          contents
+        ]
+
+        @stdout_buffer = []
+        @stderr_buffer = ::RightScale::RightPopen::SafeOutputBuffer.new
+        begin
+          ::RightScale::RightPopen.popen3_sync(
+            tarball_cmd.join(' '),
+            :target             => self,
+            :timeout_handler    => :timeout_tarball,
+            :stderr_handler     => :stderr_tarball,
+            :stdout_handler     => :stdout_tarball,
+            :inherit_io         => true,  # avoid killing any rails connection
+            :timeout_seconds    => TARBALL_CREATE_TIMEOUT)
+        rescue Exception => e
+          raise MetadataError,
+            "Failed to generate cookbook tarball from source files: #{e.message}\n" +
+            "stdout: #{@stdout_buffer.join}\n" +
+            "stderr: #{@stderr_buffer.display_text}"
         end
       end
     end
@@ -265,8 +316,8 @@ EOS
     #
     # again, the user can work around these contraints by generating his own
     # metadata and checking it into the repository.
-    def generate_copy_in(jailed_repo_dir)
-      copy_in = {}
+    def generate_copy_in()
+      copy_in = []
       start_path = @cookbook.repo_dir
       end_path = start_path
       if @cookbook.pos != '.'
@@ -276,25 +327,21 @@ EOS
       loop do
         current_path = ::File.dirname(current_path)
         if current_path.length >= end_path.length
-          limited_files_of(current_path) do |file|
-            copy_in[file] = ::File.join(jailed_repo_dir, relative_to_repo_dir(file))
-          end
+          limited_files_of(current_path) { |file| copy_in << file }
         else
           break
         end
       end
       current_path = start_path
-      recursive_generate_copy_in(copy_in, current_path, jailed_repo_dir)
+      recursive_generate_copy_in(copy_in, current_path)
       copy_in
     end
 
     # recursive part of generate_copy_in
-    def recursive_generate_copy_in(copy_in, current_path, jailed_repo_dir)
-      limited_files_of(current_path) do |file|
-        copy_in[file] = ::File.join(jailed_repo_dir, relative_to_repo_dir(file))
-      end
+    def recursive_generate_copy_in(copy_in, current_path)
+      limited_files_of(current_path) { |file| copy_in << file }
       directories_of(current_path) do |dir|
-        recursive_generate_copy_in(copy_in, ::File.join(dir), jailed_repo_dir)
+        recursive_generate_copy_in(copy_in, ::File.join(dir))
       end
       true
     end
