@@ -38,7 +38,6 @@ Gem::Specification.new do |spec|
   spec.rubyforge_project = %q{right_scraper}
   spec.require_path = 'lib'
 
-  spec.add_dependency('json', '~> 1.4')
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('right_git')
   spec.add_dependency('right_popen', '~> 2.0')
