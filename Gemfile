@@ -11,7 +11,7 @@ gem 'rake',          '0.8.7'
 gem 'right_support', '2.7'
 
 group :test do
-  gem 'json',     '1.4.6'  # locked for mswin32 friendliness
+  gem 'json',     '~> 1.4'
   gem 'rspec',    '~> 2.0'
   gem 'flexmock', '~> 0.9'
   gem 'rtags',    '~> 0.97'
