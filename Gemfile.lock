@@ -8,7 +8,7 @@ GIT
 PATH
   remote: .
   specs:
-    right_scraper (4.0.0)
+    right_scraper (4.0.1)
       json (~> 1.4)
       right_aws (>= 2.0)
       right_git
@@ -79,7 +79,7 @@ PLATFORMS
 
 DEPENDENCIES
   flexmock (~> 0.9)
-  json (= 1.4.6)
+  json (~> 1.4)
   rake (= 0.8.7)
   rdoc (~> 2.4)
   right_git!
