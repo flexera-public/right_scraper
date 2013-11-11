@@ -142,6 +142,10 @@ module RightScraper::Scrapers
       @ignorable_paths = options[:ignorable_paths]
       @stack = []
       @queue = (@repository.resources_path || [""]).reverse
+
+      # Make sure the requested cookbook resource path exists
+      raise "Cookbook resource path is non-existent for this repository and branch" unless File.directory?(File.join(repo_dir, @queue.first))
+
       @resources = []
       scanners = options[:scanners] || default_scanners
       @scanner = RightScraper::Scanners::Union.new(scanners, options)
@@ -221,9 +225,9 @@ module RightScraper::Scrapers
     # @next(Resources::Base):: Next resource
     def pop_queue
       until @queue.empty?
-        nextdir = @queue.pop
-        if File.directory?(File.join(repo_dir, nextdir))
-          @next = find_next(Dir.new(File.join(repo_dir, nextdir)))
+        nextdir = File.join(repo_dir, @queue.pop)
+        if File.directory?(nextdir)
+          @next = find_next(Dir.new(nextdir))
           return @next
         else
           @logger.warn("When processing in #{@repository}, no such path #{nextdir}")
