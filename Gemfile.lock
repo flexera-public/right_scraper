@@ -8,7 +8,7 @@ GIT
 PATH
   remote: .
   specs:
-    right_scraper (4.0.0)
+    right_scraper (4.0.2)
       json (~> 1.4)
       right_aws (>= 2.0)
       right_git
