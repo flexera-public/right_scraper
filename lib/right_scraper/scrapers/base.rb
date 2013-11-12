@@ -26,6 +26,8 @@ require 'right_scraper/scrapers'
 
 module RightScraper::Scrapers
 
+  class ScraperError < Exception; end
+
   # Base class for all scrapers. Subclasses should override
   # #find_next which instantiates the resource from the file system.
   class Base < ::RightScraper::RegisteredBase
@@ -132,8 +134,8 @@ module RightScraper::Scrapers
     #   RightScaper::Builders::Filesystem
     #
     def initialize(options)
-      raise "Repository required when initializing a scraper" unless options[:repository]
-      raise "Repository directory required when initializing a scraper" unless options[:repo_dir]
+      raise ScraperError.new("Repository required when initializing a scraper") unless options[:repository]
+      raise ScraperError.new("Repository directory required when initializing a scraper") unless options[:repo_dir]
       @repository = options[:repository]
       unless @logger = options[:logger]
         raise ::ArgumentError, ':logger is required'
@@ -144,7 +146,12 @@ module RightScraper::Scrapers
       @queue = (@repository.resources_path || [""]).reverse
 
       # Make sure the requested cookbook resource path exists
-      raise "Cookbook resource path is non-existent for this repository and branch" unless File.directory?(File.join(repo_dir, @queue.first))
+      missing_paths = @queue.select {|path| !File.directory?(File.join(repo_dir, path)) }.compact.sort
+
+      raise ScraperError.new(
+        "Cookbook resource path#{'s' unless missing_paths.size < 2}: " +
+        "[#{missing_paths.join(', ')}] #{missing_paths.size < 2 ? "is" : "are"} " +
+        "non-existent for this repository and branch") unless missing_paths.empty?
 
       @resources = []
       scanners = options[:scanners] || default_scanners
