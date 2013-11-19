@@ -4,14 +4,13 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'right_git',   :git => 'git@github.com:rightscale/right_git.git',
-                   :branch => 'release4.11'
+                   :branch => 'teal_13_17_acu134044_support_mingw'
 gem 'right_popen', '~> 2.0'
 
 gem 'rake',          '0.8.7'
 gem 'right_support', '2.7'
 
 group :test do
-  gem 'json',     '1.4.6'  # locked for mswin32 friendliness
   gem 'rspec',    '~> 2.0'
   gem 'flexmock', '~> 0.9'
   gem 'rtags',    '~> 0.97'
