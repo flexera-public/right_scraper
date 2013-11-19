@@ -30,7 +30,8 @@ module RightScraper
     # Otherwise pass the arguments on to ::Logger.
     def initialize(*args)
       if args.empty?
-        super('/dev/null')
+        is_windows = !!(RUBY_PLATFORM =~ /mswin|win32|dos|mingw|cygwin/)
+        super((is_windows ? 'nul' : '/dev/null'))
         self.level = ::Logger::ERROR
       else
         super
