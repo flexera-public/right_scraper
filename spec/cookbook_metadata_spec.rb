@@ -93,6 +93,9 @@ describe RightScraper::Scanners::CookbookMetadata do
         metadata_scripts_dir,
         ::RightScraper::Scanners::CookbookMetadata::KNIFE_METADATA_SCRIPT_NAME)
     end
+
+    let(:cookbook_tar_path) { ::File.join(metadata_scripts_dir, RightScraper::Scanners::CookbookMetadata::TARBALL_ARCHIVE_NAME) }
+    let(:untar_cookbook_cmd) { "tar -Pxf #{cookbook_tar_path.inspect}" }
     let(:knife_metadata_cmd) { "ruby #{knife_metadata_script_path.inspect}" }
     let(:repo_metadata_rb_path) do
       ::File.join(repo_cookbook_dir, described_class::RUBY_METADATA)
@@ -134,7 +137,12 @@ describe RightScraper::Scanners::CookbookMetadata do
         mock_warden = flexmock('warden')
         mock_warden.
           should_receive(:run_command_in_jail).
-          with(knife_metadata_cmd, copy_in, copy_out).
+          with(untar_cookbook_cmd, cookbook_tar_path, nil).
+          once.
+          and_return { true }
+        mock_warden.
+          should_receive(:run_command_in_jail).
+          with(knife_metadata_cmd, nil, copy_out).
           once.
           and_return { generate_metadata_json }
         mock_warden.should_receive(:cleanup).and_return(true)
@@ -158,13 +166,6 @@ describe RightScraper::Scanners::CookbookMetadata do
         let(:repo_cookbook_dir)   { repo_dir }
         let(:jailed_cookbook_dir) { jailed_repo_dir }
 
-        let(:copy_in) do
-          {
-            knife_metadata_script_path => knife_metadata_script_path,
-            repo_metadata_rb_path      => jailed_metadata_rb_path
-          }
-        end
-
         context 'when generated metadata meets size limit' do
           it 'should generate metadata from source' do
             subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
@@ -185,7 +186,6 @@ describe RightScraper::Scanners::CookbookMetadata do
               line_count.times { f.puts 'x' * 64 }
             end
 
-            copy_in.merge!(repo_small_file_path => jailed_small_file_path)
             subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
             subject.end(cookbook)
 
@@ -274,22 +274,8 @@ describe RightScraper::Scanners::CookbookMetadata do
           ]
         end
 
-        let(:copy_in) do
-          { knife_metadata_script_path => knife_metadata_script_path }
-        end
-
         before(:each) do
-          # metadata generator will ignore sibling directories not on direct
-          # path from repo_dir to cookbook_dir.
-          ignores = [
-            ::File.join(repo_dir, 'detritus') + '/',
-            ::File.join(repo_dir, 'cookbooks', 'some_other_cookbook') + '/',
-          ]
-          create_file_layout(repo_dir, repo_hierarchy).reject do |fullpath|
-            ignores.any? { |ignore| fullpath.start_with?(ignore) }
-          end.each do |fullpath|
-            copy_in[fullpath] = jailed_repo_dir + fullpath[repo_dir.length..-1]
-          end
+          create_file_layout(repo_dir, repo_hierarchy)
           cookbook.should_receive(:pos).and_return(cookbook_pos)
         end
 
