@@ -25,6 +25,8 @@
 require 'right_scraper/scanners'
 
 require 'json'
+require 'right_popen'
+require 'right_popen/safe_output_buffer'
 require 'tmpdir'
 
 module RightScraper::Scanners
