@@ -228,7 +228,7 @@ describe RightScraper::Processes::Warden do
     it 'should run a command with jailed files' do
       ::Dir.mktmpdir do |tmpdir|
         in_files_dir_name = 'in_files'
-        jailed_files_dir_name = 'jailed_files'
+        jailed_files_dir_name = in_files_dir_name
         out_files_dir_name = 'out_files'
         result_file_name = 'result.txt'
 
@@ -246,12 +246,10 @@ describe RightScraper::Processes::Warden do
           "ls #{jailed_files_dir.inspect}",
           "echo success>#{jailed_result_path.inspect}"
         ]
-        copy_in = files.inject({}) do |result, name|
-          src_path = ::File.join(in_files_dir, name)
-          dst_path = ::File.join(jailed_files_dir, name)
-          fail "in-file does not exist: #{src_path.inspect}" unless ::File.file?(src_path)
-          result[src_path] = dst_path
-          result
+        copy_in = files.map do |name|
+          path = ::File.join(in_files_dir, name)
+          fail "in-file does not exist: #{path.inspect}" unless ::File.file?(path)
+          path
         end
         copy_out = { jailed_result_path => out_result_path }
         result = subject.run_command_in_jail(cmd, copy_in, copy_out)

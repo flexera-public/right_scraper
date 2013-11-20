@@ -117,7 +117,7 @@ module RightScraper
       #
       # === Parameters
       # @param [String|Array] cmds to execute
-      # @param [Hash] copy_in files as map of host source path to jail destination path or empty or nil
+      # @param [String|Array] copy_in file(s) to copy into jail (using same path on both sides) or nil or empty
       # @param [Hash] copy_out files as map of jail source path to host destination path or empty or nil
       #
       # === Return
@@ -133,9 +133,8 @@ module RightScraper
         raise StateError, 'handle is invalid' unless @handle
 
         # copy any files in before running commands.
-        if copy_in && !copy_in.empty?
-          send_copy_in_cmds(copy_in)
-        end
+        copy_in = Array(copy_in)
+        send_copy_in_cmds(copy_in) if !copy_in.empty?
 
         # note that appending --privileged will run script as root, but we have
         # no use case for running scripts as root at this time.
@@ -181,6 +180,8 @@ module RightScraper
 
       # warden doesn't create directories on copy_in (or _out) so we need to
       # generate a script and execute it before invoking copy_in.
+      #
+      # @param [Array] copy_in as array of files to copy into jail
       def send_copy_in_cmds(copy_in)
         mkdir_cmds = copy_in.
           map { |dst_path| ::File.dirname(dst_path) }.uniq.sort.
