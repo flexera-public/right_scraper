@@ -184,7 +184,7 @@ module RightScraper
               warden.run_command_in_jail(cmd, cookbook_tarball_path, nil)
 
               # Generate the metadata
-              cmd = "ruby #{knife_metadata_script_path.inspect}"
+              cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect}"
               warden.run_command_in_jail(cmd, nil, copy_out)
 
               # constraining the generate file size is debatable, but our UI
