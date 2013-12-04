@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:rightscale/right_git.git
-  revision: 31064c3bfc7a1310a2bf5b9862ec2e8a5945eed7
+  revision: b5754efb8195b1bf30fe83f3eb263d6b0480d59b
   branch: teal_13_17_acu134044_support_mingw
   specs:
     right_git (0.0.2)
