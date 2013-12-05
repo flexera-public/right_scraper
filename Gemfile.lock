@@ -1,9 +1,9 @@
 GIT
   remote: git@github.com:rightscale/right_git.git
-  revision: 69814a78d191755991cc8983283b86be723cfa6f
+  revision: 6665d5e5dc99830b7bae0c4752035e124094d8ce
   branch: master
   specs:
-    right_git (0.0.1)
+    right_git (0.0.2)
 
 PATH
   remote: .
@@ -79,7 +79,6 @@ PLATFORMS
 
 DEPENDENCIES
   flexmock (~> 0.9)
-  json (= 1.4.6)
   rake (= 0.8.7)
   rdoc (~> 2.4)
   right_git!
