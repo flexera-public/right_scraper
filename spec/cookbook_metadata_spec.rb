@@ -96,7 +96,7 @@ describe RightScraper::Scanners::CookbookMetadata do
 
     let(:cookbook_tar_path) { ::File.join(metadata_scripts_dir, RightScraper::Scanners::CookbookMetadata::TARBALL_ARCHIVE_NAME) }
     let(:untar_cookbook_cmd) { "tar -Pxf #{cookbook_tar_path.inspect}" }
-    let(:knife_metadata_cmd) { "ruby #{knife_metadata_script_path.inspect}" }
+    let(:knife_metadata_cmd) { "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect}" }
     let(:repo_metadata_rb_path) do
       ::File.join(repo_cookbook_dir, described_class::RUBY_METADATA)
     end
