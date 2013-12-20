@@ -3,8 +3,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'right_git',   :git => 'git@github.com:rightscale/right_git.git',
-                   :branch => 'master'
+gem 'right_git'
 gem 'right_popen', '~> 2.0'
 
 gem 'rake',          '0.8.7'
