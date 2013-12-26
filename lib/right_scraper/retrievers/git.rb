@@ -25,6 +25,7 @@
 require 'right_scraper/retrievers'
 
 require 'fileutils'
+require 'shellwords'
 require 'tmpdir'
 require 'right_git'
 require 'right_support'
@@ -157,8 +158,6 @@ module RightScraper::Retrievers
 
     DEFAULT_BRANCH_NAME = 'master'
 
-    GIT_REVISION_REGEX = /^[A-Za-z0-9._-]+$/
-
     def git_repo_for(dir)
       ::RightGit::Git::Repository.new(
         dir,
@@ -250,11 +249,7 @@ module RightScraper::Retrievers
 
     def resolve_revision
       revision = @repository.tag.to_s.strip
-      revision = DEFAULT_BRANCH_NAME if revision.empty?
-      unless revision =~ GIT_REVISION_REGEX
-        raise RetrieverError, "Revision reference contained illegal characters: #{revision.inspect}"
-      end
-      revision
+      revision.empty? ? DEFAULT_BRANCH_NAME : revision.shellescape
     end
 
     # Validates the given revision string to ensure it is safe and sane before
