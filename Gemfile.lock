@@ -1,7 +1,7 @@
 GIT
   remote: git@github.com:rightscale/right_git.git
   revision: d50fb377f042d6942b4b043d095f2576c59f002b
-  branch: release4.11
+  branch: release5.0
   specs:
     right_git (0.0.1)
 

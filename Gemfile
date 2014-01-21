@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'right_git',   :git => 'git@github.com:rightscale/right_git.git',
-                   :branch => 'release4.11'
+                   :branch => 'release5.0'
 gem 'right_popen', '~> 2.0'
 
 gem 'rake',          '0.8.7'
