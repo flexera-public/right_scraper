@@ -48,6 +48,10 @@ module RightScraper::Scanners
     # exceptions
     class MetadataError < Exception; end
 
+    def tls
+      Thread.current[self.class.to_s.to_sym] ||= {}
+    end
+
     def begin(resource)
       @read_blk = nil
       @cookbook = resource
@@ -91,6 +95,29 @@ module RightScraper::Scanners
     ensure
       @read_blk = nil
       @cookbook = nil
+    end
+
+    # All done scanning this repository, we can tear down the warden container we may or
+    # may not have created while parsing the cookbooks for this repository.
+    #
+    def finish
+      begin
+        FileUtils.remove_entry_secure(tls[:tmpdir]) if tls[:tmpdir]
+      rescue ::Exception => e
+        @logger.note_warning(e.message)
+      end
+
+      if warden = tls[:warden]
+        begin
+          warden.cleanup
+        rescue ::Exception => e
+          @logger.note_warning(e.message)
+        end
+      end
+
+    ensure
+      # Cleanup thread-local storage
+      tls = {}
     end
 
     # Notice a file during scanning.
@@ -160,66 +187,65 @@ module RightScraper::Scanners
         # note we will use the same tmpdir path inside and outside the
         # container only because it is non-trivial to invoke mktmpdir inside
         # the container.
-        create_tmpdir do |tmpdir|
+        tmpdir = create_tmpdir
 
-          # arrest
-          knife_metadata_script_path = ::File.join(tmpdir, KNIFE_METADATA_SCRIPT_NAME)
-          cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
-          jailed_repo_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
-          jailed_cookbook_dir = (@cookbook.pos == '.' && jailed_repo_dir) || ::File.join(jailed_repo_dir, @cookbook.pos)
-          jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
-          freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
+        # arrest
+        knife_metadata_script_path = ::File.join(tmpdir, KNIFE_METADATA_SCRIPT_NAME)
+        jailed_repo_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
+        jailed_cookbook_dir = (@cookbook.pos == '.' && jailed_repo_dir) || ::File.join(jailed_repo_dir, @cookbook.pos)
+        jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
+        freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
 
-          # police brutality
-          create_knife_metadata_script(knife_metadata_script_path, jailed_cookbook_dir)
-          copy_in = generate_copy_in
-          copy_in << knife_metadata_script_path
-          copy_out = { jailed_metadata_json_path => freed_metadata_json_path }
+        # police brutality
+        copy_out = { jailed_metadata_json_path => freed_metadata_json_path }
 
-          # prosecute
-          create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
+        begin
+          # jail the repo
+          unless warden = tls[:warden]
+            # Create the container, one for all in this repo
+            warden = tls[:warden] = create_warden
 
-          # jail
-          warden = create_warden
-          begin
-            # Deploy our cookbook
+            # Get a list of the files in the repo we need
+            create_knife_metadata_script(knife_metadata_script_path)
+            copy_in = generate_copy_in
+            copy_in << knife_metadata_script_path
+
+            # tar up the required pieces of the repo and copy them into the container
+            cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
+            create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
+
+            # unarchive the tarball on the otherside (this is faster than single file copies)
             cmd = "tar -Pxf #{cookbook_tarball_path.inspect}"
             warden.run_command_in_jail(cmd, cookbook_tarball_path, nil)
-
-            # Generate the metadata
-            cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect}"
-            warden.run_command_in_jail(cmd, nil, copy_out)
-
-            # constraining the generate file size is debatable, but our UI
-            # attempts to load metadata JSON into memory far too often to be
-            # blasé about generating multi-megabyte JSON files.
-            unless ::File.file?(freed_metadata_json_path)
-              raise MetadataError, 'Generated JSON file not found.'
-            end
-            freed_metadata_json_size = ::File.stat(freed_metadata_json_path).size
-            if freed_metadata_json_size <= FREED_FILE_SIZE_CONSTRAINT
-              # parole for good behavior
-              return ::File.read(freed_metadata_json_path)
-            else
-              # life imprisonment.
-              raise MetadataError,
-                    "Generated metadata size of" +
-                    " #{freed_metadata_json_size / 1024} KB" +
-                    " exceeded the allowed limit of" +
-                    " #{FREED_FILE_SIZE_CONSTRAINT / 1024} KB"
-            end
-          rescue ::RightScraper::Processes::Warden::LinkError => e
-            raise MetadataError,
-                  "Failed to generate metadata from source: #{e.message}" +
-                  "\n#{e.link_result.stdout}" +
-                  "\n#{e.link_result.stderr}"
-          ensure
-            begin
-              warden.cleanup
-            rescue ::Exception => e
-              @logger.note_warning(e.message)
-            end
           end
+
+          # Generate the metadata
+          cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect} #{jailed_cookbook_dir}"
+          warden.run_command_in_jail(cmd, nil, copy_out)
+
+          # constraining the generate file size is debatable, but our UI
+          # attempts to load metadata JSON into memory far too often to be
+          # blasé about generating multi-megabyte JSON files.
+          unless ::File.file?(freed_metadata_json_path)
+            raise MetadataError, 'Generated JSON file not found.'
+          end
+          freed_metadata_json_size = ::File.stat(freed_metadata_json_path).size
+          if freed_metadata_json_size <= FREED_FILE_SIZE_CONSTRAINT
+            # parole for good behavior
+            return ::File.read(freed_metadata_json_path)
+          else
+            # life imprisonment.
+            raise MetadataError,
+                  "Generated metadata size of" +
+                  " #{freed_metadata_json_size / 1024} KB" +
+                  " exceeded the allowed limit of" +
+                  " #{FREED_FILE_SIZE_CONSTRAINT / 1024} KB"
+          end
+        rescue ::RightScraper::Processes::Warden::LinkError => e
+          raise MetadataError,
+                "Failed to generate metadata from source: #{e.message}" +
+                "\n#{e.link_result.stdout}" +
+                "\n#{e.link_result.stderr}"
         end
       end
     end
@@ -272,21 +298,22 @@ module RightScraper::Scanners
     # contains a ruby interpreter that has chef installed as a gem.
     #
     # we want to avoid using the knife command line only because it requires a
-    # '$HOME/.chef/knife.rb' configuration fil even though we won't use that
+    # '$HOME/.chef/knife.rb' configuration file even though we won't use that
     # configuration file in any way. :@
     #
     # the simplest solution is to execute the knife tool within a ruby script
     # because it has no pre-configuration requirement and it does not require
     # the knife binstub to be on the PATH.
-    def create_knife_metadata_script(script_path, jailed_cookbook_dir)
+    def create_knife_metadata_script(script_path)
       script = <<EOS
 require 'rubygems'
 require 'chef'
 require 'chef/knife/cookbook_metadata'
 
+jailed_cookbook_dir = ARGV.pop
 knife_metadata = ::Chef::Knife::CookbookMetadata.new
-knife_metadata.name_args = [#{::File.basename(jailed_cookbook_dir).inspect}]
-knife_metadata.config[:cookbook_path] = #{::File.dirname(jailed_cookbook_dir).inspect}
+knife_metadata.name_args = [::File.basename(jailed_cookbook_dir)]
+knife_metadata.config[:cookbook_path] = ::File.dirname(jailed_cookbook_dir)
 knife_metadata.run
 EOS
       ::File.open(script_path, 'w') { |f| f.puts script }
@@ -305,37 +332,12 @@ EOS
     # presumably the jail would also be limiting disk space so it is important
     # to avoid this source of failure.
     #
-    # the cookbook might go as far back as its repository root or may traverse
-    # any subdirectory of the cookbook directory. assume sibling directories
-    # are out-of-bounds going back to the root, as follows:
-    #
-    # ...(N) -> repo(Y)  -> cookbooks(Y) -> cookbook(Y) -> dirs(Y) -> ...(Y)
-    #        |> dirs(N)  |> dirs(N)      |> dirs(N)     |> files(Y)
-    #        |> files(Y) |> files(Y)     |> files(Y)
-    #
-    # (Y) = allowed-with-size-contraint
-    # (N) = out-of-bounds
-    #
     # again, the user can work around these contraints by generating his own
     # metadata and checking it into the repository.
     def generate_copy_in()
       copy_in = []
       start_path = @cookbook.repo_dir
-      end_path = start_path
-      if @cookbook.pos != '.'
-        start_path = ::File.join(start_path, @cookbook.pos)
-      end
-      current_path = start_path
-      loop do
-        current_path = ::File.dirname(current_path)
-        if current_path.length >= end_path.length
-          limited_files_of(current_path) { |file| copy_in << file }
-        else
-          break
-        end
-      end
-      current_path = start_path
-      recursive_generate_copy_in(copy_in, current_path)
+      recursive_generate_copy_in(copy_in, start_path)
       copy_in
     end
 
@@ -366,7 +368,7 @@ EOS
                         ' generation due to exceeding size constraint of' +
                         " #{JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
                         " #{relative_to_repo_dir(item).inspect}"
-              @logger.note_warning(message)
+              @logger.info(message)
             end
           end
         end
@@ -397,8 +399,8 @@ EOS
     end
 
     # factory method for tmpdir (convenient for testing).
-    def create_tmpdir(&block)
-      ::Dir.mktmpdir(&block)
+    def create_tmpdir
+      tls[:tmpdir] ||= ::Dir.mktmpdir
     end
 
   end
