@@ -202,13 +202,13 @@ module RightScraper::Scanners
         begin
           # jail the repo
           unless warden = tls[:warden]
-            # Create the container, one for all in this repo
-            warden = tls[:warden] = create_warden
-
             # Get a list of the files in the repo we need
             create_knife_metadata_script(knife_metadata_script_path)
             copy_in = generate_copy_in
             copy_in << knife_metadata_script_path
+
+            # Create the container, one for all in this repo
+            warden = tls[:warden] = create_warden
 
             # tar up the required pieces of the repo and copy them into the container
             cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
