@@ -212,6 +212,7 @@ module RightScraper::Scanners
 
             # tar up the required pieces of the repo and copy them into the container
             cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
+            # prosecute
             create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
 
             # unarchive the tarball on the otherside (this is faster than single file copies)
@@ -220,7 +221,7 @@ module RightScraper::Scanners
           end
 
           # Generate the metadata
-          cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect} #{jailed_cookbook_dir}"
+          cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect} #{jailed_cookbook_dir.inspect}"
           warden.run_command_in_jail(cmd, nil, copy_out)
 
           # constraining the generate file size is debatable, but our UI
