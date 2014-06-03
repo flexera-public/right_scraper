@@ -117,7 +117,7 @@ module RightScraper::Scanners
 
     ensure
       # Cleanup thread-local storage
-      tls = {}
+      tls.clear
     end
 
     # Notice a file during scanning.
