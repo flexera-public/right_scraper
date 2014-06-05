@@ -67,6 +67,7 @@ describe RightScraper::Scanners::CookbookMetadata do
 
   after(:each) do
     ::FileUtils.rm_rf(base_dir) rescue nil if ::File.directory?(base_dir)
+    subject.finish
   end
 
   context 'when metadata.json is present' do
@@ -96,7 +97,7 @@ describe RightScraper::Scanners::CookbookMetadata do
 
     let(:cookbook_tar_path) { ::File.join(metadata_scripts_dir, RightScraper::Scanners::CookbookMetadata::TARBALL_ARCHIVE_NAME) }
     let(:untar_cookbook_cmd) { "tar -Pxf #{cookbook_tar_path.inspect}" }
-    let(:knife_metadata_cmd) { "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect}" }
+    let(:knife_metadata_cmd) { "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect} #{jailed_cookbook_dir.inspect}" }
     let(:repo_metadata_rb_path) do
       ::File.join(repo_cookbook_dir, described_class::RUBY_METADATA)
     end
@@ -156,8 +157,7 @@ describe RightScraper::Scanners::CookbookMetadata do
         mock_subject.should_receive(:create_warden).and_return(warden)
         mock_subject.
           should_receive(:create_tmpdir).
-          and_yield(metadata_scripts_dir).
-          and_return(nil)
+          and_return(metadata_scripts_dir)
         mock_subject
       end
 
@@ -174,29 +174,6 @@ describe RightScraper::Scanners::CookbookMetadata do
             @parsed_metadata.should == metadata
           end
 
-          it 'should warn for non-metadata files in repo that exceed size limit' do
-            repo_small_file_path = ::File.join(repo_dir, 'small.txt')
-            ::File.open(repo_small_file_path, 'w') { |f| f.puts 'small text file' }
-            jailed_small_file_path = ::File.join(jailed_repo_dir, 'small.txt')
-
-            repo_big_file_path = ::File.join(repo_dir, 'big.txt')
-            ::File.open(repo_big_file_path, 'w') do |f|
-              f.puts 'a text file that exceeds size limit'
-              line_count = described_class::JAILED_FILE_SIZE_CONSTRAINT / 64
-              line_count.times { f.puts 'x' * 64 }
-            end
-
-            subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
-            subject.end(cookbook)
-
-            message =
-              'Ignored a repository file during metadata' +
-              ' generation due to exceeding size constraint of' +
-              " #{described_class::JAILED_FILE_SIZE_CONSTRAINT / 1024} KB:" +
-              " \"big.txt\""
-            logged_warnings.should == [message]
-            @parsed_metadata.should == metadata
-          end
         end # when generated metadata meets size limit
 
         context 'when generated metadata exceeds size limit' do
