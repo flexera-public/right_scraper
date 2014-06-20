@@ -266,13 +266,16 @@ module RightScraper::Scanners
         "stderr: #{@stderr_buffer.display_text}"
     end
 
+    # @param [String] dest_file
+    # @param [Array] contents
+    # @param [String] dest_path
     def create_cookbook_tarball(dest_file, contents, dest_path)
       @logger.operation(:tarball_generation) do
         tarball_cmd = [
           'tar',
           "-Pcf #{dest_file}",
           "--transform='s,#{@cookbook.repo_dir},#{dest_path},'",
-          contents
+          '-T', '-'
         ]
 
         @stdout_buffer = []
@@ -282,6 +285,7 @@ module RightScraper::Scanners
             tarball_cmd.join(' '),
             :target             => self,
             :timeout_handler    => :timeout_tarball,
+            :input              => contents.join("\n"),
             :stderr_handler     => :stderr_tarball,
             :stdout_handler     => :stdout_tarball,
             :inherit_io         => true,  # avoid killing any rails connection
@@ -335,6 +339,8 @@ EOS
     #
     # again, the user can work around these contraints by generating his own
     # metadata and checking it into the repository.
+    #
+    # @return [Array] list of files to copy into jail
     def generate_copy_in()
       copy_in = []
       start_path = @cookbook.repo_dir
