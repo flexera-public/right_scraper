@@ -48,10 +48,6 @@ Gem::Specification.new do |spec|
   spec.requirements << 'git command line client'
   spec.requirements << 'Subversion command line client'
 
-  spec.add_development_dependency('rspec', '~> 2.0')
-  spec.add_development_dependency('flexmock', '~> 0.9')
-  spec.add_development_dependency('rtags', '~> 0.97')
-
   spec.description = <<-EOF
 RightScraper provides a simple interface to download and keep local copies of remote
 repositories up-to-date using the following protocols:
