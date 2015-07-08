@@ -26,11 +26,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require 'fileutils'
 require 'tmpdir'
 require 'digest/sha1'
+require 'right_scraper/utils/s3_helper'
 
 describe RightScraper::Scanners::CookbookS3Upload do
   include RightScraper::SpecHelpers::DevelopmentModeEnvironment
-
   include RightScraper::SpecHelpers
+  include RightScraper::S3Helper
 
   # Create download repository following given layout
   # Update @repo_path with path to repository
@@ -77,15 +78,20 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      @s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
-                            aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
-                            :logger => ::RightScraper::Loggers::Default.new)
+
+      @s3 =  get_s3(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"],
+                    :logger => ::RightScraper::Loggers::Default.new)
+
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
     end
 
     it 'should raise an exception immediately' do
       bucket_name = 'this-bucket-does-not-exist'
-      @s3.bucket(bucket_name).should be_nil
+
+      lambda {
+        @s3.GetBucket("Bucket" => bucket_name)
+      }.should raise_exception(/NoSuchBucket/)
+
       lambda {
       @scraper = @scraperclass.new(:repository => @repo,
                                    :logger => scraper_logger,
@@ -111,7 +117,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      bucket_name = 'com.rightscale.test.20100823'
+      @bucket = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(:repository => @repo,
                                    :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,
@@ -120,17 +126,17 @@ describe RightScraper::Scanners::CookbookS3Upload do
                                                  RightScraper::Scanners::CookbookS3Upload],
                                    :s3_key => ENV['AWS_ACCESS_KEY_ID'],
                                    :s3_secret => ENV['AWS_SECRET_ACCESS_KEY'],
-                                   :s3_bucket => bucket_name,
+                                   :s3_bucket => @bucket,
                                    :max_bytes => 1024**2,
                                    :max_seconds => 20)
-      s3 = RightAws::S3.new(aws_access_key_id=ENV['AWS_ACCESS_KEY_ID'],
-                            aws_secret_access_key=ENV['AWS_SECRET_ACCESS_KEY'],
-                            :logger => ::RightScraper::Loggers::Default.new)
 
-      # create=true is prone to the too-many-buckets error even when the bucket
+      @s3 =  get_s3(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"],
+                    :logger => ::RightScraper::Loggers::Default.new)
+
+      # Creating a bucket is prone to the too-many-buckets error even when the bucket
       # already exists. since the bucket always exists for the test account
       # there is no need to try creating it programmatically and fail specs.
-      @bucket = s3.bucket(bucket_name, create=false)
+
       FileUtils.rm_rf(RightScraper::Retrievers::Base.repo_dir(@repo_path, @repo))
     end
 
@@ -145,7 +151,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       end
 
       it 'the cookbook should exist' do
-        s3cookbook = @bucket.get(File.join('Cooks', @cookbook.resource_hash))
+        s3cookbook = @s3.GetObject("Bucket" => @bucket, "Object" => File.join('Cooks', @cookbook.resource_hash))
         s3cookbook.should_not be_nil
         ::Digest::MD5.hexdigest(s3cookbook).should == @cookbook.resource_hash
         s3cookbook.should_not == ::RightScraper::Resources::Cookbook::EMPTY_MANIFEST_JSON
@@ -155,7 +161,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
 
       it 'every file in the manifest should exist' do
         @cookbook.manifest.each do |key, value|
-          file = @bucket.get(File.join('Files', value))
+          file = @s3.GetObject("Bucket" => @bucket, "Object" => File.join('Files', value))
           file.should_not be_nil
           value.should == Digest::MD5.hexdigest(file)
         end

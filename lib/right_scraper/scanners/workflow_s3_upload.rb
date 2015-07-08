@@ -24,13 +24,15 @@
 # ancestor
 require 'right_scraper/scanners'
 
-require 'right_aws'
+require 'right_aws_api'
+require 'right_scraper/utils/s3_helper'
 require 'json'
 
 module RightScraper::Scanners
 
   # Upload workflow definition and metadata to an S3 bucket.
   class WorkflowS3Upload < ::RightScraper::Scanners::Base
+    include ::RightScraper::S3Helper
 
     # Create a new S3Upload.  In addition to the options recognized
     # by Scanner, this class recognizes <tt>:s3_key</tt>,
@@ -48,11 +50,9 @@ module RightScraper::Scanners
       super
       s3_key = options.fetch(:s3_key)
       s3_secret = options.fetch(:s3_secret)
-      s3 = RightAws::S3.new(aws_access_key_id=s3_key,
-                            aws_secret_access_key=s3_secret,
-                            :logger => @logger)
       @bucket = s3.bucket(options.fetch(:s3_bucket))
-      raise "Need an actual, existing S3 bucket!" if @bucket.nil?
+      @s3 = get_s3(s3_key, s3_secret, :logger => @logger)
+      raise "Need an actual, existing S3 bucket!" unless s3_exists?(@bucket)
     end
 
     # Upon ending a scan for a workflows, upload the workflows
@@ -61,11 +61,11 @@ module RightScraper::Scanners
     # === Parameters
     # workflows(RightScraper::Workflows):: Workflow to scan
     def end(workflow)
-      @bucket.put(File.join('Workflows', workflow.resource_hash),
-                  {
-                    :metadata => workflow.metadata,
-                    :manifest => workflow.manifest
-                  }.to_json)
+      path = File.join('Workflows', workflow.resource_hash)
+      @s3.PutObject("Bucket" => @bucket, "Object" => path, :body => {
+        :metadata => workflow.metadata,
+        :manifest => workflow.manifest
+      }.to_json)
     end
 
     # Upload a file during scanning.
@@ -81,8 +81,8 @@ module RightScraper::Scanners
       contents = yield
       name = Digest::SHA1.hexdigest(contents)
       path = File.join('Files', name)
-      unless @bucket.key(path).exists?
-        @bucket.put(path, contents)
+      unless s3_exists?(@bucket, path)
+        @s3.PutObject("Bucket" => @bucket, "Object" => path, :body => contents)
       end
     end
   end
