@@ -1,0 +1,53 @@
+#--
+# Copyright: Copyright (c) 2015 RightScale, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# 'Software'), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#++
+
+module RightScraper
+  module S3Helper
+    AWS_S3_ENDPOINT = "https://s3.amazonaws.com"
+
+    def get_s3(aws_access_key_id, aws_secret_key, options = {})
+      # this option is required when bucket's name includes dots
+      if options.has_key?(:cloud)
+        options[:cloud].merge!(:no_dns_buckets => true)
+      else
+        options.merge!(:cloud => {:no_dns_buckets => true})
+      end
+
+      @s3 = RightScale::CloudApi::AWS::S3::Manager.new(
+        aws_access_key_id, aws_secret_key, AWS_S3_ENDPOINT, options
+      )
+    end
+
+    def s3_exists?(bucket, path = nil)
+      if path
+        @s3.GetObject("Bucket" => bucket, "Object" => path)
+      else
+        @s3.GetBucket("Bucket" => bucket)
+      end
+    rescue RightScale::CloudApi::HttpError => e
+      e.message.match(/NoSuchKey|NoSuchBucket/) ? false : raise(e)
+    else
+      true
+    end
+  end
+end

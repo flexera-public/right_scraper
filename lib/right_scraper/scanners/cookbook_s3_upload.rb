@@ -24,7 +24,8 @@
 # ancestor
 require 'right_scraper/scanners'
 
-require 'right_aws'
+require 'right_aws_api'
+require 'right_scraper/utils/s3_helper'
 require 'json'
 require 'digest/md5'
 
@@ -32,6 +33,8 @@ module RightScraper::Scanners
 
   # Upload scanned files to an S3 bucket.
   class CookbookS3Upload < ::RightScraper::Scanners::Base
+    include ::RightScraper::S3Helper
+
     # Create a new S3Upload.  In addition to the options recognized
     # by Scanner, this class recognizes <tt>:s3_key</tt>,
     # <tt>:s3_secret</tt>, and <tt>:s3_bucket</tt> and requires all
@@ -48,11 +51,9 @@ module RightScraper::Scanners
       super
       s3_key = options.fetch(:s3_key)
       s3_secret = options.fetch(:s3_secret)
-      s3 = RightAws::S3.new(aws_access_key_id=s3_key,
-                            aws_secret_access_key=s3_secret,
-                            :logger => @logger)
-      @bucket = s3.bucket(options.fetch(:s3_bucket))
-      raise "Need an actual, existing S3 bucket!" if @bucket.nil?
+      @bucket = options.fetch(:s3_bucket)
+      @s3 = get_s3(s3_key, s3_secret, :logger => @logger)
+      raise "Need an actual, existing S3 bucket!" unless s3_exists?(@bucket)
     end
 
     # Upon ending a scan for a cookbook, upload the cookbook
@@ -62,9 +63,9 @@ module RightScraper::Scanners
     # cookbook(RightScraper::Cookbook):: cookbook to scan
     def end(cookbook)
       path = File.join('Cooks', cookbook.resource_hash)
-      unless @bucket.key(path).exists?
+      unless s3_exists?(@bucket, path)
         contents = cookbook.manifest_json
-        @bucket.put(path, contents)
+        @s3.PutObject("Bucket" => @bucket, "Object" => path, :body => contents)
       end
     end
 
@@ -80,8 +81,8 @@ module RightScraper::Scanners
       contents = yield
       name = Digest::MD5.hexdigest(contents)
       path = File.join('Files', name)
-      unless @bucket.key(path).exists?
-        @bucket.put(path, contents)
+      unless s3_exists?(@bucket, path)
+        @s3.PutObject("Bucket" => @bucket, "Object" => path, :body => contents)
       end
     end
   end

@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_dependency('json', '~> 1.4')
-  spec.add_dependency('right_aws', '>= 2.0')
+  spec.add_dependency('right_aws_api')
   spec.add_dependency('right_git')
   spec.add_dependency('right_popen', '~> 2.0')
   spec.add_dependency('right_support', '~> 2.6')
