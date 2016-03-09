@@ -21,28 +21,27 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'rubygems'
-require ::File.expand_path(::File.join(::File.dirname(__FILE__), 'lib/right_scraper/version'))
+require ::File.expand_path('../lib/right_scraper/version', __FILE__)
 
-Gem::Specification.new do |spec|
+::Gem::Specification.new do |spec|
   spec.name      = 'right_scraper'
   spec.version   = ::RightScraper::GEM_VERSION
   spec.authors   = ['Raphael Simon', 'Tony Spataro', 'Scott Messier']
   spec.email     = 'support@rightscale.com'
   spec.homepage  = 'https://github.com/rightscale/right_scraper'
-  spec.platform  = Gem::Platform::RUBY
+  spec.platform  = ::Gem::Platform::RUBY
   spec.summary   = 'Download and update remote repositories'
   spec.has_rdoc = true
   spec.rdoc_options = ["--main", "README.rdoc", "--title", "RightScraper"]
   spec.extra_rdoc_files = ["README.rdoc"]
-  spec.required_ruby_version = '>= 1.8.7'
+  spec.required_ruby_version = '>= 2.1'
   spec.rubyforge_project = %q{right_scraper}
   spec.require_path = 'lib'
 
-  spec.add_dependency('json', '~> 1.4')
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('right_git')
-  spec.add_dependency('right_popen', '~> 2.0')
-  spec.add_dependency('right_support', '~> 2.6')
+  spec.add_dependency('right_popen')
+  spec.add_dependency('right_support', '~> 2.8')
 
   spec.requirements << 'curl command line client'
   spec.requirements << 'git command line client'
@@ -59,7 +58,7 @@ will analyze the repository content and instantiate "resources" as a result. Cur
 supported resources are Chef cookbooks and RightScale workflow definitions.
 EOF
 
-  candidates = Dir.glob("{lib,spec}/**/*") +
-               ["LICENSE", "README.rdoc", "Rakefile", "right_scraper.gemspec", "Gemfile", "right_scraper.rconf"]
+  candidates = ::Dir.glob("lib/**/*") +
+               %w(LICENSE README.rdoc right_scraper.gemspec)
   spec.files = candidates.sort
 end

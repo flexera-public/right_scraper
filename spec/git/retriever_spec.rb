@@ -523,7 +523,8 @@ describe RightScraper::Retrievers::Git do
     include RightScraper::SpecHelpers::CookbookScraping
 
     it 'should see a cookbook' do
-      pending "Don't annoy GitHub unless ANNOY_GITHUB is set" unless ENV['ANNOY_GITHUB']
+      # note that this will make a request to Github with current user
+      # credentials, which are normally available on CI.
       @scraper.next_resource.should_not be_nil
     end
 
