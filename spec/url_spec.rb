@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -65,7 +65,7 @@ describe RightScraper::Repositories::Svn do
 
     it 'should refuse to create repositories for hosts that don\'t exist' do
       lambda do
-        make_repo "http://nonexistent.invalid/%20CBLAH"
+        make_repo "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}/%20CBLAH"
       end.should raise_exception(error_class, /Invalid URI/)
     end
 
