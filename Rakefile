@@ -1,5 +1,5 @@
 #-- -*-ruby-*-
-# Copyright: Copyright (c) 2010-2011 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,68 +22,12 @@
 #++
 
 require 'rubygems'
-require 'rubygems/package_task'
 require 'bundler/setup'
 
 require 'fileutils'
 require 'rake'
-require 'rspec/core/rake_task'
-require 'rdoc/task'
 require 'rake/clean'
 
-task :default => 'spec'
+::Dir['tasks/**/*.rake'].each { |path| load path }
 
-# == Gem packaging == #
-
-desc "Build right_scraper gem"
-Gem::PackageTask.new(Gem::Specification.load("right_scraper.gemspec")) do |package|
-  package.need_zip = true
-  package.need_tar = true
-end
-
-CLEAN.include('pkg')
-
-# == Unit Tests == #
-
-task :specs => :spec
-
-# == Unit Tests == #
-
-desc 'Run unit tests'
-RSpec::Core::RakeTask.new do |t|
-  t.pattern = 'spec/**/*_spec.rb'
-    t.rspec_opts = ["--color", "--format", "nested"]
-end
-
-namespace :spec do
-  desc "Run unit tests with RCov"
-  RSpec::Core::RakeTask.new(:rcov) do |t|
-    t.pattern = '*/spec/**/*_spec.rb'
-    t.rcov = true
-    t.rcov_opts = %q[--exclude "spec"]
-  end
-
-  desc "Print Specdoc for unit tests"
-  RSpec::Core::RakeTask.new(:doc) do |t|
-    t.pattern = '*/spec/**/*_spec.rb'
-    t.rspec_opts = ["--format", "documentation"]
-  end
-end
-
-# == Documentation == #
-
-desc "Generate API documentation to doc/rdocs/index.html"
-RDoc::Task.new do |rd|
-  rd.rdoc_dir = 'doc/rdocs'
-  rd.main = 'README.rdoc'
-  rd.rdoc_files.include 'README.rdoc', 'lib/**/*.rb'
-
-  rd.options << '--all'
-  rd.options << '--diagram'
-end
-
-# == Emacs integration == #
-desc "Rebuild TAGS file"
-task :tags do
-  sh "rtags -R */{lib,spec}"
-end
+task :default => :spec

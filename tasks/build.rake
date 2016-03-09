@@ -1,5 +1,5 @@
-#--  -*- mode: ruby; encoding: utf-8 -*-
-# Copyright: Copyright (c) 2011 RightScale, Inc.
+#--
+# Copyright: Copyright (c) 2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,11 +21,12 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module RightScraper
-  # for gemspec, etc.
-  GEM_VERSION = '5.0.1'
+require 'rubygems/package_task'
 
-  # (Fixnum) protocol versioning scheme; prepended to hashes to
-  # prevent collisions.
-  PROTOCOL_VERSION = 1
+desc "Build right_scraper gem"
+::Gem::PackageTask.new(::Gem::Specification.load("right_scraper.gemspec")) do |package|
+  package.need_zip = true
+  package.need_tar = true
 end
+
+CLEAN.include('pkg')
