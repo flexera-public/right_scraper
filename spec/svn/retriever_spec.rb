@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the

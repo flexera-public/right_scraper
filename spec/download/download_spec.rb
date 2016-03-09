@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -46,7 +46,7 @@ describe RightScraper::Resources::Cookbook do
     before(:each) do
       @repository = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
-                                                     :url => "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}/foo/bar/baz",
+                                                     :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "user",
                                                      :second_credential => "password")
     end
@@ -74,7 +74,7 @@ describe RightScraper::Resources::Cookbook do
     before(:each) do
       @repository = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
-                                                     :url => "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}:23/foo/bar/baz",
+                                                     :url => "http://a.site:23/foo/bar/baz",
                                                      :first_credential => "user",
                                                      :second_credential => "password")
     end
@@ -86,7 +86,7 @@ describe RightScraper::Resources::Cookbook do
     before(:each) do
       @repository = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
-                                                     :url => "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}/foo/bar/baz",
+                                                     :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "user")
     end
 
@@ -97,7 +97,7 @@ describe RightScraper::Resources::Cookbook do
     before(:each) do
       @repository = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                      :repo_type => :download,
-                                                     :url => "urn:#{::RightScraper::SpecHelpers::BAD_HOSTNAME}:stuff")
+                                                     :url => "urn:a.site:stuff")
     end
 
     it_should_behave_like 'a download repository'

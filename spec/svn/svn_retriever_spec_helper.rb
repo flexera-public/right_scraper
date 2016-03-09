@@ -80,12 +80,7 @@ module RightScraper
     end
 
     def commit_content(commit_message = 'commit message')
-      # note that the latest svn client supports adding top-level items
-      # recursively by default (otherwise use --depth) and will fail if child
-      # items are explicitly added afterward. for the latter the --force flag
-      # is applied to ignore any already-versioned files being added. 'commit'
-      # will push both the added and any modified versioned files.
-      svn_client.execute('add', '--force', ::Dir.glob(::File.join(repo_dir, '*')))
+      svn_client.execute('add', Dir.glob(File.join(repo_dir, '**/*')))
       svn_client.execute("commit --message #{commit_message.inspect}")
     end
 

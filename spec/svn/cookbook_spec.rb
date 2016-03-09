@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -40,10 +40,9 @@ describe RightScraper::Resources::Cookbook do
 
   context 'with a SVN repository' do
     before(:each) do
-      pending 'requires svn client' if `which svn`.chomp.empty?
       @repository = RightScraper::Repositories::Svn.from_hash(:display_name => 'test repo',
                                                      :repo_type => :svn,
-                                                     :url => "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}/foo/bar/baz",
+                                                     :url => "http://a.site/foo/bar/baz",
                                                      :first_credential => "username",
                                                      :second_credential => "password")
     end
@@ -79,10 +78,9 @@ describe RightScraper::Resources::Cookbook do
 
   context 'with a SVN repository with a tag' do
     before(:each) do
-      pending 'requires svn client' if `which svn`.chomp.empty?
       @repository = RightScraper::Repositories::Svn.from_hash(:display_name => 'test repo',
                                                      :repo_type => :svn,
-                                                     :url => "http://#{::RightScraper::SpecHelpers::BAD_HOSTNAME}/foo/bar/baz",
+                                                     :url => "http://a.site/foo/bar/baz",
                                                      :tag => "foo",
                                                      :first_credential => "username",
                                                      :second_credential => "password")
