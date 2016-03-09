@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -41,6 +41,11 @@ ENV["DEVELOPMENT"] ||= "yes"
 module RightScraper
 
   module SpecHelpers
+    # HACK: this three-part UUID hostname is unresolvable behind our firewall.
+    # with only two parts our DNS server still tries to resolve it by appending
+    # parts and fails only after a 2m timeout.
+    BAD_HOSTNAME = 'bad.55aff53c7eeb0692a95c91c24e167695.com'
+
     module DevelopmentModeEnvironment
       def DevelopmentModeEnvironment.included(mod)
         mod.module_eval do
