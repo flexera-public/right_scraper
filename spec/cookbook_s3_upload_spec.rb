@@ -60,8 +60,8 @@ describe RightScraper::Scanners::CookbookS3Upload do
   end
 
   before(:each) do
-    pending "Not run unless [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET] set" unless
-            ENV['AWS_ACCESS_KEY_ID'] && ENV['AWS_SECRET_ACCESS_KEY'] && ENV['S3_BUCKET']
+    pending "Not run unless AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY set" unless
+            ENV['AWS_ACCESS_KEY_ID'] && ENV['AWS_SECRET_ACCESS_KEY']
   end
 
   context "given a bucket that doesn't exist" do
@@ -111,7 +111,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @repo = RightScraper::Repositories::Base.from_hash(:display_name => 'test repo',
                                                :repo_type    => :download,
                                                :url          => "file:///#{@download_file}")
-      bucket_name = ::ENV['S3_BUCKET']
+      bucket_name = 'com.rightscale.test.20100823'
       @scraper = @scraperclass.new(:repository => @repo,
                                    :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,

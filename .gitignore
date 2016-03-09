@@ -1,4 +1,10 @@
-.bundle/
-vendor/
-pkg/
-measurement/
+.bundle
+.idea
+pkg
+tags
+.emacs-project
+config/environment.rb
+fulllib
+TAGS
+doc
+.rvmrc

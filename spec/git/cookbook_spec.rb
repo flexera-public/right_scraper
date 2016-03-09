@@ -38,7 +38,7 @@ describe RightScraper::Resources::Cookbook do
   end
 
   let(:scraper_logger) { make_scraper_logger }
-  let(:bad_hostname)   { ::RightScraper::SpecHelpers::BAD_HOSTNAME }
+  let(:bad_hostname)   { 'a.site' }
   let(:bad_url)        { "http://#{bad_hostname}/foo/bar/baz" }
 
   context 'with an invalid git repository' do

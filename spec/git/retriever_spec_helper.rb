@@ -104,7 +104,7 @@ module RightScraper
     end
 
     def delete_branch(branch)
-      @git_repo.branch(branch).delete
+      @git_repo.branch_for(branch).delete
     end
 
     def force_rebase(upstream, newbase)
