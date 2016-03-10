@@ -10,7 +10,7 @@ may specify only the functionality (and required libraries and gems) you require
 This gem depends on all available RightScraper modules, enabling full support at the
 cost of requiring some systems administration work external to Ruby.
 
-Maintained by the RightScale Teal Team
+Maintained by the RightScale Sapphire Team
 
 == USAGE
 
@@ -42,7 +42,7 @@ The build can be tested using the RSpec gem.
 
 <b>RightScraper</b>
 
-Copyright:: Copyright (c) 2010 RightScale, Inc.
+Copyright:: Copyright (c) 2010-2016 RightScale, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
