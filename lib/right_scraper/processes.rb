@@ -28,6 +28,5 @@ module RightScraper
     autoload :Shell, 'right_scraper/processes/shell'
     autoload :SSHAgent, 'right_scraper/processes/ssh_agent'
     autoload :SvnClient, 'right_scraper/processes/svn_client'
-    autoload :Warden, 'right_scraper/processes/warden'
   end
 end

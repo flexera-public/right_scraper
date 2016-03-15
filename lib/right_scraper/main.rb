@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,6 +24,7 @@
 # ancestor
 require 'right_scraper'
 
+require 'right_support'
 require 'fileutils'
 
 module RightScraper
@@ -48,32 +49,43 @@ module RightScraper
     # <tt>:max_bytes</tt>:: Maximum number of bytes to read from remote repo, unlimited if nil
     # <tt>:max_seconds</tt>:: Maximum number of seconds to spend reading from remote repo, unlimited if nil
     def initialize(options={})
-      options = {
+      options = ::RightSupport::Data::Mash.new(
         :kind        => nil,
         :basedir     => nil,
         :max_bytes   => nil,
         :max_seconds => nil,
-        :callback    => nil,
         :logger      => nil,
         :s3_key      => nil,
         :s3_secret   => nil,
         :s3_bucket   => nil,
-        :errors      => nil,
-        :warnings    => nil,
         :scanners    => nil,
         :builders    => nil,
-      }.merge(options)
+      ).merge(options)
+      @old_logger_callback = nil
       @temporary = !options.has_key?(:basedir)
       options[:basedir] ||= Dir.mktmpdir
       options[:logger] ||= ::RightScraper::Loggers::Default.new
       @logger = options[:logger]
       @resources = []
+      options[:errors] = @logger.errors
+      options[:warnings] = @logger.warnings
+
+      # load classes from scanners and builders options, if necessary.
+      [:scanners, :builders].each do |k|
+        list = options[k] || []
+        list.each_with_index do |clazz, index|
+          unless clazz.kind_of?(::Class)
+            list[index] = ::Object.const_get(clazz)
+          end
+        end
+      end
       @options = options
     end
 
-    # Scrape given repository, depositing files into the scrape
-    # directory.  Update content of unique directory incrementally
-    # when possible with further calls.
+    # Scrapes and scans a given repository.
+    #
+    # @deprecated the newer methodology will perform these operations in stages
+    # controlled externally instead of calling this all-in-one method.
     #
     # === Parameters
     # repo(Hash|RightScraper::Repositories::Base):: Repository to be scraped
@@ -98,57 +110,87 @@ module RightScraper
     # === Raise
     # 'Invalid repository type':: If repository type is not known
     def scrape(repo, incremental=true, &callback)
-      errorlen = errors.size
-      repo = RightScraper::Repositories::Base.from_hash(repo) if repo.is_a?(Hash)
+      @old_logger_callback = @logger.callback
       @logger.callback = callback
+      errorlen = errors.size
       begin
-        # 1. Retrieve the files
-        retriever = nil
-        repo_dir_changed = false
-        @logger.operation(:retrieving, "from #{repo}") do
-          # note that the retriever type may be unavailable but allow the
-          # retrieve method to raise any such error.
-          retriever = repo.retriever(@options)
-          repo_dir_changed = retriever.retrieve
-        end
-
-        # TEAL FIX: Note that retrieve will now return true iff there has been
-        # a change to the last scraped repository directory for efficiency
-        # reasons and only for retreiver types that support this behavior.
-        #
-        # Even if the retrieval is skipped due to already having the data on
-        # disk we still need to scrape its resources only because of the case
-        # of the metadata scraper daemon, which updates multiple repositories
-        # of similar criteria.
-        #
-        # The issue is that a new repo can appear later with the same criteria
-        # as an already-scraped repo and will need it's own copy of the
-        # scraped resources. The easiest (but not most efficient) way to
-        # deliver these is to rescrape the already-seen resources. This
-        # becomes more expensive as we rely on generating "metadata.json" from
-        # "metadata.rb" for cookbooks but is likely not expensive enough to
-        # need to improve this logic.
-
-
-        # 2. Now scrape if there is a scraper in the options
-        @logger.operation(:scraping, retriever.repo_dir) do
-          if @options[:kind]
-            options = @options.merge({:ignorable_paths => retriever.ignorable_paths,
-                                      :repo_dir        => retriever.repo_dir,
-                                      :repository      => retriever.repository})
-            scraper = RightScraper::Scrapers::Base.scraper(options)
-            @resources += scraper.scrape
-          end
+        if retrieved = retrieve(repo, &callback)
+          scan(retrieved, &callback)
         end
       rescue Exception
-        # logger handles communication with the end user and appending
-        # to our error list, we just need to keep going.
+        # legacy logger handles communication with the end user and appending
+        # to our error list; we just need to keep going. the new methodology
+        # has no such guaranteed communication so the caller will decide how to
+        # handle errors, etc.
       ensure
-        # ensure basedir is always removed if temporary (even with errors).
-        ::FileUtils.remove_entry_secure(@options[:basedir]) rescue nil if @temporary
+        cleanup
       end
-      @logger.callback = nil
       errors.size == errorlen
+    end
+
+    # Retrieves the given repository. See #scrape for details.
+    def retrieve(repo)
+      errorlen = errors.size
+      unless repo.kind_of?(::RightScraper::Repositories::Base)
+        repo = RightScraper::Repositories::Base.from_hash(::RightSupport::Data::Mash.new(repo))
+      end
+      retriever = nil
+
+      # 1. Retrieve the files
+      @logger.operation(:retrieving, "from #{repo}") do
+        # note that the retriever type may be unavailable but allow the
+        # retrieve method to raise any such error.
+        retriever = repo.retriever(@options)
+        retriever.retrieve
+      end
+
+      if errors.size == errorlen
+        # create the freed directory with world-writable permission for
+        # subsequent scan output for less-privileged child processes.
+        freed_base_path = freed_dir(repo)
+        ::FileUtils.rm_rf(freed_base_path) if ::File.exist?(freed_base_path)
+        ::FileUtils.mkdir_p(freed_base_path)
+        ::File.chmod(0777, freed_base_path)
+
+        # the following hash is needed for running any subsequent scanners.
+        {
+          ignorable_paths: retriever.ignorable_paths,
+          repo_dir: retriever.repo_dir,
+          freed_dir: freed_base_path,
+          repository: retriever.repository
+        }
+      else
+        nil
+      end
+    end
+
+    # Scans a local directory. See #scrape for details.
+    def scan(retrieved)
+      errorlen = errors.size
+      old_callback = @logger.callback
+      options = ::RightSupport::Data::Mash.new(@options).merge(retrieved)
+      repo = options[:repository]
+      unless repo.kind_of?(::RightScraper::Repositories::Base)
+        repo = RightScraper::Repositories::Base.from_hash(::RightSupport::Data::Mash.new(repo))
+        options[:repository] = repo
+      end
+      @logger.operation(:scraping, options[:repo_dir]) do
+        scraper = ::RightScraper::Scrapers::Base.scraper(options)
+        @resources += scraper.scrape
+      end
+      errors.size == errorlen
+    end
+
+    # base directory for any file operations.
+    def base_dir
+      @options[:basedir]
+    end
+
+    # cleans up temporary files, etc.
+    def cleanup
+      @logger.callback = @old_logger_callback
+      @old_logger_callback = nil
+      ::FileUtils.remove_entry_secure(base_dir) rescue nil if @temporary
     end
 
     # Path to directory where given repo should be or was downloaded
@@ -159,7 +201,14 @@ module RightScraper
     # === Return
     # String:: Path to local directory that corresponds to given repository
     def repo_dir(repo)
-      RightScraper::Retrievers::Base.repo_dir(@options[:basedir], repo)
+      RightScraper::Retrievers::Base.repo_dir(base_dir, repo)
+    end
+
+    # Path to directory where scanned artifacts can by copied out of containment
+    # due to lack of permissions to write to other directories. the freed files
+    # can then be reused by subsequent scanners, etc.
+    def freed_dir(repo)
+      ::File.expand_path('../freed', repo_dir(repo))
     end
 
     # (Array):: Error messages in case of failure
@@ -172,7 +221,7 @@ module RightScraper
       @logger.warnings
     end
 
-   # Was scraping successful?
+    # Was scraping successful?
     # Call errors to get error messages if false
     #
     # === Return

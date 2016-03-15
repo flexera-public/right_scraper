@@ -36,7 +36,7 @@ module RightScraper::Retrievers
   # somewhere.  Uses command line curl and command line tar.
   class Download < ::RightScraper::Retrievers::Base
 
-    class DownloadError < Exception; end
+    class DownloadError < ::RightScraper::Error; end
 
     @@available = false
 

@@ -96,6 +96,7 @@ module RightScraper::Repositories
       repo = repo_class.new
       validate_uri(repo_hash[:url]) unless ENV['DEVELOPMENT']
       repo_hash.each do |k, v|
+        k = k.to_sym
         next if k == :repo_type
         if [:first_credential, :second_credential].include?(k) && is_useful?(v)
           v = useful_part(v)

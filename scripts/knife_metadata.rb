@@ -1,5 +1,6 @@
+#!/usr/bin/env ruby
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,34 +22,21 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-# ancestor
-require 'right_scraper/resources'
-
-module RightScraper::Resources
-
-  class Workflow < ::RightScraper::Resources::Base
-
-    METADATA_EXT = '.meta'
-    DEFINITION_EXT = '.def'
-
-    # Relative path to definition file
-    # @pos must be set before this can be called
-    #
-    # === Return
-    # path(String):: Path to definition file
-    def definition_path
-      path = @pos
-    end
-
-    # Relative path to metadata file
-    # @pos must be set before this can be called
-    #
-    # === Return
-    # path(String):: Path to metadata file
-    def metadata_path
-      path = @pos.chomp(File.extname(@pos)) + METADATA_EXT if @pos
-    end
-
-  end
-
+def warn(*args)
+  # eliminate ruby/gem warnings from output
 end
+
+require 'rubygems'
+require 'chef'
+require 'chef/knife/cookbook_metadata'
+
+if ::ARGV.size != 1
+  $stderr.puts "Usage: #{::File.basename(__FILE__)} <cookbook_dir>"
+  exit 1
+end
+
+cookbook_dir = ARGV.pop
+knife_metadata = ::Chef::Knife::CookbookMetadata.new
+knife_metadata.name_args = [::File.basename(cookbook_dir)]
+knife_metadata.config[:cookbook_path] = ::File.dirname(cookbook_dir)
+knife_metadata.run

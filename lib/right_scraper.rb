@@ -25,6 +25,9 @@ require 'right_scraper/version'
 
 # Autoload everything possible
 module RightScraper
+  # base error class
+  class Error < ::StandardError; end
+
   autoload :Builders, 'right_scraper/builders'
   autoload :Loggers, 'right_scraper/loggers'
   autoload :Main, 'right_scraper/main'

@@ -68,5 +68,23 @@ module RightScraper::Resources
       @resource_hash
     end
 
+    # marshal cookbook to hash
+    def to_hash
+      {
+        repository: repository,
+        metadata: metadata,
+        manifest: manifest,
+        pos: pos
+      }
+    end
+
+    # unmarshal cookbook from hash
+    def self.from_hash(h)
+      h = ::RightSupport::Data::Mash.new(h)
+      c = self.new(h[:repository], h[:pos], h[:repo_dir])
+      c.manifest = h[:manifest]
+      c
+    end
+
   end
 end

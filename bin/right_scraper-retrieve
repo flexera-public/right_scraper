@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+#--
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# 'Software'), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#++
+
+def warn(*args)
+  # eliminate ruby/gem warnings from output
+end
+
+require 'json'
+require 'right_git'
+require File.expand_path('../../lib/right_scraper', __FILE__)
+
+if ::ARGV.size != 2
+  $stderr.puts "Usage: #{::File.basename(__FILE__)} <options.json> <repository.json>"
+  exit 1
+end
+
+main = nil
+begin
+  options = ::JSON.load(::File.read(::ARGV.shift))
+  repository = ::JSON.load(::File.read(::ARGV.shift))
+  main = ::RightScraper::Main.new(options)
+  if retrieved = main.retrieve(repository)
+    # remove any credentials from repository after retrieval; not needed in
+    # order to run scanners subsequently.
+    %w(first_credential second_credential).each { |k| repository.delete(k) }
+    retrieved[:repository] = repository
+    retrieved[:warnings] = main.warnings unless main.warnings.empty?
+    $stdout.puts(::JSON.generate(retrieved))
+  else
+    result = { errors: main.errors }
+    $stderr.puts(::JSON.generate(result))
+    exit 2
+  end
+  exit 0
+rescue ::RightScraper::Error, ::RightGit::Shell::ShellError => e
+  # all explicitly raised scraper errors derive from these errors.
+  result = { errors: [e.message] }
+  $stderr.puts(::JSON.generate(result))
+  exit 3
+rescue ::SystemExit => e
+  exit e.status
+rescue ::Exception => e
+  result = {
+    errors: ['internal error'],
+    unhandled_exception: {
+      class: e.class,
+      message: e.message,
+      backtrace: (e.backtrace || []).join("\n")
+    }
+  }
+  $stderr.puts(::JSON.generate(result))
+  exit 4
+ensure
+  main.cleanup rescue nil if main
+end
