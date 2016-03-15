@@ -37,6 +37,7 @@ require ::File.expand_path('../lib/right_scraper/version', __FILE__)
   spec.required_ruby_version = '>= 2.1'
   spec.rubyforge_project = %q{right_scraper}
   spec.require_path = 'lib'
+  spec.executables = ::Dir.glob("bin/*").map { |p| ::File.basename(p) }
 
   spec.add_dependency('right_aws', '>= 2.0')
   spec.add_dependency('right_git')
@@ -58,7 +59,7 @@ will analyze the repository content and instantiate "resources" as a result. Cur
 supported resources are Chef cookbooks and RightScale workflow definitions.
 EOF
 
-  candidates = ::Dir.glob("lib/**/*") +
+  candidates = ::Dir.glob("{bin,scripts,lib/**}/*") +
                %w(LICENSE README.rdoc right_scraper.gemspec)
   spec.files = candidates.sort
 end
