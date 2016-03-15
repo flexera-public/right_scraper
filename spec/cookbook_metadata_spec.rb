@@ -134,30 +134,13 @@ describe RightScraper::Scanners::CookbookMetadata do
         true
       end
 
-      let(:warden) do
-        mock_warden = flexmock('warden')
-        mock_warden.
-          should_receive(:run_command_in_jail).
-          with(untar_cookbook_cmd, cookbook_tar_path, nil).
-          once.
-          and_return { true }
-        mock_warden.
-          should_receive(:run_command_in_jail).
-          with(knife_metadata_cmd, nil, copy_out).
-          once.
-          and_return { generate_metadata_json }
-        mock_warden.should_receive(:cleanup).and_return(true)
-        mock_warden
-      end
-
       before(:each) do
         ::FileUtils.mkdir_p(::File.dirname(repo_metadata_rb_path))
         ::File.open(repo_metadata_rb_path, 'w') { |f| f.puts '# some valid metadata' }
         mock_subject = flexmock(subject)
-        mock_subject.should_receive(:create_warden).and_return(warden)
         mock_subject.
           should_receive(:create_tmpdir).
-          and_return(metadata_scripts_dir)
+          and_return([metadata_scripts_dir, true])
         mock_subject
       end
 
@@ -278,7 +261,7 @@ describe RightScraper::Scanners::CookbookMetadata do
         end
       end
 
-      it 'should fail before invoking warden' do
+      it 'should fail after scrape' do
         subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
         message = 'Metadata source file' +
                   " #{described_class::RUBY_METADATA.inspect}" +

@@ -37,7 +37,7 @@ module RightScraper
       include ::RightGit::Shell::Interface
 
       # exceptions.
-      class LimitError < ::RightGit::Shell::ShellError; end
+      class LimitError < ::RightScraper::Error; end
 
       class SizeLimitError < LimitError; end
       class TimeLimitError < LimitError; end
@@ -149,7 +149,7 @@ module RightScraper
         @exit_code = status.exitstatus
         if @raise_on_failure && !status.success?
           @output.buffer << "Exit code = #{@exit_code}"
-          raise ::RightGit::Shell::ShellError, "Execution failed: #{@output.display_text}"
+          raise ::RightScraper::Error, "Execution failed: #{@output.display_text}"
         end
         true
       end

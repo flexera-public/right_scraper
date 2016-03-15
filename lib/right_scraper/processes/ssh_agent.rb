@@ -35,7 +35,7 @@ module RightScraper
     # Manage a dedicated SSH agent.
     class SSHAgent
 
-      class SSHAgentError < Exception; end
+      class SSHAgentError < ::RightScraper::Error; end
 
       def initialize
         @display = ENV['DISPLAY']

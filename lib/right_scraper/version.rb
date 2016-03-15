@@ -1,5 +1,5 @@
 #--  -*- mode: ruby; encoding: utf-8 -*-
-# Copyright: Copyright (c) 2011 RightScale, Inc.
+# Copyright: Copyright (c) 2011-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -23,7 +23,7 @@
 
 module RightScraper
   # for gemspec, etc.
-  GEM_VERSION = '5.0.1'
+  GEM_VERSION = '5.1.1'
 
   # (Fixnum) protocol versioning scheme; prepended to hashes to
   # prevent collisions.

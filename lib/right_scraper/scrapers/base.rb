@@ -26,7 +26,7 @@ require 'right_scraper/scrapers'
 
 module RightScraper::Scrapers
 
-  class ScraperError < Exception; end
+  class ScraperError < ::RightScraper::Error; end
 
   # Base class for all scrapers. Subclasses should override
   # #find_next which instantiates the resource from the file system.

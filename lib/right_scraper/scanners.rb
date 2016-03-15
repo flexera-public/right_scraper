@@ -26,8 +26,10 @@ require 'right_scraper'
 module RightScraper
   module Scanners
     autoload :Base, 'right_scraper/scanners/base'
+    autoload :CookbookFilenameScanner, 'right_scraper/scanners/cookbook_filename_scanner'
     autoload :CookbookManifest, 'right_scraper/scanners/cookbook_manifest'
     autoload :CookbookMetadata, 'right_scraper/scanners/cookbook_metadata'
+    autoload :CookbookMetadataReadOnly, 'right_scraper/scanners/cookbook_metadata_readonly'
     autoload :CookbookS3Upload, 'right_scraper/scanners/cookbook_s3_upload'
     autoload :Union, 'right_scraper/scanners/union'
     autoload :WorkflowManifest, 'right_scraper/scanners/workflow_manifest'

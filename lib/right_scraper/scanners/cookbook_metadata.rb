@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,6 +24,7 @@
 # ancestor
 require 'right_scraper/scanners'
 
+require 'fileutils'
 require 'json'
 require 'right_popen'
 require 'right_popen/safe_output_buffer'
@@ -42,11 +43,25 @@ module RightScraper::Scanners
     JAILED_FILE_SIZE_CONSTRAINT = 128 * 1024  # 128 KB
     FREED_FILE_SIZE_CONSTRAINT = 64 * 1024  # 64 KB
 
-    TARBALL_CREATE_TIMEOUT = 30 # ..to create the tarball
-    TARBALL_ARCHIVE_NAME = 'cookbook.tar'
+    attr_reader :freed_dir
 
     # exceptions
-    class MetadataError < Exception; end
+    class MetadataError < ::RightScraper::Error; end
+
+    def initialize(options)
+      super
+
+      # we will free the generated 'metadata.json' to a path relative to the
+      # repository directory. this allows for multiple passes over the
+      # generated file(s) using different child processes, some or all of
+      # which may execute in containers. the exact location of the freed file
+      # depends on the cookbook position; recall that multiple cookbooks can
+      # appear within a given repository.
+      @freed_dir = options[:freed_dir].to_s
+      if @freed_dir.empty? || !::File.directory?(@freed_dir)
+        raise ::ArgumentError, "Missing or invalid freed_dir: #{@freed_dir.inspect}"
+      end
+    end
 
     def tls
       Thread.current[self.class.to_s.to_sym] ||= {}
@@ -97,24 +112,14 @@ module RightScraper::Scanners
       @cookbook = nil
     end
 
-    # All done scanning this repository, we can tear down the warden container we may or
-    # may not have created while parsing the cookbooks for this repository.
+    # All done scanning this repository.
     #
     def finish
       begin
-        FileUtils.remove_entry_secure(tls[:tmpdir]) if tls[:tmpdir]
+        ::FileUtils.remove_entry_secure(tls[:tmpdir]) if tls[:tmpdir]
       rescue ::Exception => e
         @logger.note_warning(e.message)
       end
-
-      if warden = tls[:warden]
-        begin
-          warden.cleanup
-        rescue ::Exception => e
-          @logger.note_warning(e.message)
-        end
-      end
-
     ensure
       # Cleanup thread-local storage
       tls.clear
@@ -157,8 +162,7 @@ module RightScraper::Scanners
     private
 
     # Executes the 'metadata.rb' file from a cookbook. Because we don't want
-    # to evaluate arbitrary Ruby code, we need to sandbox it first using
-    # Warden.
+    # to evaluate arbitrary Ruby code, we need to sandbox it first.
     #
     # in order for knife metadata to succeed in the general case we need to
     # copy some (but not all) of the cookbook directory AND its ancestors (if
@@ -187,141 +191,113 @@ module RightScraper::Scanners
         # note we will use the same tmpdir path inside and outside the
         # container only because it is non-trivial to invoke mktmpdir inside
         # the container.
-        tmpdir = create_tmpdir
+        tmpdir, created = create_tmpdir
 
-        # arrest
-        knife_metadata_script_path = ::File.join(tmpdir, KNIFE_METADATA_SCRIPT_NAME)
+        # path constants
+        src_knife_script_path = ::File.expand_path(
+            ::File.join(__FILE__, '../../../../scripts', KNIFE_METADATA_SCRIPT_NAME))
+        dst_knife_script_dir = tmpdir
+        dst_knife_script_path = ::File.join(dst_knife_script_dir, KNIFE_METADATA_SCRIPT_NAME)
         jailed_repo_dir = ::File.join(tmpdir, UNDEFINED_COOKBOOK_NAME)
         jailed_cookbook_dir = (@cookbook.pos == '.' && jailed_repo_dir) || ::File.join(jailed_repo_dir, @cookbook.pos)
         jailed_metadata_json_path = ::File.join(jailed_cookbook_dir, JSON_METADATA)
-        freed_metadata_json_path = ::File.join(tmpdir, JSON_METADATA)
+        freed_metadata_dir = (@cookbook.pos == '.' && freed_dir) || ::File.join(freed_dir, @cookbook.pos)
+        freed_metadata_json_path = ::File.join(freed_metadata_dir, JSON_METADATA)
 
-        # police brutality
+        # in the multi-pass case we will run this scanner only on the first pass
+        # so the 'metadata.json' file should not exist. the read-only scanner,
+        # which is safe outside of containment, should be used subsequently.
+        # the entire 'freed' directory should have been removed upon the next
+        # successful retrieval so that this scanner will succeed.
+        if ::File.file?(freed_metadata_json_path)
+          raise MetadataError, "Refused to overwrite already-generated metadata file: #{freed_metadata_json_path}"
+        end
+
+        # jail the repo using the legacy semantics for copying files in and out
+        # of jail.
         copy_out = { jailed_metadata_json_path => freed_metadata_json_path }
 
-        begin
-          # jail the repo
-          unless warden = tls[:warden]
-            # Get a list of the files in the repo we need
-            create_knife_metadata_script(knife_metadata_script_path)
-            copy_in = generate_copy_in
-            copy_in << knife_metadata_script_path
+        # copy files into the jail once per repository (i.e. not once per
+        # cookbook within the repository).
+        if created
+          copy_in = generate_copy_in(@cookbook.repo_dir, jailed_repo_dir)
+          copy_in[src_knife_script_path] = dst_knife_script_path
 
-            # Create the container, one for all in this repo
-            warden = tls[:warden] = create_warden
-
-            # tar up the required pieces of the repo and copy them into the container
-            cookbook_tarball_path = ::File.join(tmpdir, TARBALL_ARCHIVE_NAME)
-            # prosecute
-            create_cookbook_tarball(cookbook_tarball_path, copy_in, jailed_repo_dir)
-
-            # unarchive the tarball on the otherside (this is faster than single file copies)
-            cmd = "tar -Pxf #{cookbook_tarball_path.inspect}"
-            warden.run_command_in_jail(cmd, cookbook_tarball_path, nil)
-          end
-
-          # Generate the metadata
-          cmd = "export LC_ALL='en_US.UTF-8'; ruby #{knife_metadata_script_path.inspect} #{jailed_cookbook_dir.inspect}"
-          warden.run_command_in_jail(cmd, nil, copy_out)
-
-          # constraining the generate file size is debatable, but our UI
-          # attempts to load metadata JSON into memory far too often to be
-          # blasé about generating multi-megabyte JSON files.
-          unless ::File.file?(freed_metadata_json_path)
-            raise MetadataError, 'Generated JSON file not found.'
-          end
-          freed_metadata_json_size = ::File.stat(freed_metadata_json_path).size
-          if freed_metadata_json_size <= FREED_FILE_SIZE_CONSTRAINT
-            # parole for good behavior
-            return ::File.read(freed_metadata_json_path)
-          else
-            # life imprisonment.
-            raise MetadataError,
-                  "Generated metadata size of" +
-                  " #{freed_metadata_json_size / 1024} KB" +
-                  " exceeded the allowed limit of" +
-                  " #{FREED_FILE_SIZE_CONSTRAINT / 1024} KB"
-          end
-        rescue ::RightScraper::Processes::Warden::LinkError => e
-          raise MetadataError,
-                "Failed to generate metadata from source: #{e.message}" +
-                "\n#{e.link_result.stdout}" +
-                "\n#{e.link_result.stderr}"
+          # note that at this point we previously used Warden as a container
+          # for the copied-in files but now we assume that the current process
+          # is already in a container (i.e. Docker) and so this copying is
+          # more about creating a writable directory for knife than about
+          # containment. the checked-out repo should be read-only to this
+          # contained process due to running with limited privileges.
+          do_copy_in(copy_in)
         end
+
+        # HACK: support ad-hoc testing in dev-mode by using the current version
+        # for rbenv shell.
+        if ::ENV['RBENV_VERSION'].to_s.empty?
+          ruby = 'ruby'
+        else
+          ruby = `which ruby`.chomp
+        end
+
+        # execute knife as a child process. any constraints are assumed to be
+        # imposed on the current process by a container (timeout, memory, etc.)
+        shell = ::RightGit::Shell::Default
+        output = StringIO.new
+        exitstatus = shell.execute(
+          "#{ruby} #{dst_knife_script_path.inspect} #{jailed_cookbook_dir.inspect} 2>&1",
+          directory: dst_knife_script_dir,
+          outstream: output,
+          raise_on_failure: false,
+          set_env_vars: { LC_ALL: 'en_US.UTF-8' },  # character encoding for emitted JSON
+          clear_env_vars: %w{BUNDLE_BIN_PATH BUNDLE_GEMFILE})
+        if exitstatus != 0
+          output = output.string
+          raise MetadataError, "Failed to run chef knife: #{output[0, 1024]}"
+        end
+
+        # free files from jail.
+        do_copy_out(copy_out)
+
+        # load and return freed metadata.
+        return ::File.read(freed_metadata_json_path)
       end
     end
 
-    def stdout_tarball(data)
-      @stdout_buffer << data
-    end
-
-    def stderr_tarball(data)
-      @stderr_buffer.safe_buffer_data(data)
-    end
-
-    def timeout_tarball
-      raise MetadataError,
-        "Timed out waiting for tarball to build.\n" +
-        "stdout: #{@stdout_buffer.join}\n" +
-        "stderr: #{@stderr_buffer.display_text}"
-    end
-
-    # @param [String] dest_file
-    # @param [Array] contents
-    # @param [String] dest_path
-    def create_cookbook_tarball(dest_file, contents, dest_path)
-      @logger.operation(:tarball_generation) do
-        tarball_cmd = [
-          'tar',
-          "-Pcf #{dest_file}",
-          "--transform='s,#{@cookbook.repo_dir},#{dest_path},'",
-          '-T', '-'
-        ]
-
-        @stdout_buffer = []
-        @stderr_buffer = ::RightScale::RightPopen::SafeOutputBuffer.new
-        begin
-          ::RightScale::RightPopen.popen3_sync(
-            tarball_cmd.join(' '),
-            :target             => self,
-            :timeout_handler    => :timeout_tarball,
-            :input              => contents.join("\n"),
-            :stderr_handler     => :stderr_tarball,
-            :stdout_handler     => :stdout_tarball,
-            :inherit_io         => true,  # avoid killing any rails connection
-            :timeout_seconds    => TARBALL_CREATE_TIMEOUT)
-        rescue Exception => e
-          raise MetadataError,
-            "Failed to generate cookbook tarball from source files: #{e.message}\n" +
-            "stdout: #{@stdout_buffer.join}\n" +
-            "stderr: #{@stderr_buffer.display_text}"
+    # copies files into jail. we no longer start a new container so this is only
+    # a local file copying operation. we still need files to appear in a
+    # writable directory location because knife will write to the directory.
+    def do_copy_in(path_map)
+      path_map.each do |src_path, dst_path|
+        if src_path != dst_path
+          ::FileUtils.mkdir_p(::File.dirname(dst_path))
+          ::FileUtils.cp(src_path, dst_path)
         end
       end
+      true
     end
 
-    # generates a script that runs Chef's knife tool. it presumes the jail
-    # contains a ruby interpreter that has chef installed as a gem.
-    #
-    # we want to avoid using the knife command line only because it requires a
-    # '$HOME/.chef/knife.rb' configuration file even though we won't use that
-    # configuration file in any way. :@
-    #
-    # the simplest solution is to execute the knife tool within a ruby script
-    # because it has no pre-configuration requirement and it does not require
-    # the knife binstub to be on the PATH.
-    def create_knife_metadata_script(script_path)
-      script = <<EOS
-require 'rubygems'
-require 'chef'
-require 'chef/knife/cookbook_metadata'
-
-jailed_cookbook_dir = ARGV.pop
-knife_metadata = ::Chef::Knife::CookbookMetadata.new
-knife_metadata.name_args = [::File.basename(jailed_cookbook_dir)]
-knife_metadata.config[:cookbook_path] = ::File.dirname(jailed_cookbook_dir)
-knife_metadata.run
-EOS
-      ::File.open(script_path, 'w') { |f| f.puts script }
+    # copies files out of jail by mapping of jail to free path.
+    def do_copy_out(path_map)
+      path_map.each do |src_path, dst_path|
+        # constraining the generated 'metadata.json' size is debatable, but
+        # our UI attempts to load metadata JSON into memory far too often to
+        # be blasé about generating multi-megabyte JSON files.
+        unless ::File.file?(src_path)
+          raise MetadataError, "Expected generated file was not found: #{src_path}"
+        end
+        src_size = ::File.stat(src_path).size
+        if src_size <= FREED_FILE_SIZE_CONSTRAINT
+          ::FileUtils.mkdir_p(::File.dirname(dst_path))
+          ::FileUtils.cp(src_path, dst_path)
+        else
+          raise MetadataError,
+                "Generated file size of" +
+                " #{src_size / 1024} KB" +
+                " exceeded the allowed limit of" +
+                " #{FREED_FILE_SIZE_CONSTRAINT / 1024} KB"
+        end
+      end
       true
     end
 
@@ -340,12 +316,20 @@ EOS
     # again, the user can work around these contraints by generating his own
     # metadata and checking it into the repository.
     #
-    # @return [Array] list of files to copy into jail
-    def generate_copy_in()
+    # @return [Hash] path_map as map of source to destination file paths
+    def generate_copy_in(src_base_path, dst_base_path)
+      src_base_path = ::File.expand_path(src_base_path)
+      dst_base_path = ::File.expand_path(dst_base_path)
       copy_in = []
-      start_path = @cookbook.repo_dir
-      recursive_generate_copy_in(copy_in, start_path)
-      copy_in
+      recursive_generate_copy_in(copy_in, src_base_path)
+
+      src_base_path += '/'
+      src_base_path_len = src_base_path.length
+      dst_base_path += '/'
+      copy_in.inject({}) do |h, src_path|
+        h[src_path] = ::File.join(dst_base_path, src_path[src_base_path_len..-1])
+        h
+      end
     end
 
     # recursive part of generate_copy_in
@@ -399,16 +383,18 @@ EOS
       path[(@cookbook.repo_dir.length + 1)..-1]
     end
 
-    # factory method for an object capable of running command in jail
-    # (convenient for testing).
-    def create_warden
-      ::RightScraper::Processes::Warden.new
-    end
-
     # factory method for tmpdir (convenient for testing).
     def create_tmpdir
-      tls[:tmpdir] ||= ::Dir.mktmpdir
+      td = tls[:tmpdir]
+      if td.nil?
+        td = ::Dir.mktmpdir
+        tls[:tmpdir] = td
+        created = true
+      else
+        created = false
+      end
+      return [td, created]
     end
 
-  end
-end
+  end # CookbookMetadata
+end # RightScraper::Scanners

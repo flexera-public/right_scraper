@@ -79,7 +79,7 @@ describe RightScraper::Processes::Shell do
           once
         expect { subject.execute(cmd, shell_execute_options) }.
           to raise_error(
-            ::RightGit::Shell::ShellError,
+           ::RightScraper::Error,
             "Execution failed: Exit code = 99")
       end
 
