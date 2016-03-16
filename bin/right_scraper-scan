@@ -45,14 +45,23 @@ begin
   retrieved.delete('errors')
   retrieved.delete('warnings')
   if main.scan(retrieved)
-    retrieved[:warnings] = main.warnings unless main.warnings.empty?
-    retrieved[:resources] = main.resources.map do |r|
-      # remove repository from each returned cookbook due to redundancy.
-      h = r.to_hash
-      h.delete(:repository)
-      h
+    result = {}
+    result[:warnings] = main.warnings unless main.warnings.empty?
+
+    # we can optimize by not marshaling back resources when the only scanner is
+    # CookbookMetadata. the reason is that we expect this scanner to only be
+    # called in unprivileged isolation followed by more scanners with more
+    # privileges and only the latter need to return fully resolved resources.
+    if main.scanners != [RightScraper::Scanners::CookbookMetadata]
+      result[:resources] = main.resources.map do |r|
+        # remove relational repository from each returned cookbook due to being
+        # the same for each resource and already known to caller.
+        h = r.to_hash
+        h.delete(:repository)
+        h
+      end
     end
-    $stdout.puts(::JSON.generate(retrieved))
+    $stdout.puts(::JSON.generate(result))
   else
     result = { errors: main.errors }
     $stderr.puts(::JSON.generate(result))

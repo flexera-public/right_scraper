@@ -221,6 +221,16 @@ module RightScraper
       @logger.warnings
     end
 
+    # (Array):: scanners or empty
+    def builders
+      return @options[:builders]
+    end
+
+    # (Array):: scanners or empty
+    def scanners
+      return @options[:scanners]
+    end
+
     # Was scraping successful?
     # Call errors to get error messages if false
     #

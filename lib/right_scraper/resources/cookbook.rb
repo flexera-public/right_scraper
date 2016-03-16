@@ -72,8 +72,8 @@ module RightScraper::Resources
     def to_hash
       {
         repository: repository,
-        metadata: metadata,
-        manifest: manifest,
+        metadata: ::JSON.dump(metadata),  # pass these as opaque JSON blobs to
+        manifest: ::JSON.dump(manifest),  # be unmarshaled only by from_hash
         pos: pos
       }
     end
@@ -82,7 +82,14 @@ module RightScraper::Resources
     def self.from_hash(h)
       h = ::RightSupport::Data::Mash.new(h)
       c = self.new(h[:repository], h[:pos], h[:repo_dir])
-      c.manifest = h[:manifest]
+      if (md = h[:metadata]).kind_of?(::String)
+        md = ::JSON.load(md)
+      end
+      c.metadata = md
+      if (mf = h[:manifest]).kind_of?(::String)
+        mf = ::JSON.load(mf)
+      end
+      c.manifest = mf
       c
     end
 
