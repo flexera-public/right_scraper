@@ -27,9 +27,7 @@ options = {
   :basedir     => SCRAPE_DIR,        
   :max_bytes   => SCRAPE_MAX_SIZE,        
   :max_seconds => SCRAPE_MAX_TIME,        
-  :s3_key      => ENV['AWS_ACCESS_KEY_ID'],        
-  :s3_secret   => ENV['AWS_SECRET_ACCESS_KEY'],        
-  :s3_bucket   => ENV['S3_BUCKET'],        
+  :s3_bucket   => ENV['S3_BUCKET'],
   :builders    => ['RightScraper::Builders::Filesystem'],
   :scanners    => [
     'RightScraper::Scanners::CookbookMetadata',

@@ -41,6 +41,14 @@ begin
   retrieved = ::JSON.load(::File.read(::ARGV.shift))
   main = ::RightScraper::Main.new(options)
 
+  # use credentials from environment, if available.
+  if !(aws_access_key_id = ::ENV['AWS_ACCESS_KEY_ID'].to_s).empty?
+    options['s3_key'] = aws_access_key_id
+    if !(aws_secret_access_key = ::ENV['AWS_SECRET_ACCESS_KEY'].to_s).empty?
+      options['s3_secret'] = aws_secret_access_key
+    end
+  end
+
   # cleanup any leftover errors/warnings in retrieved hash.
   retrieved.delete('errors')
   retrieved.delete('warnings')

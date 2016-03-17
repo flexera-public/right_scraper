@@ -39,6 +39,15 @@ main = nil
 begin
   options = ::JSON.load(::File.read(::ARGV.shift))
   repository = ::JSON.load(::File.read(::ARGV.shift))
+
+  # use credentials from environment, if available.
+  if !(repo_first_cred = ::ENV['REPOSITORY_FIRST_CREDENTIAL'].to_s).empty?
+    repository['first_credential'] = repo_first_cred
+    if !(repo_second_cred = ::ENV['REPOSITORY_SECOND_CREDENTIAL'].to_s).empty?
+      repository['second_credential'] = repo_second_cred
+    end
+  end
+
   main = ::RightScraper::Main.new(options)
   if retrieved = main.retrieve(repository)
     # remove any credentials from repository after retrieval; not needed in
