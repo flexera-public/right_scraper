@@ -24,7 +24,7 @@ GEM
       byebug (~> 8.0)
       pry (~> 0.10)
     rack (1.6.4)
-    rake (10.5.0)
+    rake (11.1.1)
     right_aws (3.1.0)
       right_http_connection (>= 1.2.5)
     right_develop (3.1.12)
