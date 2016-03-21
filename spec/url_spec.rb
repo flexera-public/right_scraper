@@ -34,13 +34,13 @@ describe RightScraper::Repositories::Svn do
                                              :second_credential => "foo@bar")
   end
   before(:each) do
-    @oldtest = ENV['DEVELOPMENT']
+    @oldtest = ENV['VALIDATE_URI']
   end
   after(:each) do
     if @oldtest.nil?
-      ENV.delete('DEVELOPMENT')
+      ENV.delete('VALIDATE_URI')
     else
-      ENV['DEVELOPMENT'] = @oldtest
+      ENV['VALIDATE_URI'] = @oldtest
     end
   end
 
@@ -48,7 +48,7 @@ describe RightScraper::Repositories::Svn do
     let(:error_class) { ::RightScraper::Repositories::Base::RepositoryError }
 
     before(:each) do
-      ENV.delete('DEVELOPMENT')
+      ENV.delete('VALIDATE_URI')
     end
 
     it 'should not throw an error when creating a repository for a normal URI' do
@@ -110,7 +110,7 @@ describe RightScraper::Repositories::Svn do
 
   context 'in development mode' do
     before(:each) do
-      ENV['DEVELOPMENT'] = "yes"
+      ENV['VALIDATE_URI'] = 'false'
     end
 
     it 'should not throw an error when creating a repository for a normal URI' do

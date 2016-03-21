@@ -23,7 +23,7 @@
 
 module RightScraper
   # for gemspec, etc.
-  GEM_VERSION = '5.2.2'
+  GEM_VERSION = '5.2.3'
 
   # (Fixnum) protocol versioning scheme; prepended to hashes to
   # prevent collisions.

@@ -35,6 +35,11 @@ if ::ARGV.size != 2
   exit 1
 end
 
+# specifically trap-and-ignore SIGTERM and SIGQUIT to prevent the Docker
+# container being stopped on service shutdown. also do not emit any output.
+# allows SIGINT for development.
+%W(TERM QUIT).each { |s| trap(s) {} }
+
 main = nil
 begin
   options = ::JSON.load(::File.read(::ARGV.shift))

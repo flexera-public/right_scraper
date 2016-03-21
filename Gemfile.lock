@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    right_scraper (5.2.2)
+    right_scraper (5.2.3)
       right_aws (>= 2.0)
       right_git
       right_popen
@@ -38,7 +38,7 @@ GEM
       right_support (>= 2.8.10)
     right_http_connection (1.5.0)
     right_popen (3.0.1)
-    right_support (2.9.3)
+    right_support (2.9.5)
     rspec (2.99.0)
       rspec-core (~> 2.99.0)
       rspec-expectations (~> 2.99.0)

@@ -35,7 +35,7 @@ RSpec.configure do |c|
   c.mock_with(:flexmock)
 end
 
-ENV["DEVELOPMENT"] ||= "yes"
+ENV["VALIDATE_URI"] ||= 'false'
 
 # Helper module
 module RightScraper
@@ -50,14 +50,14 @@ module RightScraper
       def DevelopmentModeEnvironment.included(mod)
         mod.module_eval do
           before(:each) do
-            @oldtest = ENV['DEVELOPMENT']
-            ENV['DEVELOPMENT'] = "yes"
+            @oldtest = ENV['VALIDATE_URI']
+            ENV['VALIDATE_URI'] = 'false'
           end
           after(:each) do
             if @oldtest.nil?
-              ENV.delete('DEVELOPMENT')
+              ENV.delete('VALIDATE_URI')
             else
-              ENV['DEVELOPMENT'] = @oldtest
+              ENV['VALIDATE_URI'] = @oldtest
             end
           end
         end
@@ -67,14 +67,14 @@ module RightScraper
       def ProductionModeEnvironment.included(mod)
         mod.module_eval do
           before(:each) do
-            @oldtest = ENV['DEVELOPMENT']
-            ENV.delete('DEVELOPMENT')
+            @oldtest = ENV['VALIDATE_URI']
+            ENV.delete('VALIDATE_URI')
           end
           after(:each) do
             if @oldtest.nil?
-              ENV.delete('DEVELOPMENT')
+              ENV.delete('VALIDATE_URI')
             else
-              ENV['DEVELOPMENT'] = @oldtest
+              ENV['VALIDATE_URI'] = @oldtest
             end
           end
         end

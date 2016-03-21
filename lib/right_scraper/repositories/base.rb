@@ -94,7 +94,7 @@ module RightScraper::Repositories
       raise ::ArgumentError, ':repo_type is required' if repo_type.empty?
       repo_class = query_registered_type(repo_type)
       repo = repo_class.new
-      validate_uri(repo_hash[:url]) unless ENV['DEVELOPMENT']
+      validate_uri(repo_hash[:url]) unless ENV['VALIDATE_URI'].to_s == 'false'
       repo_hash.each do |k, v|
         k = k.to_sym
         next if k == :repo_type
