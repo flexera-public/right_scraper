@@ -38,8 +38,7 @@ module RightScraper
   # class functionality.
   class Main
 
-    # (Array):: Scraped resources
-    attr_reader :resources
+    attr_reader :logger, :resources
 
     # Initialize scrape destination directory
     #
@@ -61,7 +60,6 @@ module RightScraper
         :scanners    => nil,
         :builders    => nil,
       ).merge(options)
-      @old_logger_callback = nil
       @temporary = !options.has_key?(:basedir)
       options[:basedir] ||= Dir.mktmpdir
       options[:logger] ||= ::RightScraper::Loggers::Default.new
@@ -110,12 +108,12 @@ module RightScraper
     # === Raise
     # 'Invalid repository type':: If repository type is not known
     def scrape(repo, incremental=true, &callback)
-      @old_logger_callback = @logger.callback
+      old_logger_callback = @logger.callback
       @logger.callback = callback
       errorlen = errors.size
       begin
-        if retrieved = retrieve(repo, &callback)
-          scan(retrieved, &callback)
+        if retrieved = retrieve(repo)
+          scan(retrieved)
         end
       rescue Exception
         # legacy logger handles communication with the end user and appending
@@ -123,6 +121,7 @@ module RightScraper
         # has no such guaranteed communication so the caller will decide how to
         # handle errors, etc.
       ensure
+        @logger.callback = old_logger_callback
         cleanup
       end
       errors.size == errorlen
@@ -188,8 +187,6 @@ module RightScraper
 
     # cleans up temporary files, etc.
     def cleanup
-      @logger.callback = @old_logger_callback
-      @old_logger_callback = nil
       ::FileUtils.remove_entry_secure(base_dir) rescue nil if @temporary
     end
 

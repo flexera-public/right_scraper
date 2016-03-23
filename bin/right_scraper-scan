@@ -65,7 +65,7 @@ begin
     # CookbookMetadata. the reason is that we expect this scanner to only be
     # called in unprivileged isolation followed by more scanners with more
     # privileges and only the latter need to return fully resolved resources.
-    if main.scanners != [RightScraper::Scanners::CookbookMetadata]
+    if main.scanners != [::RightScraper::Scanners::CookbookMetadata]
       result[:resources] = main.resources.map do |r|
         # remove relational repository from each returned cookbook due to being
         # the same for each resource and already known to caller.
@@ -83,14 +83,14 @@ begin
   exit 0
 rescue ::RightScraper::Error, ::RightGit::Shell::ShellError => e
   # all explicitly raised scraper errors derive from these errors.
-  result = { errors: [e.message] }
+  result = { errors: [[e.class, :scan, e.message]] }
   $stderr.puts(::JSON.generate(result))
   exit 3
 rescue ::SystemExit => e
   exit e.status
 rescue ::Exception => e
   result = {
-    errors: ['internal error'],
+    errors: [[e.class, :internal_error, e.message]],
     unhandled_exception: {
       class: e.class,
       message: e.message,
