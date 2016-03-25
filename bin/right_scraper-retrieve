@@ -59,6 +59,7 @@ begin
     # order to run scanners subsequently.
     %w(first_credential second_credential).each { |k| repository.delete(k) }
     repository['tag'] = retrieved[:repository].revision  # send back commit SHA, if any, for comparison
+    repository['repository_hash'] = retrieved[:repository].repository_hash
     retrieved[:repository] = repository
     retrieved[:warnings] = main.warnings unless main.warnings.empty?
     $stdout.puts(::JSON.generate(retrieved))

@@ -72,8 +72,8 @@ module RightScraper::Resources
     def to_hash
       {
         repository: repository,
-        metadata: ::JSON.dump(metadata),  # pass these as opaque JSON blobs to
-        manifest: ::JSON.dump(manifest),  # be unmarshaled only by from_hash
+        resource_hash: resource_hash,     # location of cookbook manifest in S3
+        metadata: ::JSON.dump(metadata),  # pass as opaque JSON blob
         pos: pos
       }
     end

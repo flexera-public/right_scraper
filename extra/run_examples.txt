@@ -1,0 +1,5 @@
+# retrieve
+bundle exec ruby bin/right_scraper-retrieve tmp/options.json tmp/repository.json > tmp/retrieved.json
+
+# scan
+bundle exec ruby bin/right_scraper-scan tmp/options.json tmp/retrieved.json
