@@ -131,8 +131,14 @@ module RightScraper
     def retrieve(repo)
       errorlen = errors.size
       unless repo.kind_of?(::RightScraper::Repositories::Base)
-        repo = RightScraper::Repositories::Base.from_hash(::RightSupport::Data::Mash.new(repo))
+        repo = ::RightSupport::Data::Mash.new(repo)
+        repository_hash = repo.delete(:repository_hash)  # optional
+        repo = RightScraper::Repositories::Base.from_hash(repo)
+        if repository_hash && repository_hash != repo.repository_hash
+          raise RightScraper::Error, "Repository hash mismatch: #{repository_hash} != #{repo.repository_hash}"
+        end
       end
+
       retriever = nil
 
       # 1. Retrieve the files
@@ -170,7 +176,12 @@ module RightScraper
       options = ::RightSupport::Data::Mash.new(@options).merge(retrieved)
       repo = options[:repository]
       unless repo.kind_of?(::RightScraper::Repositories::Base)
-        repo = RightScraper::Repositories::Base.from_hash(::RightSupport::Data::Mash.new(repo))
+        repo = ::RightSupport::Data::Mash.new(repo)
+        repository_hash = repo.delete(:repository_hash)  # optional
+        repo = RightScraper::Repositories::Base.from_hash(repo)
+        if repository_hash && repository_hash != repo.repository_hash
+          raise RightScraper::Error, "Repository hash mismatch: #{repository_hash} != #{repo.repository_hash}"
+        end
         options[:repository] = repo
       end
       @logger.operation(:scraping, options[:repo_dir]) do
