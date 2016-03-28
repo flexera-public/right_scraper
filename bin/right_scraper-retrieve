@@ -43,7 +43,9 @@ end
 main = nil
 begin
   options = ::JSON.load(::File.read(::ARGV.shift))
+  fail 'options are invalid' unless options.kind_of?(::Hash)
   repository = ::JSON.load(::File.read(::ARGV.shift))
+  fail 'repository is invalid' unless repository.kind_of?(::Hash)
 
   # use credentials from environment, if available.
   if !(repo_first_cred = ::ENV['REPOSITORY_FIRST_CREDENTIAL'].to_s).empty?
@@ -65,14 +67,14 @@ begin
     $stdout.puts(::JSON.generate(retrieved))
   else
     result = { errors: main.errors }
-    $stderr.puts(::JSON.generate(result))
+    $stdout.puts(::JSON.generate(result))
     exit 2
   end
   exit 0
 rescue ::RightScraper::Error, ::RightGit::Shell::ShellError => e
   # all explicitly raised scraper errors derive from these errors.
   result = { errors: [[e.class, :retreive, e.message]] }
-  $stderr.puts(::JSON.generate(result))
+  $stdout.puts(::JSON.generate(result))
   exit 3
 rescue ::SystemExit => e
   exit e.status
@@ -85,7 +87,7 @@ rescue ::Exception => e
       backtrace: (e.backtrace || []).join("\n")
     }
   }
-  $stderr.puts(::JSON.generate(result))
+  $stdout.puts(::JSON.generate(result))
   exit 4
 ensure
   main.cleanup rescue nil if main
