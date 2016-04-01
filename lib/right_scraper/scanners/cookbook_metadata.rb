@@ -38,11 +38,13 @@ module RightScraper::Scanners
     JSON_METADATA = 'metadata.json'
     RUBY_METADATA = 'metadata.rb'
 
-    UNDEFINED_COOKBOOK_NAME = 'undefined'
+    UNDEFINED_COOKBOOK_NAME    = 'undefined'
     KNIFE_METADATA_SCRIPT_NAME = 'knife_metadata.rb'
+    KNIFE_METADATA_TIMEOUT     = 60  # 1m
 
     JAILED_FILE_SIZE_CONSTRAINT = 128 * 1024  # 128 KB
-    FREED_FILE_SIZE_CONSTRAINT = 64 * 1024  # 64 KB
+    FREED_FILE_SIZE_CONSTRAINT  = 64 * 1024  # 64 KB
+
 
     attr_reader :freed_dir
 
@@ -245,16 +247,19 @@ module RightScraper::Scanners
         # imposed on the current process by a container (timeout, memory, etc.)
         shell = ::RightGit::Shell::Default
         output = StringIO.new
-        exitstatus = shell.execute(
-          "#{ruby} #{dst_knife_script_path.inspect} #{jailed_cookbook_dir.inspect} 2>&1",
-          directory: dst_knife_script_dir,
-          outstream: output,
-          raise_on_failure: false,
-          set_env_vars: { LC_ALL: 'en_US.UTF-8' },  # character encoding for emitted JSON
-          clear_env_vars: %w{BUNDLE_BIN_PATH BUNDLE_GEMFILE})
-        if exitstatus != 0
+        begin
+          shell.execute(
+            "#{ruby} #{dst_knife_script_path.inspect} #{jailed_cookbook_dir.inspect} 2>&1",
+            directory: dst_knife_script_dir,
+            outstream: output,
+            raise_on_failure: true,
+            set_env_vars: { LC_ALL: 'en_US.UTF-8' },  # character encoding for emitted JSON
+            clear_env_vars: %w{BUNDLE_BIN_PATH BUNDLE_GEMFILE},
+            timeout: KNIFE_METADATA_TIMEOUT)
           output = output.string
-          raise MetadataError, "Failed to run chef knife: #{output[0, 1024]}"
+        rescue ::RightGit::Shell::ShellError => e
+          output = output.string
+          raise MetadataError, "Failed to run chef knife: #{e.message}\n#{output[0, 1024]}"
         end
 
         # free files from jail.

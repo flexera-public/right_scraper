@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    right_scraper (5.2.8)
+    right_scraper (5.3.1)
       right_aws (>= 2.0)
       right_git
       right_popen

@@ -27,6 +27,12 @@ require 'json'
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper', 'scanners', 'cookbook_metadata'))
 
+# monkey-patch to shorten metadata timeout
+class RightScraper::Scanners::CookbookMetadata
+  remove_const(:KNIFE_METADATA_TIMEOUT)
+  KNIFE_METADATA_TIMEOUT = 3
+end
+
 describe RightScraper::Scanners::CookbookMetadata do
 
   include RightScraper::SpecHelpers
@@ -175,6 +181,31 @@ EOF
             @parsed_metadata['name'].should == 'undefined'
           end
         end # when generated metadata exceeds size limit
+
+        context 'when metadata script exceeds time limit' do
+          before(:each) do
+            ::File.open(repo_metadata_rb_path, 'a') do |f|
+              f.puts "\nsleep 120"
+            end
+            true
+          end
+
+          it 'should fail on time limit while generating metadata' do
+            timeout = RightScraper::Scanners::CookbookMetadata::KNIFE_METADATA_TIMEOUT
+            start_time = ::Time.now
+            subject.notice(described_class::RUBY_METADATA) { fail 'unexpected' }
+            begin
+              subject.end(cookbook)
+              fail 'unexpected'
+            rescue described_class::MetadataError => e
+              message = "Failed to run chef knife: Execution timed out after #{timeout} seconds.\n"
+              e.message.should start_with(message)
+              elapsed = ::Time.now - start_time
+              elapsed.should be_within(2).of(timeout)
+            end
+          end
+        end # when generated metadata exceeds size limit
+
       end # when repo hierarchy is simple
 
       context 'when repo hierarchy is complex' do
