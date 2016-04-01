@@ -63,7 +63,7 @@ describe RightScraper::Resources::Cookbook do
           FileUtils.remove_entry_secure(@tmpdir)
         end
       end.to raise_exception(
-        ::RightGit::RightGitError,
+        ::RightScraper::Error,
         /#{::Regexp.escape(bad_hostname)}/)
     end
   end
@@ -124,7 +124,7 @@ describe RightScraper::Resources::Cookbook do
           FileUtils.remove_entry_secure(@tmpdir)
         end
       end.to raise_exception(
-        ::RightGit::RightGitError,
+        ::RightScraper::Error,
         /#{::Regexp.escape(bad_hostname)}/)
       ENV['SSH_AGENT_PID'].should == oldpid
     end

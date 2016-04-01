@@ -22,6 +22,17 @@
 #++
 
 require 'rubygems'
+require 'bundler/setup'
+
+# legacy rspec depends on Test::Unit, which fails rspec runs that have any non-
+# Test::Unit arguments. disable this nonsense.
+require 'test/unit'
+module ::Test::Unit::Options
+  def process_args(args = [])
+    {}
+  end
+end
+
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'right_scraper'))
 
 require 'logger'
@@ -78,6 +89,16 @@ module RightScraper
             end
           end
         end
+      end
+    end
+
+    # represents a file name and content for creation by .create_file_layout
+    class FileContent
+      attr_reader :name, :content
+
+      def initialize(name, content)
+        @name = name
+        @content = content
       end
     end
 
@@ -142,6 +163,7 @@ module RightScraper
         :kind            => kind,
         :ignorable_paths => retriever.ignorable_paths,
         :repo_dir        => retriever.repo_dir,
+        :freed_dir       => ::FileUtils.mkdir_p(::File.expand_path('../freed', retriever.repo_dir)).first,
         :repository      => retriever.repository,
         :logger          => retriever.logger)
     end
@@ -166,6 +188,10 @@ module RightScraper
             FileUtils.mkdir_p(full_path)
             result += create_file_layout(full_path, v)
           end
+        elsif elem.is_a?(FileContent)
+          fullpath = ::File.join(path, elem.name)
+          File.open(fullpath, 'w') { |f| f.write elem.content }
+          result << fullpath
         else
           fullpath = ::File.join(path, elem.to_s)
           File.open(fullpath, 'w') { |f| f.puts elem.to_s }

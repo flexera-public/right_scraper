@@ -34,11 +34,9 @@ module RightScraper
 
     def repo
       RightScraper::Repositories::Base.from_hash(
-        :display_name      => 'test repo',
-        :repo_type         => :download,
-        :url               => "file://#{@download_file}",
-        :first_credential  => ENV['REMOTE_USER'],
-        :second_credential => ENV['REMOTE_PASSWORD'])
+        :display_name => 'test repo',
+        :repo_type    => :download,
+        :url          => "file://#{@download_file}")
     end
 
     # Create download repository following given layout

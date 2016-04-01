@@ -1,5 +1,5 @@
 #--
-# Copyright: Copyright (c) 2010-2013 RightScale, Inc.
+# Copyright: Copyright (c) 2010-2016 RightScale, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -90,6 +90,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @scraper = @scraperclass.new(:repository => @repo,
                                    :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,
+                                   :freed_dir => ::FileUtils.mkdir_p(::File.expand_path('../freed', @download_repo_path)).first,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
                                                  RightScraper::Scanners::CookbookS3Upload],
@@ -115,6 +116,7 @@ describe RightScraper::Scanners::CookbookS3Upload do
       @scraper = @scraperclass.new(:repository => @repo,
                                    :logger => scraper_logger,
                                    :repo_dir => @download_repo_path,
+                                   :freed_dir => ::FileUtils.mkdir_p(::File.expand_path('../freed', @download_repo_path)).first,
                                    :scanners => [RightScraper::Scanners::CookbookMetadata,
                                                  RightScraper::Scanners::CookbookManifest,
                                                  RightScraper::Scanners::CookbookS3Upload],

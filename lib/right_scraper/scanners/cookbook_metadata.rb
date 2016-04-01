@@ -26,6 +26,7 @@ require 'right_scraper/scanners'
 
 require 'fileutils'
 require 'json'
+require 'right_git'
 require 'right_popen'
 require 'right_popen/safe_output_buffer'
 require 'tmpdir'
