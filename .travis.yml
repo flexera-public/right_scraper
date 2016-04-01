@@ -1,3 +1,4 @@
+sudo: required
 language: ruby
 rvm:
   - 2.1.8
@@ -9,9 +10,10 @@ env:
   global:
     - RACK_ENV=integration
 install:
-  - bundle check --path=vendor/bundle || (rm -rf vendor && bundle package --all && bundle install --local --jobs=8 --retry=8 --without debugger --path=vendor/bundle)
+# - sudo apt-get update -qq && apt-get install git-core subversion -y
+  - rvm gemset use global
+  - gem install chef -v 11.6.2 --no-rdoc --no-ri
+  - bundle install
+  - eval "$(ssh-agent -s)"  # start the ssh agent
 script:
-  - bundle exec rake spec
-cache:
-  directories:
-    - vendor
+  - rake spec
