@@ -37,13 +37,6 @@ describe RightScraper::Retrievers::Git do
     @helper.create_cookbook(where, @helper.repo_content)
   end
 
-  def secondary_workflow(where, name=nil, definition=nil, metadata=nil)
-    FileUtils.mkdir_p(where)
-    @helper.create_workflow(where, name || 'workflow',
-                            definition || "sequence\n  a\n  b",
-                            metadata || {"random" => 42 })
-  end
-
   def get_scraper(repo, basedir)
     @retriever = make_retriever(repo, basedir)
     @retriever.retrieve
@@ -417,12 +410,6 @@ describe RightScraper::Retrievers::Git do
     include RightScraper::SpecHelpers::CookbookScraping
 
     it 'should see a cookbook' do
-      @scraper.next_resource.should_not be_nil
-    end
-
-    it 'should see a cookbook' do
-      # note that this will make a request to Github with current user creds.
-      pending "No SSH credentials are present." unless ::File.file?(::File.join(::ENV['HOME'], '.ssh/id_rsa'))
       @scraper.next_resource.should_not be_nil
     end
 
