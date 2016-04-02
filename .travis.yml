@@ -15,6 +15,12 @@ install:
   - rvm gemset use global
   - gem install chef -v 11.6.2 --no-rdoc --no-ri
   - bundle install
-  - eval "$(ssh-agent -s)"  # start the ssh agent
+before_script:
+# some setup for git to avoid prompting that breaks tests
+  - echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  - echo -e "[user]\n  name = Your Email\n  email = your_email@example.com\n\n[core]\n  excludesfile = ~/.gitignore\n\n" > ~/.gitconfig
+
 script:
-  - rake spec
+# set DISPLAY= to defeat prompts for password on travis where DISPLAY is somehow not empty by default.
+# note that you can set verbose=true to display the full git commands, etc.
+  - DISPLAY= rake spec
