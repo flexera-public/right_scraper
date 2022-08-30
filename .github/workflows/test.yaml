@@ -56,10 +56,10 @@ jobs:
           gem install yajl-ruby -v 1.4.1
           gem install chef -v 11.6.2 --no-rdoc --no-ri
 
-      - name: Run Spec
-        run: |
-          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-          echo -e "[user]\n  name = Your Email\n  email = your_email@example.com\n\n[core]\n  excludesfile = ~/.gitignore\n\n" > ~/.gitconfig    
+      # - name: Run Spec
+      #   run: |
+      #     echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+      #     echo -e "[user]\n  name = Your Email\n  email = your_email@example.com\n\n[core]\n  excludesfile = ~/.gitignore\n\n" > ~/.gitconfig    
 
       - name: Run Spec
         run: |
