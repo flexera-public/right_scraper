@@ -53,7 +53,7 @@ jobs:
 
       - name: Run Spec
         run: |
-          gem 'yajl-ruby', '~> 1.4', '>= 1.4.1'
+          gem install yajl-ruby', '~> 1.4', '>= 1.4.1'
           gem install chef -v 11.6.2 --no-rdoc --no-ri
 
       - name: Run Spec
