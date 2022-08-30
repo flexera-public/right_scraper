@@ -51,7 +51,7 @@ jobs:
       #   run: |
       #     rvm gemset use global
 
-      - name: Run Spec
+      - name: Before Script
         run: |
           gem install yajl-ruby -v 1.4.1
           gem install chef -v 11.6.2 --no-rdoc --no-ri
@@ -63,4 +63,4 @@ jobs:
 
       - name: Run Spec
         run: |
-          DISPLAY= rake spec
+          DISPLAY= bundle exec rake spec
