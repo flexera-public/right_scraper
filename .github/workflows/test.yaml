@@ -47,9 +47,9 @@ jobs:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
 
-      - name: Run Spec
-        run: |
-          rvm gemset use global
+      # - name: Run Spec
+      #   run: |
+      #     rvm gemset use global
 
       - name: Run Spec
         run: |
